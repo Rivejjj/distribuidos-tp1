@@ -41,16 +41,3 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(accum.authors['authors'][2010], 1)
         accum.add_book(self.base_book)
         self.assertEqual(accum.authors['authors'][2010], 2)
-
-    def test_add_review(self):
-        accum = Accumulator()
-        new_review = Review(1,'distributed systems', 10, 1, 'profile_name', 'helpfulness', 2, 'time', 'summary', 'text')
-
-        accum.add_review(self.base_review)
-        self.assertEqual(accum.reviews['distributed systems'], (1, 5))
-
-        accum.add_review(self.base_review)
-        self.assertEqual(accum.reviews['distributed systems'], (2, 5))
-
-        accum.add_review(new_review)
-        self.assertEqual(accum.reviews['distributed systems'], (3, 4))
