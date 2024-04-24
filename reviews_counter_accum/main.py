@@ -2,7 +2,7 @@
 from configparser import ConfigParser
 import logging
 import os
-from common.accumulator import Accumulator
+from common.reviews_counter import ReviewsCounter
 from messages.book import Book
 
 
@@ -22,7 +22,15 @@ def initialize_config():
     config.read("config.ini")
 
     config_params = {}
-
+    try:
+        config_params["logging_level"] = os.getenv("LOGGING", config["DEFAULT"]["LOGGING_LEVEL"])
+        config_params["top"] = os.getenv("TOP", None)
+        
+    except KeyError as e:
+        raise KeyError(f"Missing configuration parameter: {e}. Aborting server")
+    except ValueError as e:
+        raise ValueError(f"Error parsing configuration parameter: {e}. Aborting server")
+    
     return config_params
 
 
@@ -47,7 +55,7 @@ def main():
 
     logging.debug("Config: %s", config_params)
 
-    accum = Accumulator()
+    counter = ReviewsCounter(amount = config_params["top"])
 
     test_book = Book(
         "Test Book",
@@ -62,4 +70,4 @@ def main():
         1
     )
 
-    accum.add_book(test_book)
+    counter.add_book(test_book)

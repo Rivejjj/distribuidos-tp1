@@ -1,13 +1,14 @@
 version: '3.9'
 name: tp1
 services:
-  decades_accumulator:
-    container_name: decades_accumulator
-    image: decades_accumulator:latest
+  reviews_counter:
+    container_name: reviews_counter
+    image: reviews_counter_accum:latest
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
+      - TOP=10
     networks:
       - testing_net
   
