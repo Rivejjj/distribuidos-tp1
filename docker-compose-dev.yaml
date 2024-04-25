@@ -12,6 +12,17 @@ services:
     networks:
       - testing_net
 
+  data_receiver:
+    container_name: data_receiver
+    image: data-receiver:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=DEBUG
+      - CATEGORY=Computers
+    networks:
+      - testing_net
+
   published_year_filter:
     container_name: published_year_filter
     image: book-filter:latest
