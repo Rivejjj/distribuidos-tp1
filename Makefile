@@ -10,6 +10,7 @@ all:
 docker-image:
 	docker build -f ./book-filter/Dockerfile -t "book-filter:latest" .
 	docker build -f ./data-receiver/Dockerfile -t "data-receiver:latest" .
+	docker build -f ./decades_accumulator/Dockerfile -t "decades_accumulator:latest" .
 	# Execute this command from time to time to clean up intermediate stages generated 
 	# during client build (your hard drive will like this :) ). Don't left uncommented if you 
 	# want to avoid rebuilding client image every time the docker-compose-up command 
@@ -34,7 +35,11 @@ docker-compose-down:
 docker-compose-logs:
 	docker compose -f docker-compose-dev.yaml logs -f
 <<<<<<< HEAD
+<<<<<<< HEAD
 .PHONY: docker-compose-logs
 =======
 .PHONY: docker-compose-logs
 >>>>>>> 83e3fb8 (data receiver basic functions)
+=======
+.PHONY: docker-compose-logs
+>>>>>>> origin/decades-accumulator

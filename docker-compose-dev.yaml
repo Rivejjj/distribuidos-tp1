@@ -8,6 +8,17 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
+      - PUBLISHED_YEAR_RANGE=Computers
+    networks:
+      - testing_net
+
+  decades_accumulator:
+    container_name: decades_accumulator
+    image: decades_accumulator:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=DEBUG
       - CATEGORY=Computers
     networks:
       - testing_net
