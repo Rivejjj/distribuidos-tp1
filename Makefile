@@ -8,7 +8,9 @@ all:
 
 
 docker-image:
+	docker build -f ./rabbitmq/rabbitmq.dockerfile -t "rabbitmq:latest" .
 	docker build -f ./book-filter/Dockerfile -t "book-filter:latest" .
+	docker build -f ./client/Dockerfile -t "client:latest" .
 	# Execute this command from time to time to clean up intermediate stages generated 
 	# during client build (your hard drive will like this :) ). Don't left uncommented if you 
 	# want to avoid rebuilding client image every time the docker-compose-up command 

@@ -2,10 +2,12 @@
 from configparser import ConfigParser
 import logging
 import os
-from common.book_filter import BookFilter
 from messages.book import Book
 import pika
 import time
+
+BOOKS_DATA_PATH = "books_data.csv"
+
 
 def initialize_config():
     """ Parse env variables or config file to find program config params
@@ -25,17 +27,7 @@ def initialize_config():
     config_params = {}
     try:
         config_params["logging_level"] = os.getenv(
-            'LOGGING_LEVEL', config["DEFAULT"]["LOGGING_LEVEL"])
-        config_params["category"] = os.getenv(
-            'CATEGORY', None)
-        config_params["published_year_range"] = os.getenv(
-            'PUBLISHED_YEAR_RANGE', None)
-        config_params["title_contains"] = os.getenv(
-            'TITLE_CONTAINS', None)
-
-        if config_params["published_year_range"]:
-            config_params["published_year_range"] = tuple(
-                map(int, config_params["published_year_range"].split("-")))
+            "LOGGING_LEVEL", config["DEFAULT"]["LOGGING_LEVEL"])
     except KeyError as e:
         raise KeyError(
             "Key was not found. Error: {} .Aborting server".format(e))
@@ -59,56 +51,38 @@ def initialize_log(logging_level):
         datefmt='%Y-%m-%d %H:%M:%S',
     )
 
-def callback(ch, method, properties, body):
-    logging.info(f" [x] {method.routing_key}:{body}")
-
+def read_csv(file):
+	line = file.readline()
+	line = line.strip('\n')
+	return line
+	
 
 def main():
     config_params = initialize_config()
     initialize_log(config_params["logging_level"])
+
     logging.debug("Config: %s", config_params)
+    logging.info("Starting book filter")
 
-    book_filter = BookFilter(
-        category=config_params["category"],
-        published_year_range=config_params["published_year_range"],
-        title_contains=config_params["title_contains"]
-    )
     time.sleep(40)
-
-    connection = pika.BlockingConnection(
-        pika.ConnectionParameters(host='rabbitmq'))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
     channel = connection.channel()
     channel.exchange_declare(exchange='topic_logs', exchange_type='topic')
 
+    file = open(BOOKS_DATA_PATH, 'r', encoding="utf8")
+    message = read_csv(file)
 
-    result = channel.queue_declare('', exclusive=True)
-    queue_name = result.method.queue
-    binding_key = "book.*"
-    channel.queue_bind(
-        exchange='topic_logs', queue=queue_name, routing_key=binding_key)
-    
-    print(' [*] Waiting for logs. To exit press CTRL+C')
+    routing_key = "book.*"
 
-    channel.basic_consume(
-        queue=queue_name, on_message_callback=callback, auto_ack=True)
-    channel.start_consuming()
+    for _ in range(1,20):
+        channel.basic_publish(
+            exchange='topic_logs', routing_key=routing_key, body=message)
+        print(f" [x] Sent {routing_key}:{message}")
+        message = read_csv(file)
+
+
+
 
 
 if __name__ == "__main__":
     main()
-
-
-'''
-test_book = Book(
-        "Test Book",
-        "Test Description",
-        "Test Author",
-        "Test Image",
-        "Test Preview Link",
-        "Test Publisher",
-        "2021-01-01",
-        "Test Info Link",
-        ["literature", "fiction"],
-        1
-    )
-'''
