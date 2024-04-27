@@ -8,7 +8,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
-      - PUBLISHED_YEAR_RANGE=Computers
+      - CATEGORY=Computers
     networks:
       - testing_net
 
@@ -19,7 +19,17 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
-      - CATEGORY=Computers
+    networks:
+      - testing_net
+
+  reviews_counter:
+    container_name: reviews_counter
+    image: reviews_counter_accum:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=DEBUG
+      - TOP=10
     networks:
       - testing_net
 
