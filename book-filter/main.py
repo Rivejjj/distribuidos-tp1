@@ -4,92 +4,64 @@ import logging
 import os
 from common.book_filter import BookFilter
 from messages.book import Book
-from rabbitmq.queue import Queue
+from rabbitmq.queue import QueueMiddleware
+from utils.initialize import initialize_config, initialize_log
 
 
-def initialize_config():
-    """ Parse env variables or config file to find program config params
+def initialize():
+    params = ["logging_level", "category",
+              "published_year_range", "title_contains", "id", "last", "input_queue", "output_queue"]
 
-    Function that search and parse program configuration parameters in the
-    program environment variables first and the in a config file. 
-    If at least one of the config parameters is not found a KeyError exception 
-    is thrown. If a parameter could not be parsed, a ValueError is thrown. 
-    If parsing succeeded, the function returns a ConfigParser object 
-    with config parameters
-    """
+    config_params = initialize_config(params)
 
-    config = ConfigParser(os.environ)
-    # If config.ini does not exists original config object is not modified
-    config.read("config.ini")
+    if config_params["published_year_range"]:
+        config_params["published_year_range"] = tuple(
+            map(int, config_params["published_year_range"].split("-")))
 
-    config_params = {}
-    try:
-        config_params["logging_level"] = os.getenv(
-            'LOGGING_LEVEL', config["DEFAULT"]["LOGGING_LEVEL"])
-        config_params["category"] = os.getenv(
-            'CATEGORY', None)
-        config_params["published_year_range"] = os.getenv(
-            'PUBLISHED_YEAR_RANGE', None)
-        config_params["title_contains"] = os.getenv(
-            'TITLE_CONTAINS', None)
+    if config_params["LAST"]:
+        config_params["LAST"] = bool(config_params["LAST"])
 
-        if config_params["published_year_range"]:
-            config_params["published_year_range"] = tuple(
-                map(int, config_params["published_year_range"].split("-")))
-    except KeyError as e:
-        raise KeyError(
-            "Key was not found. Error: {} .Aborting server".format(e))
-    except ValueError as e:
-        raise ValueError(
-            "Key could not be parsed. Error: {}. Aborting server".format(e))
+    if config_params["ID"]:
+        config_params["ID"] = int(config_params["ID"])
+
+    initialize_log(config_params["logging_level"])
 
     return config_params
 
 
-def initialize_log(logging_level):
-    """
-    Python custom logging initialization
+def get_queue_names(config_params):
+    id = config_params["id"]
+    eof_send_queue = "EOF_1" if config_params["last"] else f"EOF_{id + 1}"
+    return [config_params["input_queue"], config_params["output_queue"], f"EOF_{id}", eof_send_queue]
 
-    Current timestamp is added to be able to identify in docker
-    compose logs the date when the log has arrived
-    """
-    logging.basicConfig(
-        format='%(asctime)s %(levelname)-8s %(message)s',
-        level=logging_level,
-        datefmt='%Y-%m-%d %H:%M:%S',
-    )
+
+def process_message(book_filter: BookFilter, queue_middleware: QueueMiddleware, output_queue: str):
+    def callback(ch, method, properties, body):
+        book = Book.from_json(body)
+        logging.info("Received book %s", book)
+        if book_filter.filter(book):
+            logging.info("Book accepted")
+            queue_middleware.send(output_queue, book)
+        else:
+            logging.info("Book rejected")
+    return callback
 
 
 def main():
 
-    config_params = initialize_config()
-    initialize_log(config_params["logging_level"])
+    config_params = initialize()
 
-    logging.debug("Config: %s", config_params)
+    queue_middleware = QueueMiddleware(get_queue_names(config_params))
 
-    queue = Queue('query_queue')
+    book_filter = BookFilter(
+        category=config_params["category"],
+        published_year_range=config_params["published_year_range"],
+        title_contains=config_params["title_contains"]
+    )
 
-    queue.start_consuming(lambda ch, method, properties,
-                          body: logging.info(body))
+    queue_middleware.start_consuming(config_params["input_queue"],
+                                     process_message(book_filter, queue_middleware, config_params["output_queue"]))
 
-    # book_filter = BookFilter(
-    #     category=config_params["category"],
-    #     published_year_range=config_params["published_year_range"],
-    #     title_contains=config_params["title_contains"]
-    # )
 
-    # test_book = Book(
-    #     "Test Book",
-    #     "Test Description",
-    #     "Test Author",
-    #     "Test Image",
-    #     "Test Preview Link",
-    #     "Test Publisher",
-    #     "2021-01-01",
-    #     "Test Info Link",
-    #     ["literature", "fiction"],
-    #     1
-    # )
-
-    # book_filter.filter(test_book)
-main()
+if __name__ == "__main__":
+    main()

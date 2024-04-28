@@ -3,8 +3,8 @@ import time
 import pika
 
 
-class Queue:
-    def __init__(self, queue_names):
+class QueueMiddleware:
+    def __init__(self, queue_names: list[str]):
         logging.info("Connecting to queue")
 
         # Waits for rabbitmq
