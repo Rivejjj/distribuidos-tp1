@@ -12,3 +12,6 @@ class Book:
         self.info_link = info_link
         self.categories = categories
         self.ratings_count = ratings_count
+
+    def has_empty_fields(self):
+        return not all([self.title, self.description, self.authors, self.image, self.preview_link, self.publisher, self.published_year, self.info_link, self.categories, self.ratings_count])

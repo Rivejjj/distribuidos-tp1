@@ -6,6 +6,7 @@ from common.book_filter import BookFilter
 from messages.book import Book
 import pika
 import time
+import functools
 
 def initialize_config():
     """ Parse env variables or config file to find program config params
@@ -59,8 +60,24 @@ def initialize_log(logging_level):
         datefmt='%Y-%m-%d %H:%M:%S',
     )
 
+def callback2(ch, method, properties, body, args):
+    logging.info(f" [x] {method.routing_key}:{body}")
+    fields = body.decode().split(",")
+    book = Book(*fields)
+    if not book.has_empty_fields() and args[0].filter(body):
+        args[1].write(body)
+        logging.info(f"{body}\n")
+
 def callback(ch, method, properties, body):
     logging.info(f" [x] {method.routing_key}:{body}")
+
+
+def declare_exchange():
+    connection = pika.BlockingConnection(
+        pika.ConnectionParameters(host='rabbitmq'))
+    channel = connection.channel()
+    channel.exchange_declare(exchange='topic_logs', exchange_type='topic')
+    return channel
 
 
 def main():
@@ -75,40 +92,29 @@ def main():
     )
     time.sleep(40)
 
-    connection = pika.BlockingConnection(
-        pika.ConnectionParameters(host='rabbitmq'))
-    channel = connection.channel()
-    channel.exchange_declare(exchange='topic_logs', exchange_type='topic')
-
+    channel = declare_exchange()
 
     result = channel.queue_declare('', exclusive=True)
     queue_name = result.method.queue
-    binding_key = "book.*"
+    binding_key = "book"
+
     channel.queue_bind(
         exchange='topic_logs', queue=queue_name, routing_key=binding_key)
     
-    print(' [*] Waiting for logs. To exit press CTRL+C')
+    logging.info(' [*] Waiting for logs. To exit press CTRL+C')
+    
+
+    filtered = open("filtered_books.csv", "w")
+    
+    #args = (book_filter, filtered)
+    #callback = functools.partial(callback2, args=args)
 
     channel.basic_consume(
         queue=queue_name, on_message_callback=callback, auto_ack=True)
+
     channel.start_consuming()
+
 
 
 if __name__ == "__main__":
     main()
-
-
-'''
-test_book = Book(
-        "Test Book",
-        "Test Description",
-        "Test Author",
-        "Test Image",
-        "Test Preview Link",
-        "Test Publisher",
-        "2021-01-01",
-        "Test Info Link",
-        ["literature", "fiction"],
-        1
-    )
-'''

@@ -65,6 +65,7 @@ def main():
     logging.info("Starting book filter")
 
     time.sleep(40)
+
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
     channel = connection.channel()
     channel.exchange_declare(exchange='topic_logs', exchange_type='topic')
@@ -72,16 +73,15 @@ def main():
     file = open(BOOKS_DATA_PATH, 'r', encoding="utf8")
     message = read_csv(file)
 
-    routing_key = "book.*"
+    routing_key = "book"
 
     for _ in range(1,20):
         channel.basic_publish(
             exchange='topic_logs', routing_key=routing_key, body=message)
-        print(f" [x] Sent {routing_key}:{message}")
+        logging.info(f" [x] Sent {routing_key}:{message}")
         message = read_csv(file)
 
-
-
+    time.sleep(25)
 
 
 if __name__ == "__main__":
