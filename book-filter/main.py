@@ -4,6 +4,7 @@ import logging
 import os
 from common.book_filter import BookFilter
 from messages.book import Book
+from rabbitmq.queue import Queue
 
 
 def initialize_config():
@@ -66,23 +67,29 @@ def main():
 
     logging.debug("Config: %s", config_params)
 
-    book_filter = BookFilter(
-        category=config_params["category"],
-        published_year_range=config_params["published_year_range"],
-        title_contains=config_params["title_contains"]
-    )
+    queue = Queue('query_queue')
 
-    test_book = Book(
-        "Test Book",
-        "Test Description",
-        "Test Author",
-        "Test Image",
-        "Test Preview Link",
-        "Test Publisher",
-        "2021-01-01",
-        "Test Info Link",
-        ["literature", "fiction"],
-        1
-    )
+    queue.start_consuming(lambda ch, method, properties,
+                          body: logging.info(body))
 
-    book_filter.filter(test_book)
+    # book_filter = BookFilter(
+    #     category=config_params["category"],
+    #     published_year_range=config_params["published_year_range"],
+    #     title_contains=config_params["title_contains"]
+    # )
+
+    # test_book = Book(
+    #     "Test Book",
+    #     "Test Description",
+    #     "Test Author",
+    #     "Test Image",
+    #     "Test Preview Link",
+    #     "Test Publisher",
+    #     "2021-01-01",
+    #     "Test Info Link",
+    #     ["literature", "fiction"],
+    #     1
+    # )
+
+    # book_filter.filter(test_book)
+main()
