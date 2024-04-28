@@ -34,4 +34,12 @@ docker-compose-down:
 
 docker-compose-logs:
 	docker compose -f docker-compose-dev.yaml logs -f
+<<<<<<< HEAD
+<<<<<<< HEAD
 .PHONY: docker-compose-logs
+=======
+.PHONY: docker-compose-logs
+>>>>>>> 83e3fb8 (data receiver basic functions)
+=======
+.PHONY: docker-compose-logs
+>>>>>>> origin/decades-accumulator
