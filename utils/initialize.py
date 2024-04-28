@@ -1,14 +1,10 @@
-
 from configparser import ConfigParser
 import logging
 import os
-from common.data_receiver import DataReceiver
-from messages.book import Book
-
-from rabbitmq.queue import Queue
+import socket
 
 
-def initialize_config():
+def initialize_config(params):
     """ Parse env variables or config file to find program config params
 
     Function that search and parse program configuration parameters in the
@@ -25,15 +21,17 @@ def initialize_config():
 
     config_params = {}
     try:
-        config_params["logging_level"] = os.getenv(
-            "LOGGING", config["DEFAULT"]["LOGGING_LEVEL"])
-
+        for param, default in params:
+            env_param = param.upper()
+            default_value = config["DEFAULT"][env_param] if default else None
+            config_params[param] = os.getenv(
+                env_param, default_value)
     except KeyError as e:
         raise KeyError(
-            f"Missing configuration parameter: {e}. Aborting server")
+            "Key was not found. Error: {} .Aborting server".format(e))
     except ValueError as e:
         raise ValueError(
-            f"Error parsing configuration parameter: {e}. Aborting server")
+            "Key could not be parsed. Error: {}. Aborting server".format(e))
 
     return config_params
 
@@ -50,38 +48,3 @@ def initialize_log(logging_level):
         level=logging_level,
         datefmt='%Y-%m-%d %H:%M:%S',
     )
-
-
-def main():
-
-    # config_params = initialize_config()
-    # initialize_log(config_params["logging_level"])
-
-    # logging.debug("Config: %s", config_params)
-
-    # accum = DataReceiver()
-
-    # test_book = Book(
-    #     "Test Book",
-    #     "Test Description",
-    #     "Test Author",
-    #     "Test Image",
-    #     "Test Preview Link",
-    #     "Test Publisher",
-    #     "2021-01-01",
-    #     "Test Info Link",
-    #     ["literature", "fiction"],
-    #     1
-    # )
-
-    logging.info("Sending message to queue")
-
-    queue = Queue("query_queue")
-
-    logging.info("Sending message to queue")
-    queue.send('Hello world!')
-
-    # accum.add_book(test_book)
-
-
-main()

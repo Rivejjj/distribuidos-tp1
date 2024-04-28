@@ -1,37 +1,53 @@
-version: '3.9'
 name: tp1
 services:
-  rabbitmq:
-    build:
-      context: ./rabbitmq
-      dockerfile: rabbitmq.dockerfile
-    ports:
-      - 15672:15672
+  # rabbitmq:
+  #   build:
+  #     context: ./rabbitmq
+  #     dockerfile: rabbitmq.dockerfile
+  #   ports:
+  #     - 15672:15672
 
-  category_filter:
-    container_name: category_filter
-    image: book-filter:latest
+  client:
+    container_name: client
+    image: client:latest
     entrypoint: python3 /main.py
     depends_on:
-      - rabbitmq
-    links:
-      - rabbitmq
+      - gateway
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
-      - CATEGORY=Computers
+      - BOOKS_PATH=/data/books_data.csv
+      - BOOKS_REVIEWS_PATH=/data/Books_rating.csv
+    volumes:
+      - ./data:/data
+    networks:
+      - testing_net
+  # category_filter:
+  #   container_name: category_filter
+  #   image: book-filter:latest
+  #   entrypoint: python3 /main.py
+  #   depends_on:
+  #     - rabbitmq
+  #   links:
+  #     - rabbitmq
+  #   environment:
+  #     - PYTHONUNBUFFERED=1
+  #     - LOGGING_LEVEL=DEBUG
+  #     - CATEGORY=Computers
 
-  data_receiver:
-    container_name: data_receiver
-    image: data-receiver:latest
+  gateway:
+    container_name: gateway
+    image: gateway:latest
     entrypoint: python3 /main.py
-    depends_on:
-      - rabbitmq
-    links:
-      - rabbitmq
+    # depends_on:
+    #   - rabbitmq
+    # links:
+    #   - rabbitmq
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
+    networks:
+      - testing_net
   # decades_accumulator:
   #   container_name: decades_accumulator
   #   image: decades_accumulator:latest
@@ -75,3 +91,9 @@ services:
   #     - TITLE_CONTAINS=distributed
   #   networks:
   #     - testing_net
+networks:
+  testing_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.25.125.0/24
