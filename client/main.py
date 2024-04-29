@@ -2,7 +2,7 @@
 import logging
 import socket
 from utils.initialize import initialize_config, initialize_log
-
+import time
 
 def initialize():
 
@@ -31,17 +31,20 @@ def close_connection(socket):
 
 
 def main():
-
     config_params = initialize()
     print(config_params)
     socket = create_connection(config_params["address"], config_params["port"])
     with open(config_params["books_path"]) as file:
+        i = 0
         for line in file:
             send_message(socket, line)
+            if i == 1000:
+                break
+            i += 1
 
-    with open(config_params["books_reviews_path"]) as file:
-        for line in file:
-            send_message(socket, line)
+    # with open(config_params["books_reviews_path"]) as file:
+    #     for line in file:
+    #         send_message(socket, line)
 
     close_connection(socket)
 

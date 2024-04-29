@@ -1,5 +1,6 @@
 from messages.book import Book
 from messages.review import Review
+import csv
 
 CATEGORIES_POSITION = 8
 CATEGORIES_SEPARATOR = ';'
@@ -9,8 +10,16 @@ class DataReceiver:
         pass
 
     def parse_book(self, data):
+
+        #CAMBIAR ESTO PARA USAR CSV READER:
+        # CUANDO LAS DESCRIPCIONES TIENEN COMA NO FUNCIONA, PORQUE OBVIAMENTE VAN A TENER
+        # MAS DE 10 CAMPOS (LINEA 19)
+
         book_fields = data.split(',')
         if len(book_fields) != 10:
+            print("NOT 10 FIELDS: ", book_fields)
+            for field in book_fields:
+                print(field)
             return None
         
         book_fields[CATEGORIES_POSITION] = book_fields[CATEGORIES_POSITION].split(CATEGORIES_SEPARATOR)

@@ -49,15 +49,16 @@ def get_queue_names(config_params):
     return [config_params["INPUT_QUEUE"], config_params["OUTPUT_QUEUE"], f"EOF_{id}", eof_send_queue]
 
 
-def process_message(book_filter: BookFilter, queue_middleware: QueueMiddleware, output_queue: str):
+def process_message(book_filter: BookFilter, queue_middleware: QueueMiddleware, output_queue: str, file):
     def callback(ch, method, properties, body):
-        book = Book.from_json(body)
-        logging.info("Received book %s", book)
-        if book_filter.filter(book):
-            logging.info("Book accepted")
-            queue_middleware.send(output_queue, book)
-        else:
-            logging.info("Book rejected")
+        msg_received = body.decode()
+        fields = msg_received.split(",")
+        book = Book(*fields)
+        
+        if book and book_filter.filter(book):
+            print("Book accepted: %s", book.title)
+            queue_middleware.send(output_queue, str(book))
+            file.write(book.title + "\n")
     return callback
 
 
@@ -65,18 +66,18 @@ def main():
 
     config_params = initialize()
 
-    queue_middleware = QueueMiddleware(get_queue_names(config_params))
-
-
 
     book_filter = BookFilter(
         category=config_params["CATEGORY"],
         published_year_range=config_params["PUBLISHED_YEAR_RANGE"],
         title_contains=config_params["TITLE_CONTAINS"]
     )
-
+    file = open("output.txt", "w")
+    queue_middleware = QueueMiddleware(get_queue_names(config_params))
+    
+    print("Starting to consume")
     queue_middleware.start_consuming(config_params["INPUT_QUEUE"],
-                                     process_message(book_filter, queue_middleware, config_params["OUTPUT_QUEUE"]))
+                                     process_message(book_filter, queue_middleware, config_params["OUTPUT_QUEUE"], file))
 
 
 if __name__ == "__main__":

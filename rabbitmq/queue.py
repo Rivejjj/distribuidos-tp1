@@ -5,19 +5,19 @@ import pika
 
 class QueueMiddleware:
     def __init__(self, queue_names: list[str]):
-        logging.info("Connecting to queue")
+        logging.info("Connecting to queue: queue_names=%s", queue_names)
 
         # Waits for rabbitmq
         time.sleep(40)
 
-
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(host='rabbitmq'))
+        logging.info("Connected to queue")
         self.channel = self.connection.channel()
-        
+
         print("QUEUE NAMES", queue_names)
         for name in queue_names:
-            logging.info("Declaring queue %s", name)
+            print("Declaring queue %s", name)
             self.channel.queue_declare(queue=name, durable=True)
 
     def start_consuming(self, name,  callback):

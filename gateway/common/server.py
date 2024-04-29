@@ -41,26 +41,25 @@ class Server:
         If a problem arises in the communication with the client, the
         client socket will also be closed
         """
-        print("HANDLING QUEUE")
-        # queue = QueueMiddleware(["computers"])
-        print("QUEUE HANDLED")
         data_receiver = DataReceiver()
         try:
+            queue = QueueMiddleware(["computers"])
             while True:
 
                 msg = self.__safe_receive().decode().rstrip()
-                print("MSG",msg)
+                if msg == "":
+                    break
                 addr = self.client_sock.getpeername()
 
                 book = data_receiver.parse_book(msg)
-
+                to_filter = str(book)
                 if book:
-                    # queue.send("computers", book)
-                    logging.info(
-                        f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
+                    queue.send("computers", to_filter)
+                    print(
+                        f'action: sending to filter | result: success | ip: {addr[0]} | msg: {to_filter}')
 
-                logging.info(
-                    f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
+                # logging.info(
+                    # f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
         except OSError as e:
             logging.error(
                 f"action: receive_message | result: fail | error: {e}")

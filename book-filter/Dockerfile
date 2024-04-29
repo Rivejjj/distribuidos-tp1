@@ -1,4 +1,4 @@
-FROM python:3.9.7-slim
+FROM rabbitmq-python-base:0.0.1
 RUN pip3 install pika
 COPY book-filter /
 COPY messages /messages
