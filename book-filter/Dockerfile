@@ -1,8 +1,8 @@
-FROM python:3.9.7-slim
-RUN pip3 install pika
+FROM rabbitmq-python-base:0.0.1
 COPY book-filter /
 COPY messages /messages
 COPY rabbitmq/queue.py /rabbitmq/queue.py
+COPY utils /utils
 
 RUN python -m unittest tests/test_filter.py
-ENTRYPOINT main.py
+ENTRYPOINT ["/bin/sh"]

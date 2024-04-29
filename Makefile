@@ -8,9 +8,9 @@ all:
 
 
 docker-image:
-	# docker build -f ./book-filter/Dockerfile -t "book-filter:latest" .
+	docker build -f ./book-filter/Dockerfile -t "book-filter:latest" .
 	docker build -f ./gateway/Dockerfile -t "gateway:latest" .
-	# docker build -f ./rabbitmq/rabbitmq.dockerfile -t "rabbitmq:latest" .
+	docker build -f ./rabbitmq/rabbitmq.dockerfile -t "rabbitmq:latest" .
 	docker build -f ./client/Dockerfile -t "client:latest" .
 	# docker build -f ./decades_accumulator/Dockerfile -t "decades_accumulator:latest" .
 	# docker build -f ./reviews_counter_accum/Dockerfile -t "reviews_counter_accum:latest" .
@@ -22,7 +22,7 @@ docker-image:
 .PHONY: docker-image
 
 docker-compose-up: docker-image
-	docker compose -f docker-compose-dev.yaml up --build
+	docker compose -f docker-compose-dev.yaml up -d --build
 .PHONY: docker-compose-up
 
 docker-compose-up-nb: 

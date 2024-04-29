@@ -1,96 +1,143 @@
 name: tp1
 services:
-  # rabbitmq:
-  #   build:
-  #     context: ./rabbitmq
-  #     dockerfile: rabbitmq.dockerfile
-  #   ports:
-  #     - 15672:15672
-
-  client:
-    container_name: client
-    image: client:latest
-    entrypoint: python3 /main.py
-    depends_on:
-      - gateway
+  rabbitmq:
+    build:
+      context: ./rabbitmq
+      dockerfile: rabbitmq.dockerfile
+    ports:
+      - 15672:15672
     environment:
-      - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=DEBUG
-      - BOOKS_PATH=/data/books_data.csv
-      - BOOKS_REVIEWS_PATH=/data/Books_rating.csv
-    volumes:
-      - ./data:/data
-    networks:
-      - testing_net
-  # category_filter:
-  #   container_name: category_filter
-  #   image: book-filter:latest
+      - RABBITMQ_LOGS=False
+
+  # client:
+  #   container_name: client
+  #   image: client:latest
   #   entrypoint: python3 /main.py
   #   depends_on:
-  #     - rabbitmq
-  #   links:
-  #     - rabbitmq
+  #     - gateway
   #   environment:
   #     - PYTHONUNBUFFERED=1
-  #     - LOGGING_LEVEL=DEBUG
-  #     - CATEGORY=Computers
+  #     - LOGGING_LEVEL=INFO
+  #     - BOOKS_PATH=/data/books_data.csv
+  #     - BOOKS_REVIEWS_PATH=/data/Books_rating.csv
+  #   volumes:
+  #     - ./data:/data
+  #   networks:
+  #     - testing_net
+
+  category_filter_1:
+    container_name: category_filter_1
+    image: book-filter:latest
+    entrypoint: python3 /main.py
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - CATEGORY=Computers
+      - ID=0
+      - N=3
+      - INPUT_QUEUE=query1-queue
+      - OUTPUT_QUEUES=filtered-categorty-books-queue
+      - RABBITMQ_LOGS=False
+
+  category_filter_2:
+    container_name: category_filter_2
+    image: book-filter:latest
+    entrypoint: python3 /main.py
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - CATEGORY=Computers
+      - ID=1
+      - N=3
+      - INPUT_QUEUE=query1-queue
+      - OUTPUT_QUEUES=filtered-categorty-books-queue
+      - RABBITMQ_LOGS=False
+
+  category_filter_3:
+    container_name: category_filter_3
+    image: book-filter:latest
+    entrypoint: python3 /main.py
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - CATEGORY=Computers
+      - ID=2
+      - N=3
+      - INPUT_QUEUE=query1-queue
+      - OUTPUT_QUEUES=filtered-categorty-books-queue
+      - RABBITMQ_LOGS=False
 
   gateway:
     container_name: gateway
     image: gateway:latest
     entrypoint: python3 /main.py
-    # depends_on:
-    #   - rabbitmq
-    # links:
-    #   - rabbitmq
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=DEBUG
-    networks:
-      - testing_net
-  # decades_accumulator:
-  #   container_name: decades_accumulator
-  #   image: decades_accumulator:latest
-  #   entrypoint: python3 /main.py
-  #   environment:
-  #     - PYTHONUNBUFFERED=1
-  #     - LOGGING_LEVEL=DEBUG
-  #   networks:
-  #     - testing_net
+      - LOGGING_LEVEL=INFO
+      - OUTPUT_QUEUES=query1-queue
+      - INPUT_QUEUE=result-queue
+      - RABBITMQ_LOGS=False
+    # networks:
+    #   - testing_net
+    # decades_accumulator:
+    #   container_name: decades_accumulator
+    #   image: decades_accumulator:latest
+    #   entrypoint: python3 /main.py
+    #   environment:
+    #     - PYTHONUNBUFFERED=1
+    #     - LOGGING_LEVEL=INFO
+    #   networks:
+    #     - testing_net
 
-  # reviews_counter:
-  #   container_name: reviews_counter
-  #   image: reviews_counter_accum:latest
-  #   entrypoint: python3 /main.py
-  #   environment:
-  #     - PYTHONUNBUFFERED=1
-  #     - LOGGING_LEVEL=DEBUG
-  #     - TOP=10
-  #   networks:
-  #     - testing_net
+    # reviews_counter:
+    #   container_name: reviews_counter
+    #   image: reviews_counter_accum:latest
+    #   entrypoint: python3 /main.py
+    #   environment:
+    #     - PYTHONUNBUFFERED=1
+    #     - LOGGING_LEVEL=INFO
+    #     - TOP=10
+    #   networks:
+    #     - testing_net
 
 
-  # published_year_filter:
-  #   container_name: published_year_filter
-  #   image: book-filter:latest
-  #   entrypoint: python3 /main.py
-  #   environment:
-  #     - PYTHONUNBUFFERED=1
-  #     - LOGGING_LEVEL=DEBUG
-  #     - PUBLISHED_YEAR_RANGE=2000-2023
-  #   networks:
-  #     - testing_net
+    # published_year_filter:
+    #   container_name: published_year_filter
+    #   image: book-filter:latest
+    #   entrypoint: python3 /main.py
+    #   environment:
+    #     - PYTHONUNBUFFERED=1
+    #     - LOGGING_LEVEL=INFO
+    #     - PUBLISHED_YEAR_RANGE=2000-2023
+    #   networks:
+    #     - testing_net
 
-  # title_contains_filter:
-  #   container_name: title_contains_filter
-  #   image: book-filter:latest
-  #   entrypoint: python3 /main.py
-  #   environment:
-  #     - PYTHONUNBUFFERED=1
-  #     - LOGGING_LEVEL=DEBUG
-  #     - TITLE_CONTAINS=distributed
-  #   networks:
-  #     - testing_net
+    # title_contains_filter:
+    #   container_name: title_contains_filter
+    #   image: book-filter:latest
+    #   entrypoint: python3 /main.py
+    #   environment:
+    #     - PYTHONUNBUFFERED=1
+    #     - LOGGING_LEVEL=INFO
+    #     - TITLE_CONTAINS=distributed
+    #   networks:
+    #     - testing_net
 networks:
   testing_net:
     ipam:
