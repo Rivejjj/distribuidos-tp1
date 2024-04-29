@@ -8,11 +8,14 @@ class QueueMiddleware:
         logging.info("Connecting to queue")
 
         # Waits for rabbitmq
-        time.sleep(50)
+        time.sleep(40)
+
 
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(host='rabbitmq'))
         self.channel = self.connection.channel()
+        
+        print("QUEUE NAMES", queue_names)
         for name in queue_names:
             logging.info("Declaring queue %s", name)
             self.channel.queue_declare(queue=name, durable=True)

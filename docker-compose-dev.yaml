@@ -1,6 +1,7 @@
 name: tp1
 services:
   rabbitmq:
+    container_name: rabbitmq
     build:
       context: ./rabbitmq
       dockerfile: rabbitmq.dockerfile

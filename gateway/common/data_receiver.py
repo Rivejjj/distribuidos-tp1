@@ -10,8 +10,8 @@ class DataReceiver:
 
     def parse_book(self, data):
         book_fields = data.split(',')
-        #if len(book_fields) != 10:
-        #    raise ValueError("Invalid book data")
+        if len(book_fields) != 10:
+            return None
         
         book_fields[CATEGORIES_POSITION] = book_fields[CATEGORIES_POSITION].split(CATEGORIES_SEPARATOR)
         

@@ -42,12 +42,12 @@ class Server:
         client socket will also be closed
         """
         print("HANDLING QUEUE")
-        queue = QueueMiddleware(["computers"])
+        # queue = QueueMiddleware(["computers"])
         print("QUEUE HANDLED")
         data_receiver = DataReceiver()
         try:
             while True:
-                
+
                 msg = self.__safe_receive().decode().rstrip()
                 print("MSG",msg)
                 addr = self.client_sock.getpeername()
@@ -55,7 +55,7 @@ class Server:
                 book = data_receiver.parse_book(msg)
 
                 if book:
-                    queue.send("computers", book)
+                    # queue.send("computers", book)
                     logging.info(
                         f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
 

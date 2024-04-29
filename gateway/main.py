@@ -28,15 +28,6 @@ def main():
     server = Server(config_params["port"], config_params["listen_backlog"])
     server.run()
 
-    # logging.info("Sending message to queue")
-
-    # queue = Queue("query_queue")
-
-    # logging.info("Sending message to queue")
-    # queue.send('Hello world!')
-
-    # accum.add_book(test_book)
-
 
 if __name__ == "__main__":
     main()
