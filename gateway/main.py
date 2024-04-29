@@ -5,8 +5,8 @@ import os
 import socket
 from common.data_receiver import DataReceiver
 from messages.book import Book
+from rabbitmq.queue import QueueMiddleware
 
-from rabbitmq.queue import Queue
 from utils.initialize import initialize_config, initialize_log
 from common.server import Server
 
@@ -24,7 +24,7 @@ def initialize():
 
 def main():
     config_params = initialize()
-
+    print("Config: ", config_params)
     server = Server(config_params["port"], config_params["listen_backlog"])
     server.run()
 

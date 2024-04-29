@@ -1,11 +1,11 @@
 name: tp1
 services:
-  # rabbitmq:
-  #   build:
-  #     context: ./rabbitmq
-  #     dockerfile: rabbitmq.dockerfile
-  #   ports:
-  #     - 15672:15672
+  rabbitmq:
+    build:
+      context: ./rabbitmq
+      dockerfile: rabbitmq.dockerfile
+    ports:
+      - 15672:15672
 
   client:
     container_name: client
@@ -22,32 +22,39 @@ services:
       - ./data:/data
     networks:
       - testing_net
-  # category_filter:
-  #   container_name: category_filter
-  #   image: book-filter:latest
-  #   entrypoint: python3 /main.py
-  #   depends_on:
-  #     - rabbitmq
-  #   links:
-  #     - rabbitmq
-  #   environment:
-  #     - PYTHONUNBUFFERED=1
-  #     - LOGGING_LEVEL=DEBUG
-  #     - CATEGORY=Computers
+      
+  category_filter:
+    container_name: category_filter
+    image: book-filter:latest
+    entrypoint: python3 /main.py
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
+    environment:
+      - ID=1
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=DEBUG
+      - CATEGORY=Computers
+      - INPUT_QUEUE=Computers
+      - OUTPUT_QUEUE=Computers_filtered
+      - LAST=True
+
 
   gateway:
     container_name: gateway
     image: gateway:latest
     entrypoint: python3 /main.py
-    # depends_on:
-    #   - rabbitmq
-    # links:
-    #   - rabbitmq
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
     networks:
       - testing_net
+      
   # decades_accumulator:
   #   container_name: decades_accumulator
   #   image: decades_accumulator:latest

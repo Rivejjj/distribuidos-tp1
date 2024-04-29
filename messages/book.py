@@ -12,3 +12,8 @@ class Book:
         self.info_link = info_link
         self.categories = categories
         self.ratings_count = ratings_count
+
+    def sanitize(self):
+        if not self.title or not self.authors or not self.categories or not self.published_year:
+            return False
+        return True

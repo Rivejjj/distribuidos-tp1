@@ -1,7 +1,10 @@
 import socket
 import logging
 import signal
-
+from common.data_receiver import DataReceiver
+from messages.book import Book
+from messages.review import Review
+from rabbitmq.queue import QueueMiddleware
 # CAMBIAR, NO COLGAR CON ESTO
 MAX_BYTES = 1
 
@@ -38,16 +41,31 @@ class Server:
         If a problem arises in the communication with the client, the
         client socket will also be closed
         """
+        print("HANDLING QUEUE")
+        queue = QueueMiddleware(["computers"])
+        print("QUEUE HANDLED")
+        data_receiver = DataReceiver()
         try:
             while True:
+                
                 msg = self.__safe_receive().decode().rstrip()
+                print("MSG",msg)
                 addr = self.client_sock.getpeername()
+
+                book = data_receiver.parse_book(msg)
+
+                if book:
+                    queue.send("computers", book)
+                    logging.info(
+                        f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
+
                 logging.info(
                     f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
         except OSError as e:
             logging.error(
                 f"action: receive_message | result: fail | error: {e}")
         finally:
+            print("CLOSING")
             self._close_client_socket()
 
     def __accept_new_connection(self):

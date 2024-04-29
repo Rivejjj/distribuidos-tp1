@@ -2,7 +2,7 @@
 from configparser import ConfigParser
 import logging
 import os
-from common.data_receiver import DataReceiver
+from common.sentiment_analyzer import SentimentAnalizer
 from messages.book import Book
 
 
@@ -54,19 +54,5 @@ def main():
 
     logging.debug("Config: %s", config_params)
 
-    accum = DataReceiver()
+    sentiment_analyzer= SentimentAnalizer()
 
-    test_book = Book(
-        "Test Book",
-        "Test Description",
-        "Test Author",
-        "Test Image",
-        "Test Preview Link",
-        "Test Publisher",
-        "2021-01-01",
-        "Test Info Link",
-        ["literature", "fiction"],
-        1
-    )
-
-    #accum.add_book(test_book)

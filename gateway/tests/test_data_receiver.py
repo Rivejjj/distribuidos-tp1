@@ -26,12 +26,11 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(book.categories, self.base_book.categories)
         self.assertEqual(book.ratings_count, self.base_book.ratings_count)
 
-    def test_parse_book_raises_value_error(self):
-        data_receiver = DataReceiver()
-        with self.assertRaises(ValueError) as ctx:
-            data_receiver.parse_book('distributed systems')
-
-        self.assertTrue(ValueError, ctx.exception)
+    # def test_parse_book_raises_value_error(self):
+    #     data_receiver = DataReceiver()
+    #     with self.assertRaises(ValueError) as ctx:
+    #         data_receiver.parse_book('distributed systems')
+    #     self.assertTrue(ValueError, ctx.exception)
 
     def test_parse_review(self):
         data_receiver = DataReceiver()

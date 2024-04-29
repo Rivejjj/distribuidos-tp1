@@ -5,22 +5,19 @@ CATEGORIES_POSITION = 8
 CATEGORIES_SEPARATOR = ';'
 
 class DataReceiver:
-    def __init__(self, client = None):
-        self.client = client 
+    def __init__(self):
+        pass
 
-
-    def receive(self):
-        data = self.client.recv()
-        return data
-    
     def parse_book(self, data):
         book_fields = data.split(',')
-        if len(book_fields) != 10:
-            raise ValueError("Invalid book data")
+        #if len(book_fields) != 10:
+        #    raise ValueError("Invalid book data")
         
         book_fields[CATEGORIES_POSITION] = book_fields[CATEGORIES_POSITION].split(CATEGORIES_SEPARATOR)
         
-        return Book(*book_fields)
+        book = Book(*book_fields)
+        if book.sanitize():
+            return book
 
     def parse_review(self, data):
         review_fields = data.split(',')

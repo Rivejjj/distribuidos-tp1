@@ -9,30 +9,44 @@ from utils.initialize import initialize_config, initialize_log
 
 
 def initialize():
-    params = ["logging_level", "category",
-              "published_year_range", "title_contains", "id", "last", "input_queue", "output_queue"]
+    all_params = ["logging_level","category",
+             "published_year_range", "title_contains", "id","last", "input_queue", "output_queue"]
+    env = os.environ
+
+    params = []
+
+    for param in all_params:
+        param = param.upper()
+        if param in env:
+            params.append((param,True))
+        else:
+            params.append((param,False))
+        
 
     config_params = initialize_config(params)
+    logging.debug("Config: %s", config_params)
+    logging.info("Config: %s", config_params)
+    print(config_params)
 
-    if config_params["published_year_range"]:
-        config_params["published_year_range"] = tuple(
-            map(int, config_params["published_year_range"].split("-")))
+    if config_params["PUBLISHED_YEAR_RANGE"]:
+        config_params["PUBLISHED_YEAR_RANGE"] = tuple(
+            map(int, config_params["PUBLISHED_YEAR_RANGE"].split("-")))
 
-    if config_params["LAST"]:
+    if "LAST" in config_params:
         config_params["LAST"] = bool(config_params["LAST"])
 
-    if config_params["ID"]:
+    if "ID" in config_params:
         config_params["ID"] = int(config_params["ID"])
 
-    initialize_log(config_params["logging_level"])
+    initialize_log(config_params["LOGGING_LEVEL"])
 
     return config_params
 
 
 def get_queue_names(config_params):
-    id = config_params["id"]
-    eof_send_queue = "EOF_1" if config_params["last"] else f"EOF_{id + 1}"
-    return [config_params["input_queue"], config_params["output_queue"], f"EOF_{id}", eof_send_queue]
+    id = config_params["ID"]
+    eof_send_queue = "EOF_1" if config_params["LAST"] else f"EOF_{id + 1}"
+    return [config_params["INPUT_QUEUE"], config_params["OUTPUT_QUEUE"], f"EOF_{id}", eof_send_queue]
 
 
 def process_message(book_filter: BookFilter, queue_middleware: QueueMiddleware, output_queue: str):
@@ -53,14 +67,16 @@ def main():
 
     queue_middleware = QueueMiddleware(get_queue_names(config_params))
 
+
+
     book_filter = BookFilter(
-        category=config_params["category"],
-        published_year_range=config_params["published_year_range"],
-        title_contains=config_params["title_contains"]
+        category=config_params["CATEGORY"],
+        published_year_range=config_params["PUBLISHED_YEAR_RANGE"],
+        title_contains=config_params["TITLE_CONTAINS"]
     )
 
-    queue_middleware.start_consuming(config_params["input_queue"],
-                                     process_message(book_filter, queue_middleware, config_params["output_queue"]))
+    queue_middleware.start_consuming(config_params["INPUT_QUEUE"],
+                                     process_message(book_filter, queue_middleware, config_params["OUTPUT_QUEUE"]))
 
 
 if __name__ == "__main__":
