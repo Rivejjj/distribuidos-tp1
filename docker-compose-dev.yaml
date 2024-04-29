@@ -33,8 +33,6 @@ services:
     container_name: category_filter
     image: book-filter:latest
     entrypoint: python3 /main.py
-    volumes:
-      - ./book-filter/output.txt:/output.txt
     depends_on:
       - rabbitmq
     links:

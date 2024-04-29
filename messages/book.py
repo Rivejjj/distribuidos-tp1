@@ -1,5 +1,3 @@
-
-
 class Book:
     def __init__(self, title, description, authors, image, preview_link, publisher, published_year, info_link, categories, ratings_count):
         self.title = title

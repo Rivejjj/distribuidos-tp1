@@ -41,11 +41,14 @@ def main():
             if i == 1000:
                 break
             i += 1
-
+        print(i)
     # with open(config_params["books_reviews_path"]) as file:
     #     for line in file:
     #         send_message(socket, line)
 
+
+    # socket.recv(1024)
+    time.sleep(10)
     close_connection(socket)
 
 

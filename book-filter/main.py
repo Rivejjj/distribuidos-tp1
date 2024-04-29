@@ -6,7 +6,7 @@ from common.book_filter import BookFilter
 from messages.book import Book
 from rabbitmq.queue import QueueMiddleware
 from utils.initialize import initialize_config, initialize_log
-
+from parser_1.csv_parser import CsvParser
 
 def initialize():
     all_params = ["logging_level","category",
@@ -52,8 +52,8 @@ def get_queue_names(config_params):
 def process_message(book_filter: BookFilter, queue_middleware: QueueMiddleware, output_queue: str, file):
     def callback(ch, method, properties, body):
         msg_received = body.decode()
-        fields = msg_received.split(",")
-        book = Book(*fields)
+        line = CsvParser().parse_csv(msg_received)
+        book = Book(*line)
         
         if book and book_filter.filter(book):
             print("Book accepted: %s", book.title)
