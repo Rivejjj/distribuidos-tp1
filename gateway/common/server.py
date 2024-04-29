@@ -52,13 +52,12 @@ class Server:
                 if msg == "":
                     break
                 addr = self.client_sock.getpeername()
-
-                book = data_receiver.parse_book(msg)
-                to_filter = str(book)
-                if book:
+                to_q1 = data_receiver.text_to_q1(msg)
+                if to_q1:
                     self.queue.send_to_exchange(encode(to_filter))
+
                     print(
-                        f'action: sending to filter | result: success | ip: {addr[0]} | msg: {to_filter}')
+                        f'sending to comp.filter | msg: {to_q1}')
 
                 # logging.info(
                     # f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
