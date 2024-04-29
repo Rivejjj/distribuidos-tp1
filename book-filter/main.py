@@ -9,8 +9,8 @@ from utils.initialize import initialize_config, initialize_log
 from parser_1.csv_parser import CsvParser
 
 def initialize():
-    all_params = ["logging_level","category",
-             "published_year_range", "title_contains", "id","last", "input_queue", "output_queue"]
+    all_params = ["logging_level", "category",
+                  "published_year_range", "title_contains", "id", "last", "input_queue", "output_queue"]
     env = os.environ
 
     params = []
@@ -18,10 +18,9 @@ def initialize():
     for param in all_params:
         param = param.upper()
         if param in env:
-            params.append((param,True))
+            params.append((param, True))
         else:
-            params.append((param,False))
-        
+            params.append((param, False))
 
     config_params = initialize_config(params)
     logging.debug("Config: %s", config_params)
@@ -44,21 +43,20 @@ def initialize():
 
 
 def get_queue_names(config_params):
-    id = config_params["ID"]
-    eof_send_queue = "EOF_1" if config_params["LAST"] else f"EOF_{id + 1}"
-    return [config_params["INPUT_QUEUE"], config_params["OUTPUT_QUEUE"], f"EOF_{id}", eof_send_queue]
+    return [config_params["OUTPUT_QUEUE"]]
 
 
-def process_message(book_filter: BookFilter, queue_middleware: QueueMiddleware, output_queue: str, file):
+def process_message(book_filter: BookFilter):
     def callback(ch, method, properties, body):
+        logging.info("Received message", body.decode())
         msg_received = body.decode()
         line = CsvParser().parse_csv(msg_received)
         book = Book(*line)
         
         if book and book_filter.filter(book):
             print("Book accepted: %s", book.title)
-            queue_middleware.send(output_queue, str(book))
-            file.write(book.title + "\n")
+        else:
+            print("Book rejected: %s", book.title)
     return callback
 
 
@@ -66,18 +64,14 @@ def main():
 
     config_params = initialize()
 
-
     book_filter = BookFilter(
         category=config_params["CATEGORY"],
         published_year_range=config_params["PUBLISHED_YEAR_RANGE"],
         title_contains=config_params["TITLE_CONTAINS"]
     )
     file = open("output.txt", "w")
-    queue_middleware = QueueMiddleware(get_queue_names(config_params))
-    
-    print("Starting to consume")
-    queue_middleware.start_consuming(config_params["INPUT_QUEUE"],
-                                     process_message(book_filter, queue_middleware, config_params["OUTPUT_QUEUE"], file))
+    queue_middleware = QueueMiddleware(get_queue_names(config_params), callback=process_message(
+        book_filter), exchange='query')
 
 
 if __name__ == "__main__":

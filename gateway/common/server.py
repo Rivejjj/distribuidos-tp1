@@ -4,6 +4,7 @@ import signal
 from common.data_receiver import DataReceiver
 from messages.book import Book
 from messages.review import Review
+from utils.initialize import encode
 from rabbitmq.queue import QueueMiddleware
 # CAMBIAR, NO COLGAR CON ESTO
 MAX_BYTES = 1
@@ -17,6 +18,8 @@ class Server:
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
         self.client_sock = None
+        self.queue = QueueMiddleware(
+            [], exchange='query')
 
     def run(self):
         """
@@ -43,7 +46,6 @@ class Server:
         """
         data_receiver = DataReceiver()
         try:
-            queue = QueueMiddleware(["computers"])
             while True:
 
                 msg = self.__safe_receive().decode().rstrip()
@@ -52,7 +54,8 @@ class Server:
                 addr = self.client_sock.getpeername()
                 to_q1 = data_receiver.text_to_q1(msg)
                 if to_q1:
-                    queue.send("computers", to_q1)
+                    self.queue.send_to_exchange(encode(to_filter))
+
                     print(
                         f'sending to comp.filter | msg: {to_q1}')
 

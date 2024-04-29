@@ -48,3 +48,7 @@ def initialize_log(logging_level):
         level=logging_level,
         datefmt='%Y-%m-%d %H:%M:%S',
     )
+
+
+def encode(data):
+    return data.encode('utf-8')
