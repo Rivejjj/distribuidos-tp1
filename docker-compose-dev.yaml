@@ -27,6 +27,30 @@ services:
     volumes:
       - ./data:/data
 
+  decades-accumulator:
+    container_name: decades-accumulator
+    image: decades-accumulator:latest
+    entrypoint: python3 /main.py
+    environment:
+      - ID=1
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=DEBUG
+      - TOP=10
+      - EXCHANGE=query
+      - OUTPUT_QUEUE=result
+
+  gateway:
+    container_name: gateway
+    image: gateway:latest
+    entrypoint: python3 /main.py
+    links:
+      - rabbitmq
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=DEBUG
+      - EXCHANGE=query
+
+  
   # category_filter:
   #   container_name: category_filter
   #   image: book-filter:latest
@@ -71,30 +95,6 @@ services:
   #     - TITLE_CONTAINS=distributed
   #     - INPUT_QUEUE=published_year_filtered
   #     - OUTPUT_QUEUE=result
-
-  decades_accumulator:
-    container_name: decades_accumulator
-    image: decades_accumulator:latest
-    entrypoint: python3 /main.py
-    environment:
-      - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=DEBUG
-      - TOP=10
-      - EXCHANGE=query
-      - OUTPUT_QUEUE=result
-    networks:
-      - testing_net
-
-  gateway:
-    container_name: gateway
-    image: gateway:latest
-    entrypoint: python3 /main.py
-    links:
-      - rabbitmq
-    environment:
-      - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=DEBUG
-      - EXCHANGE=query
 
   
 

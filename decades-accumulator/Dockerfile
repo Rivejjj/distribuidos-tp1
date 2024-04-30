@@ -5,5 +5,5 @@ COPY parser_1 /parser_1
 COPY rabbitmq/queue.py /rabbitmq/queue.py
 COPY utils /utils
 
-RUN python -m unittest tests/test_filter.py
+RUN python -m unittest tests/test_accum.py
 ENTRYPOINT main.py
