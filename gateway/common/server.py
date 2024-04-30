@@ -54,7 +54,7 @@ class Server:
                 addr = self.client_sock.getpeername()
                 to_q1 = data_receiver.text_to_q1(msg)
                 if to_q1:
-                    self.queue.send_to_exchange(encode(to_filter))
+                    self.queue.send_to_exchange(encode(to_q1))
 
                     print(
                         f'sending to comp.filter | msg: {to_q1}')

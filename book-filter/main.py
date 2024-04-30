@@ -55,8 +55,6 @@ def process_message(book_filter: BookFilter):
         
         if book and book_filter.filter(book):
             print("Book accepted: %s", book.title)
-        else:
-            print("Book rejected: %s", book.title)
     return callback
 
 
@@ -69,9 +67,9 @@ def main():
         published_year_range=config_params["PUBLISHED_YEAR_RANGE"],
         title_contains=config_params["TITLE_CONTAINS"]
     )
-    file = open("output.txt", "w")
     queue_middleware = QueueMiddleware(get_queue_names(config_params), callback=process_message(
         book_filter), exchange='query')
+
 
 
 if __name__ == "__main__":

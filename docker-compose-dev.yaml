@@ -12,8 +12,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-    networks:
-      - testing_net
 
   client:
     container_name: client
@@ -28,8 +26,16 @@ services:
       - BOOKS_REVIEWS_PATH=/data/Books_rating.csv
     volumes:
       - ./data:/data
-    networks:
-      - testing_net
+
+  gateway:
+    container_name: gateway
+    image: gateway:latest
+    entrypoint: python3 /main.py
+    links:
+      - rabbitmq
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=DEBUG
 
   category_filter:
     container_name: category_filter
@@ -46,23 +52,37 @@ services:
       - CATEGORY=Computers
       - INPUT_QUEUE=computers
       - OUTPUT_QUEUE=computers_filtered
-      - LAST=True
-    networks:
-      - testing_net
+      - LAST=False
 
-  gateway:
-    container_name: gateway
-    image: gateway:latest
+  published_year_filter:
+    container_name: published_year_filter
+    image: book-filter:latest
     entrypoint: python3 /main.py
+    depends_on:
+      - rabbitmq
     links:
       - rabbitmq
     environment:
+      - ID=2
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
-    networks:
-      - testing_net
-    # networks:
-    #   - testing_net
+      - PUBLISHED_YEAR_RANGE=2000-2023
+      - INPUT_QUEUE=computers_filtered
+      - OUTPUT_QUEUE=published_year_filtered
+      - LAST=True
+
+
+    # title_contains_filter:
+    #   container_name: title_contains_filter
+    #   image: book-filter:latest
+    #   entrypoint: python3 /main.py
+    #   environment:
+    #     - PYTHONUNBUFFERED=1
+    #     - LOGGING_LEVEL=DEBUG
+    #     - TITLE_CONTAINS=distributed
+    #   networks:
+    #     - testing_net
+
 
     # decades_accumulator:
     #   container_name: decades_accumulator
@@ -85,31 +105,9 @@ services:
     #   networks:
     #     - testing_net
 
-
-    # published_year_filter:
-    #   container_name: published_year_filter
-    #   image: book-filter:latest
-    #   entrypoint: python3 /main.py
-    #   environment:
-    #     - PYTHONUNBUFFERED=1
-    #     - LOGGING_LEVEL=DEBUG
-    #     - PUBLISHED_YEAR_RANGE=2000-2023
-    #   networks:
-    #     - testing_net
-
-    # title_contains_filter:
-    #   container_name: title_contains_filter
-    #   image: book-filter:latest
-    #   entrypoint: python3 /main.py
-    #   environment:
-    #     - PYTHONUNBUFFERED=1
-    #     - LOGGING_LEVEL=DEBUG
-    #     - TITLE_CONTAINS=distributed
-    #   networks:
-    #     - testing_net
-networks:
-  testing_net:
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.25.125.0/24
+# networks:
+#   testing_net:
+#     ipam:
+#       driver: default
+#       config:
+#         - subnet: 172.25.125.0/24
