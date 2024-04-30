@@ -93,7 +93,6 @@ services:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=INFO
       - EXCHANGE=query
-
     # reviews_counter:
     #   container_name: reviews_counter
     #   image: reviews_counter_accum:latest

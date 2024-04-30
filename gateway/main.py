@@ -13,7 +13,7 @@ from common.server import Server
 
 def initialize():
     config_params = initialize_config(
-        [("logging_level", True), ("port", True),  ("listen_backlog", True), ("exchange", False)])
+        [("logging_level", True), ("port", True),  ("listen_backlog", True), ("exchange", False), ("input_queue", False)])
 
     config_params["port"] = int(config_params["port"])
     config_params["listen_backlog"] = int(config_params["listen_backlog"])
@@ -26,7 +26,7 @@ def main():
     config_params = initialize()
     print("Config: ", config_params)
     server = Server(
-        config_params["port"], config_params["listen_backlog"], exchange=config_params["exchange"])
+        config_params["port"], config_params["listen_backlog"], input_queue=config_params["input_queue"], exchange=config_params["exchange"])
     server.run()
 
 

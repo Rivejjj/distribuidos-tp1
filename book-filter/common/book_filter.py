@@ -1,6 +1,3 @@
-import re
-
-
 class BookFilter:
     def __init__(self, category=None, published_year_range=None, title_contains=None):
         self.category = category
