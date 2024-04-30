@@ -39,9 +39,6 @@ class Server:
             except OSError:
                 break
 
-    def __toggle_receiving_mode(self):
-        self.receiving_books = not self.receiving_books
-
     def __handle_client_connection(self):
         """
         Read message from a specific client socket and closes the socket
@@ -57,24 +54,19 @@ class Server:
 
                 if msg == "":
                     break
-
-                if msg == "EOF":
-                    self.__toggle_receiving_mode()
-                    break
                 # addr = self.client_sock.getpeername()
 
-                if self.receiving_books:
-                    book = data_receiver.parse_book(msg)
-                    if book:
-                        self.queue.send_to_exchange(encode(str(book)))
-                        print(
-                            f'sending to comp.filter | msg: {str(book)}')
-                if not self.receiving_books:
-                    review = data_receiver.parse_review(msg)
-                    if review:
-                        self.queue.send_to_exchange(encode(str(review)))
-                        print(
-                            f'sending to comp.filter | msg: {str(review)}')
+                book = data_receiver.parse_book(msg)
+                if book:
+                    self.queue.send_to_exchange(encode(str(book)))
+                    print(
+
+                        f'sending to comp.filter | msg: {str(book)}')
+                review = data_receiver.parse_review(msg)
+                if review:
+                    self.queue.send_to_exchange(encode(str(review)))
+                    print(
+                        f'sending to comp.filter | msg: {str(review)}')
 
                 # logging.info(
                     # f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
