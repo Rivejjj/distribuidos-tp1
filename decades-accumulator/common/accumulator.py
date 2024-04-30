@@ -2,7 +2,7 @@
 class Accumulator:
     def __init__(self):
         self.authors = {} # author -> {decade -> count}
-        
+
 
     def add_book(self,book):
         year = self.__get_year_regex(book.published_year)
@@ -12,11 +12,19 @@ class Accumulator:
         for author in book.authors.split(","):
             self.__add_author(author,decade)
 
+    def get_result(self):
+        authors = []
+        for author in self.authors.keys():
+            if len(self.authors[author]) >= 10:
+                authors.append(author)
+        return authors
+
     def __add_author(self, author, decade):
         if author not in self.authors:
             self.authors[author] = {}
         self.authors[author][decade] = self.authors[author].get(decade,0) + 1
-        print(self.authors)
+        if len(self.authors[author]) >= 10:
+            print("author:", author,"->",self.authors[author])
 
 
     def __get_decade(self,year):

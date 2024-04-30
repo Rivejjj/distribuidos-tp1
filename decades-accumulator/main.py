@@ -5,32 +5,40 @@ import os
 from common.accumulator import Accumulator
 from messages.book import Book
 from rabbitmq.queue import QueueMiddleware
-from utils.initialize import initialize_config, initialize_log
+from utils.initialize import encode, initialize_config, initialize_log
+from parser_1.csv_parser import CsvParser
 
 
-def initialize_config():
-    """ Parse env variables or config file to find program config params
+def initialize():
+    all_params = ["logging_level", "category",
+                  "published_year_range", "title_contains", "id", "last", "input_queue", "output_queue", "exchange"]
+    env = os.environ
 
-    Function that search and parse program configuration parameters in the
-    program environment variables first and the in a config file. 
-    If at least one of the config parameters is not found a KeyError exception 
-    is thrown. If a parameter could not be parsed, a ValueError is thrown. 
-    If parsing succeeded, the function returns a ConfigParser object 
-    with config parameters
-    """
+    params = []
 
-    config = ConfigParser(os.environ)
-    # If config.ini does not exists original config object is not modified
-    config.read("config.ini")
+    for param in all_params:
+        param = param.upper()
+        if param in env:
+            params.append((param, True))
+        else:
+            params.append((param, False))
 
-    config_params = {}
-    try:
-        config_params["logging_level"] = os.getenv("LOGGING", config["DEFAULT"]["LOGGING_LEVEL"])
-        
-    except KeyError as e:
-        raise KeyError(f"Missing configuration parameter: {e}. Aborting server")
-    except ValueError as e:
-        raise ValueError(f"Error parsing configuration parameter: {e}. Aborting server")
+    config_params = initialize_config(params)
+    logging.debug("Config: %s", config_params)
+    logging.info("Config: %s", config_params)
+    print(config_params)
+
+    if config_params["PUBLISHED_YEAR_RANGE"]:
+        config_params["PUBLISHED_YEAR_RANGE"] = tuple(
+            map(int, config_params["PUBLISHED_YEAR_RANGE"].split("-")))
+
+    if "LAST" in config_params:
+        config_params["LAST"] = bool(config_params["LAST"])
+
+    if "ID" in config_params:
+        config_params["ID"] = int(config_params["ID"])
+
+    initialize_log(config_params["LOGGING_LEVEL"])
 
     return config_params
 
@@ -49,18 +57,42 @@ def initialize_log(logging_level):
     )
 
 def get_queue_names(config_params):
-    return [config_params["INPUT_QUEUE"]]
+    return [config_params["OUTPUT_QUEUE"]]
+
+def process_message(accum: Accumulator, queue_middleware: QueueMiddleware):
+    def callback(ch, method, properties, body):
+        msg_received = body.decode()
+        line = CsvParser().parse_csv(msg_received)
+
+        book = Book(*line)
+        if msg_received == "EOF":
+            logging.info("Received EOF, shutting down")
+            authors = accum.get_result()
+            final_result = "\n".join([f"{author}" for author in authors])
+            queue_middleware.send_to_all(encode(final_result))
+            queue_middleware.stop_consuming()
+            return
+
+        if book and msg_received != "EOF":
+            accum.add_book(book)
+    return callback
+
 
 
 def main():
 
-    config_params = initialize_config()
-    initialize_log(config_params["logging_level"])
+    config_params = initialize()
+    initialize_log(config_params["LOGGING_LEVEL"])
 
     logging.debug("Config: %s", config_params)
 
-    queue_middleware = QueueMiddleware(get_queue_names(
-        config_params), exchange=config_params["EXCHANGE"], input_queue=config_params["INPUT_QUEUE"])
-
-
     accum = Accumulator()
+
+    queue_middleware = QueueMiddleware(get_queue_names(
+        config_params), exchange=config_params["EXCHANGE"])
+    
+    queue_middleware.start_consuming(
+        process_message(accum, queue_middleware))
+
+if __name__ == "__main__":
+    main()
