@@ -4,8 +4,8 @@ from messages.book import Book
 
 
 class TestUtils(unittest.TestCase):
-    base_book = Book('distributed systems', 'description', 'authors', 'image', 'preview_link', 'publisher',
-                     2019, 'info_link', ['category', 'category2'], 'ratings_count')
+    base_book = Book('distributed systems', 'authors', 'publisher',
+                     '2019',  ['category', 'category2'])
 
     def test_filter_by_category(self):
         book_filter = BookFilter(category='category')

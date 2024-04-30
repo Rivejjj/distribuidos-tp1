@@ -4,6 +4,7 @@ import socket
 from utils.initialize import initialize_config, initialize_log
 import time
 
+
 def initialize():
 
     config_params = initialize_config(
@@ -45,7 +46,6 @@ def main():
     # with open(config_params["books_reviews_path"]) as file:
     #     for line in file:
     #         send_message(socket, line)
-
 
     # socket.recv(1024)
     time.sleep(10)

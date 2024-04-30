@@ -11,7 +11,7 @@ MAX_BYTES = 1
 
 
 class Server:
-    def __init__(self, port, listen_backlog, exchange=None):
+    def __init__(self, port, listen_backlog, input_queue=None, exchange=None):
         # Initialize server socket
         signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -19,7 +19,9 @@ class Server:
         self._server_socket.listen(listen_backlog)
         self.client_sock = None
         self.queue = QueueMiddleware(
-            [], exchange=exchange)
+            [], input_queue=input_queue, exchange=exchange)
+
+        self.receiving_books = True
 
     def run(self):
         """
@@ -37,6 +39,9 @@ class Server:
             except OSError:
                 break
 
+    def __toggle_receiving_mode(self):
+        self.receiving_books = not self.receiving_books
+
     def __handle_client_connection(self):
         """
         Read message from a specific client socket and closes the socket
@@ -49,15 +54,27 @@ class Server:
             while True:
 
                 msg = self.__safe_receive().decode().rstrip()
+
                 if msg == "":
                     break
-                addr = self.client_sock.getpeername()
-                to_q1 = data_receiver.text_to_q1(msg)
-                if to_q1:
-                    self.queue.send_to_exchange(encode(to_q1))
 
-                    print(
-                        f'sending to comp.filter | msg: {to_q1}')
+                if msg == "EOF":
+                    self.__toggle_receiving_mode()
+                    break
+                # addr = self.client_sock.getpeername()
+
+                if self.receiving_books:
+                    book = data_receiver.parse_book(msg)
+                    if book:
+                        self.queue.send_to_exchange(encode(str(book)))
+                        print(
+                            f'sending to comp.filter | msg: {str(book)}')
+                if not self.receiving_books:
+                    review = data_receiver.parse_review(msg)
+                    if review:
+                        self.queue.send_to_exchange(encode(str(review)))
+                        print(
+                            f'sending to comp.filter | msg: {str(review)}')
 
                 # logging.info(
                     # f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')

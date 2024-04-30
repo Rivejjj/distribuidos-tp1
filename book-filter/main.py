@@ -55,7 +55,7 @@ def process_message(book_filter: BookFilter, queue_middleware: QueueMiddleware):
         book = Book(*line)
 
         if book and book_filter.filter(book):
-            print("Book accepted: %s", book.title)
+            print("Book accepted: ", book.title)
             queue_middleware.send_to_all(encode(str(book)))
     return callback
 
@@ -69,7 +69,6 @@ def main():
         published_year_range=config_params["PUBLISHED_YEAR_RANGE"],
         title_contains=config_params["TITLE_CONTAINS"]
     )
-    file = open("output.txt", "w")
     queue_middleware = QueueMiddleware(get_queue_names(
         config_params), exchange=config_params["EXCHANGE"], input_queue=config_params["INPUT_QUEUE"])
 

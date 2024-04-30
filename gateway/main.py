@@ -26,7 +26,7 @@ def main():
     config_params = initialize()
     print("Config: ", config_params)
     server = Server(
-        config_params["port"], config_params["listen_backlog"], config_params["exchange"])
+        config_params["port"], config_params["listen_backlog"], exchange=config_params["exchange"])
     server.run()
 
 
