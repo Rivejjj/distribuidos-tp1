@@ -6,38 +6,28 @@ from common.review_filter import ReviewFilter
 from messages.book import Book
 from messages.review import Review
 from rabbitmq.queue import QueueMiddleware
-from utils.initialize import encode, initialize_config, initialize_log
+from utils.initialize import encode, initialize_config, initialize_log, initialize_multi_value_environment, initialize_workers_environment
 from parser_1.csv_parser import CsvParser
 
 
 def initialize():
     all_params = ["logging_level", "category",
                   "published_year_range", "title_contains", "id", "last", "input_queue", "output_queue", "exchange", "save_books"]
-    env = os.environ
 
-    params = []
-
-    for param in all_params:
-        param = param.upper()
-        if param in env:
-            params.append((param, True))
-        else:
-            params.append((param, False))
+    params = list(map(lambda param: (param, False), all_params))
 
     config_params = initialize_config(params)
     logging.debug("Config: %s", config_params)
     logging.info("Config: %s", config_params)
     print(config_params)
 
-    if config_params["PUBLISHED_YEAR_RANGE"]:
-        config_params["PUBLISHED_YEAR_RANGE"] = tuple(
-            map(int, config_params["PUBLISHED_YEAR_RANGE"].split("-")))
+    if config_params["published_year_range"]:
+        config_params["published_year_range"] = tuple(
+            map(int, config_params["published_year_range"].split("-")))
 
-    if "LAST" in config_params:
-        config_params["LAST"] = bool(config_params["LAST"])
+    initialize_multi_value_environment(config_params, ["output_queue"])
 
-    if "ID" in config_params:
-        config_params["ID"] = int(config_params["ID"])
+    initialize_workers_environment(config_params)
 
     initialize_log(config_params["LOGGING_LEVEL"])
 
