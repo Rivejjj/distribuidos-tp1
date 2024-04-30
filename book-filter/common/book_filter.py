@@ -25,7 +25,7 @@ class BookFilter:
         return self.category in book.categories
 
     def __filter_by_published_year(self, book) -> bool:
-        return self.published_year_range[0] <= book.published_year <= self.published_year_range[1]
+        return self.published_year_range[0] <= int(book.published_year) <= self.published_year_range[1]
 
     def __filter_by_title(self, book) -> bool:
-        return self.title_contains in book.title
+        return self.title_contains.lower() in book.title.lower()

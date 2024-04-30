@@ -57,8 +57,6 @@ def process_message(book_filter: BookFilter, queue_middleware: QueueMiddleware):
         if book and book_filter.filter(book):
             print("Book accepted: %s", book.title)
             queue_middleware.send_to_all(encode(str(book)))
-        else:
-            print("Book rejected: %s", book.title)
     return callback
 
 

@@ -12,8 +12,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-    networks:
-      - testing_net
 
   client:
     container_name: client
@@ -28,8 +26,6 @@ services:
       - BOOKS_REVIEWS_PATH=/data/Books_rating.csv
     volumes:
       - ./data:/data
-    networks:
-      - testing_net
 
   category_filter:
     container_name: category_filter
@@ -46,8 +42,19 @@ services:
       - CATEGORY=Computers
       - OUTPUT_QUEUE=computers_filtered
       - EXCHANGE=query
-    networks:
-      - testing_net
+
+
+  published_year_filter:
+    container_name: published_year_filter
+    image: book-filter:latest
+    entrypoint: python3 /main.py
+    environment:
+      - ID=2
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=DEBUG
+      - PUBLISHED_YEAR_RANGE=2000-2023
+      - INPUT_QUEUE=computers_filtered
+      - OUTPUT_QUEUE=published_year_filtered
 
   title_contains_filter:
     container_name: title_contains_filter
@@ -58,14 +65,13 @@ services:
     links:
       - rabbitmq
     environment:
-      - ID=1
+      - ID=3
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
-      - CATEGORY=Computers
-      - INPUT_QUEUE=computers_filtered
-      - OUTPUT_QUEUE=distributed_filtered
-    networks:
-      - testing_net
+      - TITLE_CONTAINS=distributed
+      - INPUT_QUEUE=published_year_filtered
+      - OUTPUT_QUEUE=result
+
 
   gateway:
     container_name: gateway
@@ -77,10 +83,6 @@ services:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
       - EXCHANGE=query
-    networks:
-      - testing_net
-    # networks:
-    #   - testing_net
 
     # decades_accumulator:
     #   container_name: decades_accumulator
@@ -104,17 +106,6 @@ services:
     #     - testing_net
 
 
-    # published_year_filter:
-    #   container_name: published_year_filter
-    #   image: book-filter:latest
-    #   entrypoint: python3 /main.py
-    #   environment:
-    #     - PYTHONUNBUFFERED=1
-    #     - LOGGING_LEVEL=DEBUG
-    #     - PUBLISHED_YEAR_RANGE=2000-2023
-    #   networks:
-    #     - testing_net
-
     # title_contains_filter:
     #   container_name: title_contains_filter
     #   image: book-filter:latest
@@ -125,9 +116,4 @@ services:
     #     - TITLE_CONTAINS=distributed
     #   networks:
     #     - testing_net
-networks:
-  testing_net:
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.25.125.0/24
+
