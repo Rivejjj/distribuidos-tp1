@@ -15,6 +15,8 @@ class QueueMiddleware:
         logging.info("Connected to queue")
         self.channel = self.connection.channel()
         self.channel.basic_qos(prefetch_count=1)
+        self.exchange_queue_name = None
+        self.input_queue = None
 
         self.output_queues = output_queues
         for name in output_queues:
