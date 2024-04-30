@@ -12,7 +12,7 @@ docker-image:
 	docker build -f ./gateway/Dockerfile -t "gateway:latest" .
 	docker build -f ./book-filter/Dockerfile -t "book-filter:latest" .
 	docker build -f ./client/Dockerfile -t "client:latest" .
-	# docker build -f ./decades_accumulator/Dockerfile -t "decades_accumulator:latest" .
+	docker build -f ./decades_accumulator/Dockerfile -t "decades_accumulator:latest" .
 	# docker build -f ./reviews_counter_accum/Dockerfile -t "reviews_counter_accum:latest" .
 	
 	# Execute this command from time to time to clean up intermediate stages generated 

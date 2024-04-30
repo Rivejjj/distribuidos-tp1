@@ -69,7 +69,7 @@ def main():
         published_year_range=config_params["PUBLISHED_YEAR_RANGE"],
         title_contains=config_params["TITLE_CONTAINS"]
     )
-    file = open("output.txt", "w")
+
     queue_middleware = QueueMiddleware(get_queue_names(
         config_params), exchange=config_params["EXCHANGE"], input_queue=config_params["INPUT_QUEUE"])
 
