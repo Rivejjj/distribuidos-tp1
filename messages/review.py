@@ -1,14 +1,17 @@
 
 
 class Review:
-    def __init__(self, id, title, price, user_id, profile_name, helpfulness, score, time, summary, text):
-        self.id = id
+    def __init__(self, title, score, text):
         self.title = title
-        self.price = price
-        self.user_id = user_id
-        self.profile_name = profile_name
-        self.helpfulness = helpfulness
         self.score = score
-        self.time = time
-        self.summary = summary
         self.text = text
+
+    def __str__(self):
+        return f"{self.title},{self.score},{self.text}"
+
+    def sanitize(self):
+        if not self.title or not self.score or not self.text:
+            print("Missing fields",
+                  self.title, self.score, self.text)
+            return False
+        return True

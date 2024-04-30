@@ -1,27 +1,23 @@
 class Book:
-    def __init__(self, title, description, authors, image, preview_link, publisher, published_year, info_link, categories, ratings_count):
+    def __init__(self, title, authors, publisher, published_year, categories):
         self.title = title
-        self.description = description
         self.authors = authors
-        self.image = image
-        self.preview_link = preview_link
         self.publisher = publisher
         self.published_year = published_year
-        self.info_link = info_link
         self.categories = categories
-        self.ratings_count = ratings_count
 
-    def __str__(self):
-        return f"{self.title},{self.description},{self.authors},{self.image},{self.preview_link},{self.publisher},{self.published_year},{self.info_link},{self.categories},{self.ratings_count}"
+    def __str__(self):  # Title,description,authors,image,previewLink,publisher,publishedDate,infoLink,categories,ratingsCount
+        return f"{self.title},{self.authors},{self.publisher},{self.published_year},{self.categories}"
 
     def sanitize(self):
         self.published_year = self.get_year_regex(self.published_year)
         if not self.title or not self.authors or not self.categories or not self.published_year:
-            print("Missing title, authors, categories or published year", self.title, self.authors, self.categories, self.published_year)
+            print("Missing title, authors, categories or published year",
+                  self.title, self.authors, self.categories, self.published_year)
             return False
         return True
-    
-    def get_year_regex(self,text):
+
+    def get_year_regex(self, text):
         if text == "" or None:
             return None
         i = 0

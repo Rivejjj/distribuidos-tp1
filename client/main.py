@@ -4,6 +4,7 @@ import socket
 from utils.initialize import initialize_config, initialize_log
 import time
 
+
 def initialize():
 
     config_params = initialize_config(
@@ -46,9 +47,7 @@ def main():
     #     for line in file:
     #         send_message(socket, line)
 
-
     socket.recv(1024)
-
     close_connection(socket)
 
 

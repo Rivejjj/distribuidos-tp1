@@ -21,7 +21,7 @@ services:
       - gateway
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=DEBUG
+      - LOGGING_LEVEL=INFO
       - BOOKS_PATH=/data/books_data.csv
       - BOOKS_REVIEWS_PATH=/data/Books_rating.csv
     volumes:
@@ -96,15 +96,13 @@ services:
   #     - INPUT_QUEUE=published_year_filtered
   #     - OUTPUT_QUEUE=result
 
-  
-
     # reviews_counter:
     #   container_name: reviews_counter
     #   image: reviews_counter_accum:latest
     #   entrypoint: python3 /main.py
     #   environment:
     #     - PYTHONUNBUFFERED=1
-    #     - LOGGING_LEVEL=DEBUG
+    #     - LOGGING_LEVEL=INFO
     #     - TOP=10
     #   networks:
     #     - testing_net
@@ -116,7 +114,7 @@ services:
     #   entrypoint: python3 /main.py
     #   environment:
     #     - PYTHONUNBUFFERED=1
-    #     - LOGGING_LEVEL=DEBUG
+    #     - LOGGING_LEVEL=INFO
     #     - TITLE_CONTAINS=distributed
     #   networks:
     #     - testing_net
