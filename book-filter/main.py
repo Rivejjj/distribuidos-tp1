@@ -6,46 +6,28 @@ from common.review_filter import ReviewFilter
 from messages.book import Book
 from messages.review import Review
 from rabbitmq.queue import QueueMiddleware
-from utils.initialize import encode, initialize_config, initialize_log
+from utils.initialize import encode, get_queue_names, initialize_config, initialize_log, initialize_multi_value_environment, initialize_workers_environment
 from parser_1.csv_parser import CsvParser
 
 
 def initialize():
-    all_params = ["logging_level", "category",
-                  "published_year_range", "title_contains", "id", "last", "input_queue", "output_queue", "exchange", "save_books"]
-    env = os.environ
+    params = ["logging_level", "category",
+              "published_year_range", "title_contains", "id", "n", "input_queue", "output_queues", "exchange", "save_books"]
 
-    params = []
+    config_params = initialize_config(
+        map(lambda param: (param, False), params))
 
-    for param in all_params:
-        param = param.upper()
-        if param in env:
-            params.append((param, True))
-        else:
-            params.append((param, False))
+    if config_params["published_year_range"]:
+        config_params["published_year_range"] = tuple(
+            map(int, config_params["published_year_range"].split("-")))
 
-    config_params = initialize_config(params)
-    logging.debug("Config: %s", config_params)
-    logging.info("Config: %s", config_params)
-    print(config_params)
+    initialize_multi_value_environment(config_params, ["output_queues"])
 
-    if config_params["PUBLISHED_YEAR_RANGE"]:
-        config_params["PUBLISHED_YEAR_RANGE"] = tuple(
-            map(int, config_params["PUBLISHED_YEAR_RANGE"].split("-")))
+    initialize_workers_environment(config_params)
 
-    if "LAST" in config_params:
-        config_params["LAST"] = bool(config_params["LAST"])
-
-    if "ID" in config_params:
-        config_params["ID"] = int(config_params["ID"])
-
-    initialize_log(config_params["LOGGING_LEVEL"])
+    initialize_log(config_params["logging_level"])
 
     return config_params
-
-
-def get_queue_names(config_params):
-    return [config_params["OUTPUT_QUEUE"]]
 
 
 def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_middleware: QueueMiddleware):
@@ -78,18 +60,18 @@ def main():
     config_params = initialize()
 
     book_filter = BookFilter(
-        category=config_params["CATEGORY"],
-        published_year_range=config_params["PUBLISHED_YEAR_RANGE"],
-        title_contains=config_params["TITLE_CONTAINS"]
+        category=config_params["category"],
+        published_year_range=config_params["published_year_range"],
+        title_contains=config_params["title_contains"]
     )
 
     review_filter = None
 
-    if config_params["SAVE_BOOKS"]:
+    if config_params["save_books"]:
         review_filter = ReviewFilter()
 
     queue_middleware = QueueMiddleware(get_queue_names(
-        config_params), exchange=config_params["EXCHANGE"], input_queue=config_params["INPUT_QUEUE"])
+        config_params), exchange=config_params["exchange"], input_queue=config_params["input_queue"])
 
     queue_middleware.start_consuming(
         process_message(book_filter, review_filter, queue_middleware))
