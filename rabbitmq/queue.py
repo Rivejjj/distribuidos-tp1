@@ -24,6 +24,7 @@ class QueueMiddleware:
             self.channel.queue_declare(queue=name, durable=True)
 
         if exchange:
+            self.exchange = exchange
             self.channel.exchange_declare(
                 exchange=exchange, exchange_type='fanout')
 
