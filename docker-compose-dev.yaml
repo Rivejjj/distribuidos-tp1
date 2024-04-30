@@ -27,64 +27,60 @@ services:
     volumes:
       - ./data:/data
 
-  category_filter:
-    container_name: category_filter
-    image: book-filter:latest
-    entrypoint: python3 /main.py
-    depends_on:
-      - rabbitmq
-    links:
-      - rabbitmq
-    environment:
-      - ID=1
-      - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=INFO
-      - CATEGORY=Computers
-      - OUTPUT_QUEUE=category_computers_filtered
-      - EXCHANGE=query
+  # category_filter:
+  #   container_name: category_filter
+  #   image: book-filter:latest
+  #   entrypoint: python3 /main.py
+  #   depends_on:
+  #     - rabbitmq
+  #   links:
+  #     - rabbitmq
+  #   environment:
+  #     - ID=1
+  #     - PYTHONUNBUFFERED=1
+  #     - LOGGING_LEVEL=DEBUG
+  #     - CATEGORY=Computers
+  #     - OUTPUT_QUEUE=computers_filtered
+  #     - EXCHANGE=query
 
-  published_year_filter:
-    container_name: published_year_filter
-    image: book-filter:latest
+
+  # published_year_filter:
+  #   container_name: published_year_filter
+  #   image: book-filter:latest
+  #   entrypoint: python3 /main.py
+  #   environment:
+  #     - ID=2
+  #     - PYTHONUNBUFFERED=1
+  #     - LOGGING_LEVEL=DEBUG
+  #     - PUBLISHED_YEAR_RANGE=2000-2023
+  #     - INPUT_QUEUE=computers_filtered
+  #     - OUTPUT_QUEUE=published_year_filtered
+
+  # title_contains_filter:
+  #   container_name: title_contains_filter
+  #   image: book-filter:latest
+  #   entrypoint: python3 /main.py
+  #   depends_on:
+  #     - rabbitmq
+  #   links:
+  #     - rabbitmq
+  #   environment:
+  #     - ID=3
+  #     - PYTHONUNBUFFERED=1
+  #     - LOGGING_LEVEL=DEBUG
+  #     - TITLE_CONTAINS=distributed
+  #     - INPUT_QUEUE=published_year_filtered
+  #     - OUTPUT_QUEUE=result
+
+  decades_accumulator:
+    container_name: decades_accumulator
+    image: decades_accumulator:latest
     entrypoint: python3 /main.py
     environment:
-      - ID=2
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
-      - PUBLISHED_YEAR_RANGE=2000-2023
-      - INPUT_QUEUE=computers_filtered
-      - OUTPUT_QUEUE=published_year_filtered
-
-  category_filter_2:
-    container_name: category_filter_2
-    image: book-filter:latest
-    entrypoint: python3 /main.py
-    depends_on:
-      - rabbitmq
-    links:
-      - rabbitmq
-    environment:
-      - ID=2
-      - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=INFO
-      - CATEGORY=Computers
-      - OUTPUT_QUEUE=category_computers_filtered
+      - TOP=10
       - EXCHANGE=query
-
-  title_contains_filter:
-    container_name: title_contains_filter
-    image: book-filter:latest
-    entrypoint: python3 /main.py
-    depends_on:
-      - rabbitmq
-    links:
-      - rabbitmq
-    environment:
-      - ID=3
-      - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=DEBUG
-      - TITLE_CONTAINS=distributed
-      - INPUT_QUEUE=published_year_filtered
       - OUTPUT_QUEUE=result
 
   gateway:
@@ -97,15 +93,6 @@ services:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=INFO
       - EXCHANGE=query
-    # decades_accumulator:
-    #   container_name: decades_accumulator
-    #   image: decades_accumulator:latest
-    #   entrypoint: python3 /main.py
-    #   environment:
-    #     - PYTHONUNBUFFERED=1
-    #     - LOGGING_LEVEL=INFO
-    #   networks:
-    #     - testing_net
 
     # reviews_counter:
     #   container_name: reviews_counter
