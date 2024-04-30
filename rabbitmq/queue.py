@@ -27,15 +27,18 @@ class QueueMiddleware:
                 exchange=exchange, exchange_type='fanout')
 
             if not input_queue and callback:
-                queue_name = "TESTINGGGG"
+                print("Declaring exchange queue")
                 result = self.channel.queue_declare(
-                    queue=queue_name, durable=True)
+                    queue='', durable=True)
+                queue_name = result.method.queue
                 self.channel.queue_bind(
                     exchange=exchange, queue=queue_name)
                 self.channel.basic_consume(
                     queue=queue_name, on_message_callback=callback, auto_ack=True)
 
         if input_queue:
+            print("Declaring input queue")
+
             self.channel.queue_declare(queue=input_queue, durable=True)
             self.channel.basic_consume(
                 queue=input_queue, on_message_callback=callback, auto_ack=True)

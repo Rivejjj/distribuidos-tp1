@@ -44,9 +44,26 @@ services:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
       - CATEGORY=Computers
-      - INPUT_QUEUE=computers
       - OUTPUT_QUEUE=computers_filtered
-      - LAST=True
+      - EXCHANGE=query
+    networks:
+      - testing_net
+
+  title_contains_filter:
+    container_name: title_contains_filter
+    image: book-filter:latest
+    entrypoint: python3 /main.py
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
+    environment:
+      - ID=1
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=DEBUG
+      - CATEGORY=Computers
+      - INPUT_QUEUE=computers_filtered
+      - OUTPUT_QUEUE=distributed_filtered
     networks:
       - testing_net
 
@@ -59,6 +76,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
+      - EXCHANGE=query
     networks:
       - testing_net
     # networks:

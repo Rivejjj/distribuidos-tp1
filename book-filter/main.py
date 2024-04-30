@@ -8,9 +8,10 @@ from rabbitmq.queue import QueueMiddleware
 from utils.initialize import initialize_config, initialize_log
 from parser_1.csv_parser import CsvParser
 
+
 def initialize():
     all_params = ["logging_level", "category",
-                  "published_year_range", "title_contains", "id", "last", "input_queue", "output_queue"]
+                  "published_year_range", "title_contains", "id", "last", "input_queue", "output_queue", "exchange"]
     env = os.environ
 
     params = []
@@ -52,7 +53,7 @@ def process_message(book_filter: BookFilter):
         msg_received = body.decode()
         line = CsvParser().parse_csv(msg_received)
         book = Book(*line)
-        
+
         if book and book_filter.filter(book):
             print("Book accepted: %s", book.title)
         else:
@@ -71,7 +72,7 @@ def main():
     )
     file = open("output.txt", "w")
     queue_middleware = QueueMiddleware(get_queue_names(config_params), callback=process_message(
-        book_filter), exchange='query')
+        book_filter), exchange=config_params["EXCHANGE"], input_queue=config_params["INPUT_QUEUE"])
 
 
 if __name__ == "__main__":

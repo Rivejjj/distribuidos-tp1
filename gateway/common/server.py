@@ -11,7 +11,7 @@ MAX_BYTES = 1
 
 
 class Server:
-    def __init__(self, port, listen_backlog):
+    def __init__(self, port, listen_backlog, exchange=None):
         # Initialize server socket
         signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -19,7 +19,7 @@ class Server:
         self._server_socket.listen(listen_backlog)
         self.client_sock = None
         self.queue = QueueMiddleware(
-            [], exchange='query')
+            [], exchange=exchange)
 
     def run(self):
         """
@@ -54,7 +54,7 @@ class Server:
                 addr = self.client_sock.getpeername()
                 to_q1 = data_receiver.text_to_q1(msg)
                 if to_q1:
-                    self.queue.send_to_exchange(encode(to_filter))
+                    self.queue.send_to_exchange(encode(to_q1))
 
                     print(
                         f'sending to comp.filter | msg: {to_q1}')
