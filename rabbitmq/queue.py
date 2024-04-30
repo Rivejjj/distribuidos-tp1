@@ -4,7 +4,7 @@ import pika
 
 
 class QueueMiddleware:
-    def __init__(self, output_queues: list[str], callback=None, input_queue=None, exchange=None):
+    def __init__(self, output_queues: list[str], input_queue=None, exchange=None):
         # logging.info("Connecting to queue: queue_names=%s", queue_names)
 
         # Waits for rabbitmq
@@ -22,33 +22,45 @@ class QueueMiddleware:
             self.channel.queue_declare(queue=name, durable=True)
 
         if exchange:
-            self.exchange = exchange
             self.channel.exchange_declare(
                 exchange=exchange, exchange_type='fanout')
 
-            if not input_queue and callback:
+            if not input_queue:
                 print("Declaring exchange queue")
                 result = self.channel.queue_declare(
                     queue='', durable=True)
                 queue_name = result.method.queue
+
+                self.exchange_queue_name = queue_name
                 self.channel.queue_bind(
                     exchange=exchange, queue=queue_name)
-                self.channel.basic_consume(
-                    queue=queue_name, on_message_callback=callback, auto_ack=True)
+                # self.channel.basic_consume(
+                #     queue=queue_name, on_message_callback=callback, auto_ack=True)
 
         if input_queue:
             print("Declaring input queue")
+            self.input_queue = input_queue
 
             self.channel.queue_declare(queue=input_queue, durable=True)
-            self.channel.basic_consume(
-                queue=input_queue, on_message_callback=callback, auto_ack=True)
+            # self.channel.basic_consume(
+            #     queue=input_queue, on_message_callback=callback, auto_ack=True)
 
+        self.channel.start_consuming()
+
+    def start_consuming(self, callback):
+        if self.input_queue:
+            self.channel.basic_consume(
+                queue=self.input_queue, on_message_callback=callback, auto_ack=True)
+        if self.exchange_queue_name:
+            self.channel.basic_consume(
+                queue=self.exchange_queue_name, on_message_callback=callback, auto_ack=True)
         self.channel.start_consuming()
 
     def end(self):
         self.connection.close()
 
     def send(self, name, message):
+        logging.info(f"Sending message to queue {name}: {message}")
         self.channel.basic_publish(
             exchange='', routing_key=name, body=message, properties=pika.BasicProperties(
                 delivery_mode=2,  # make message persistent

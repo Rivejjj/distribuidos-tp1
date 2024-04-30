@@ -5,7 +5,7 @@ import os
 from common.book_filter import BookFilter
 from messages.book import Book
 from rabbitmq.queue import QueueMiddleware
-from utils.initialize import initialize_config, initialize_log
+from utils.initialize import encode, initialize_config, initialize_log
 from parser_1.csv_parser import CsvParser
 
 
@@ -47,7 +47,7 @@ def get_queue_names(config_params):
     return [config_params["OUTPUT_QUEUE"]]
 
 
-def process_message(book_filter: BookFilter):
+def process_message(book_filter: BookFilter, queue_middleware: QueueMiddleware):
     def callback(ch, method, properties, body):
         logging.info("Received message", body.decode())
         msg_received = body.decode()
@@ -56,6 +56,7 @@ def process_message(book_filter: BookFilter):
 
         if book and book_filter.filter(book):
             print("Book accepted: %s", book.title)
+            queue_middleware.send_to_all(encode(str(book)))
         else:
             print("Book rejected: %s", book.title)
     return callback
@@ -71,8 +72,11 @@ def main():
         title_contains=config_params["TITLE_CONTAINS"]
     )
     file = open("output.txt", "w")
-    queue_middleware = QueueMiddleware(get_queue_names(config_params), callback=process_message(
-        book_filter), exchange=config_params["EXCHANGE"], input_queue=config_params["INPUT_QUEUE"])
+    queue_middleware = QueueMiddleware(get_queue_names(
+        config_params), exchange=config_params["EXCHANGE"], input_queue=config_params["INPUT_QUEUE"])
+
+    queue_middleware.start_consuming(
+        process_message(book_filter, queue_middleware))
 
 
 if __name__ == "__main__":
