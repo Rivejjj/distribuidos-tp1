@@ -1,11 +1,11 @@
 
 class ReviewsCounter:
     def __init__(self):
-        self.books = {} # title -> Book
+        self.books = {} # title -> author
         self.reviews = {} # title -> (review_count,average_rating)
 
     def add_book(self,book):
-        self.books[book.title] = book
+        self.books[book.title] = book.authors
 
     def add_review(self,review):
         if review.title in self.reviews:
