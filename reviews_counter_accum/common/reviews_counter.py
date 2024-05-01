@@ -17,7 +17,7 @@ class ReviewsCounter:
             score = review.score
             self.reviews[review.title] = (1, score)
         
-        if int(self.reviews[review.title][0]) > 4:
+        if int(self.reviews[review.title][0]) > 30:
             return review.title, self.reviews[review.title][0]
         return None, None
 

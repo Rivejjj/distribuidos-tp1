@@ -11,9 +11,11 @@ class Book:
 
     def sanitize(self):
         self.published_year = self.get_year_regex(self.published_year)
-        if not self.title or not self.authors or not self.categories or not self.published_year:
-            print(f"Missing title, authors, categories or published year: {self.title}, {self.authors}, {self.categories}, {self.published_year}")
-            return False
+        fields = [self.title, self.authors, self.categories, self.published_year]
+        for i in range(len(fields)):
+            if fields[i] == None or fields[i] == "":
+                print(f"Missing title, authors, categories or published year: {self.title}, {self.authors}, {self.categories}, {self.published_year}")
+                return False
         return True
 
     def get_year_regex(self, text):
