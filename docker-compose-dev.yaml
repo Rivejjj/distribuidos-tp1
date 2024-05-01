@@ -178,7 +178,7 @@ services:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=500_reviews
-      - OUTPUT_QUEUE=results
+      - OUTPUT_QUEUES=results
       - QUERY=4
 
   ###########################################################################
