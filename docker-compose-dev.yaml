@@ -52,6 +52,7 @@ services:
       - LOGGING_LEVEL=INFO
       - EXCHANGE=query
       - INPUT_QUEUE=results
+      - QUERY_COUNT=2
 
   computers_category_filter_1:
     container_name: computers_category_filter_1
