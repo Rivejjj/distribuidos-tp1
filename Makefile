@@ -14,6 +14,8 @@ docker-image:
 	docker build -f ./client/Dockerfile -t "client:latest" .
 	docker build -f ./decades-accumulator/Dockerfile -t "decades-accumulator:latest" .
 	docker build -f ./reviews_counter_accum/Dockerfile -t "reviews_counter_accum:latest" .
+	docker build -f ./sentiment_score_accumulator/Dockerfile -t "sentiment_score_accumulator:latest" .
+	docker build -f ./sentiment_analyzer/Dockerfile -t "sentiment_analyzer:latest" .
 	
 	# Execute this command from time to time to clean up intermediate stages generated 
 	# during client build (your hard drive will like this :) ). Don't left uncommented if you 

@@ -12,7 +12,7 @@ from parser_1.csv_parser import CsvParser
 
 def initialize():
     all_params = ["logging_level", "category",
-                  "published_year_range", "title_contains", "id", "last", "input_queue", "output_queues", "exchange", "save_books"]
+                  "published_year_range", "title_contains", "id", "n", "input_queue", "output_queues", "exchange", "save_books"]
 
     params = list(map(lambda param: (param, False), all_params))
 

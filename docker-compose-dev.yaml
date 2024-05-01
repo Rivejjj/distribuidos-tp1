@@ -54,7 +54,7 @@ services:
 
   fiction_category_filter:
     container_name: fiction_category_filter
-    image: book_filter:latest
+    image: book-filter:latest
     entrypoint: python3 /main.py
     depends_on:
       - rabbitmq
@@ -63,13 +63,15 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
-      - EXCHANGE=query5
+      - EXCHANGE=query
       - OUTPUT_QUEUES=fiction_category_books_reviews
       - SAVE_BOOKS=True
       - CATEGORY=fiction
+      - ID=0
+      - N=1
 
-  sentiment_score_calculator:
-    container_name: sentiment_score_calculator
+  sentiment_analyzer:
+    container_name: sentiment_analyzer
     image: sentiment_analyzer:latest
     entrypoint: python3 /main.py
     depends_on:
@@ -81,3 +83,17 @@ services:
       - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=fiction_category_books_reviews
       - OUTPUT_QUEUES=sentiment_score
+
+  sentiment_score_accumulator:
+    container_name: sentiment_score_accumulator
+    image: sentiment_score_accumulator:latest
+    entrypoint: python3 /main.py
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - INPUT_QUEUE=sentiment_score
+      - OUTPUT_QUEUES=results

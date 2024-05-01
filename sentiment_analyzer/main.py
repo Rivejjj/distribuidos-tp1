@@ -12,7 +12,7 @@ from utils.initialize import decode, encode, get_queue_names, initialize_config,
 
 def initialize():
     all_params = ["logging_level", "input_queue",
-                  "output_queues"]
+                  "output_queues", "exchange"]
 
     params = list(map(lambda param: (param, False), all_params))
 
@@ -64,7 +64,7 @@ def process_message(sentiment_analyzer: SentimentAnalizer, queue_middleware: Que
 
 def main():
 
-    config_params = initialize_config()
+    config_params = initialize()
 
     sentiment_analyzer = SentimentAnalizer()
 
@@ -73,3 +73,7 @@ def main():
 
     queue_middleware.start_consuming(
         process_message(sentiment_analyzer, queue_middleware))
+
+
+if __name__ == "__main__":
+    main()
