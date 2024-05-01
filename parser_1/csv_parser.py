@@ -3,6 +3,7 @@ class CsvParser:
         self.fields = []
     
     def parse_csv(self,line):
+        self.fields = []
         between_quotes = False
         field = ""
         for char in line:

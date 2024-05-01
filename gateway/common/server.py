@@ -51,6 +51,10 @@ class Server:
             while True:
 
                 msg = self.__safe_receive().decode().rstrip()
+                print(f'msg: {msg}')
+                if msg == "EOF":
+                    print("EOF received")
+                    self.queue.send_to_exchange(encode("EOF"))
 
                 if msg == "":
                     break

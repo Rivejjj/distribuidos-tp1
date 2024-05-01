@@ -9,6 +9,7 @@ class TestUtils(unittest.TestCase):
 
     review_line = "1,distributed systems, 10, 1, profile_name, helpfulness, 5, time, summary, text"
 
+    min_reviews = 1
     
     # def test_add_review(self):
     #     counter = ReviewsCounter()
@@ -26,7 +27,8 @@ class TestUtils(unittest.TestCase):
     #     self.assertEqual(counter.reviews['distributed systems'], (3, 4))
 
     def test_add_book(self):
-        counter = ReviewsCounter()
+        
+        counter = ReviewsCounter(self.min_reviews)
         data_receiver = DataReceiver()
         book = data_receiver.parse_book(self.book_line)
         counter.add_book(book)

@@ -16,6 +16,8 @@ def initialize():
 
 
 def send_message(socket, message: str):
+    if message == "EOF":
+        print("EOF sent")
     socket.send(message.encode())
 
 
@@ -52,6 +54,7 @@ def main():
             # i += 1
 
     print(i)
+    send_message(socket, "EOF")
     socket.recv(1024)
     close_connection(socket)
 

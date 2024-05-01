@@ -1,7 +1,7 @@
 
 import logging
 import os
-from common.reviews_counter import ReviewsCounter
+from common.accumulator import Accumulator
 from rabbitmq.queue import QueueMiddleware
 from utils.initialize import encode, initialize_config, initialize_log
 from parser_1.csv_parser import CsvParser
@@ -57,38 +57,24 @@ def get_queue_names(config_params):
     return [config_params["OUTPUT_QUEUE"]]
 
 
-def process_message(counter: ReviewsCounter,parser: CsvParser, data_receiver: DataReceiver, queue_middleware: QueueMiddleware, more_than_n):
+def process_message(accum: Accumulator,parser: CsvParser, queue_middleware: QueueMiddleware ):
     def callback(ch, method, properties, body):
         msg_received = body.decode()
         if msg_received == "EOF":
             print("EOF received")
-            queue_middleware.send_to_all("EOF")
-            return
-        book = data_receiver.parse_book(msg_received)
-        if book:
-            counter.add_book(book)
-            print("Book accepted: %s", book.title)
-            #queue_middleware.send_to_all(encode(str(book)))
-            return
+            top = accum.get_top()
+            result = ""
+            for i in top:
+                result += f"{i[0]}: {i[1]}\n"
+            print("sending to result:", result)
+            queue_middleware.send_to_all(encode(top))
 
-        review = data_receiver.parse_review(msg_received)
-        if review:
-            author, title, avg = counter.add_review(review)
-            if title:
-                print("Review forwarded: ", review.title," | Total reviews: ", avg)
-                msg_to_forward = f"{title},{avg}"
-                queue_middleware.send_to_all_except(encode(msg_to_forward),"result")
-            if title and (title not in more_than_n):
-                print("Review accepted: ", review.title," | Total reviews: ", avg)
-                msg_to_result = f"{author},{title}"
-                queue_middleware.send("result",msg_to_result)
-                more_than_n[title] = True                
-
+        book = parser.parse_csv(msg_received)
+        if len(book) == 2:
+            print("Book accepted: ", book)
+            accum.add_book(book)
 
     return callback
-
-
-
 
 def main():
 
@@ -96,19 +82,15 @@ def main():
     initialize_log(config_params["LOGGING_LEVEL"])
     logging.debug("Config: %s", config_params)
 
-    min_amount_of_reviews = 30
-    counter = ReviewsCounter(min_amount_of_reviews)
+    top = 10
+    accum = Accumulator(top)
 
     queue_middleware = QueueMiddleware(get_queue_names(
         config_params), exchange=config_params["EXCHANGE"], input_queue=config_params["INPUT_QUEUE"])
 
     parser = CsvParser()
-    data_receiver = DataReceiver()
-    more_than_n = {}
     queue_middleware.start_consuming(
-        process_message(counter, parser,data_receiver, queue_middleware, more_than_n))
-
-
+        process_message(accum, parser, queue_middleware))
 
 
 if __name__ == "__main__":

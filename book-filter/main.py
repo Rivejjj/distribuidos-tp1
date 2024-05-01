@@ -49,6 +49,10 @@ def get_queue_names(config_params):
 def process_message(book_filter: BookFilter, parser: CsvParser,data_receiver: DataReceiver, review_filter: ReviewFilter, queue_middleware: QueueMiddleware):
     def callback(ch, method, properties, body):
         msg_received = body.decode()
+        if msg_received == "EOF":
+            print("EOF received")
+            queue_middleware.send_to_all("EOF")
+            return
         book = data_receiver.parse_book(msg_received)
 
         if book and book_filter.filter(book):

@@ -1,6 +1,7 @@
 
 class ReviewsCounter:
-    def __init__(self):
+    def __init__(self,min_reviews):
+        self.min_reviews = min_reviews
         self.books = {} # title -> author
         self.reviews = {} # title -> (review_count,average_rating)
 
@@ -17,7 +18,9 @@ class ReviewsCounter:
             score = review.score
             self.reviews[review.title] = (1, score)
         
-        if int(self.reviews[review.title][0]) > 30:
-            return review.title, self.reviews[review.title][0]
-        return None, None
+        if int(self.reviews[review.title][0]) > self.min_reviews:
+            average = self.reviews[review.title][1]
+            author = self.books[review.title]
+            return author, review.title, average
+        return None, None, None
 

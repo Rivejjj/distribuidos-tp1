@@ -63,14 +63,16 @@ class QueueMiddleware:
         self.connection.close()
 
     def send(self, name, message):
-        logging.info(f"Sending message to queue {name}: {message}")
+        #logging.info(f"Sending message to queue {name}: {message}")
         self.channel.basic_publish(
             exchange='', routing_key=name, body=message, properties=pika.BasicProperties(
                 delivery_mode=2,  # make message persistent
             ))
 
     def send_to_exchange(self, message, routing_key=''):
-        logging.info(f"Sending message to exchange: {message}")
+        #logging.info(f"Sending message to exchange: {message}")
+        if message == "EOF":
+            print("EOF to exchange")
 
         self.channel.basic_publish(
             exchange=self.exchange, routing_key=routing_key, body=message)
@@ -78,3 +80,8 @@ class QueueMiddleware:
     def send_to_all(self, message):
         for name in self.output_queues:
             self.send(name, message)
+
+    def send_to_all_except(self, message, except_queue):
+        for name in self.output_queues:
+            if name != except_queue:
+                self.send(name, message)
