@@ -42,6 +42,7 @@ class DataReceiver:
         line = parser.parse_csv(data)
 
         if len(line) != TOTAL_FIELDS_COUNT and len(line) != REVIEW_FIELDS_COUNT:
+
             return None
 
         if len(line) == TOTAL_FIELDS_COUNT:

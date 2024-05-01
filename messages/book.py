@@ -1,3 +1,6 @@
+from parser_1.csv_parser import CsvParser
+
+
 class Book:
     def __init__(self, title, authors, publisher, published_year, categories):
         self.title = title
@@ -21,6 +24,16 @@ class Book:
                 print(f"Missing title, authors, categories or published year: {self.title}, {self.authors}, {self.categories}, {self.published_year}")
                 return False
         return True
+
+    @staticmethod
+    def from_csv_line(line):
+        parser = CsvParser()
+        # print("Processing message: %s", line)
+        parsed_line = parser.parse_csv(line)
+        if len(parsed_line) != 5:
+            return None
+
+        return Book(*parsed_line)
 
     def get_year_regex(self, text):
         if text == "" or None:

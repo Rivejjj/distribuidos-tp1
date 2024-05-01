@@ -4,6 +4,7 @@ from messages.book import Book
 from messages.review import Review
 from gateway.common.data_receiver import DataReceiver
 
+
 class TestUtils(unittest.TestCase):
     book_line = """distributed systems, description,['authors'], image, preview_link, publisher,2019, info_link, "['category', 'category2']", ratings_count"""
 
@@ -40,3 +41,4 @@ class TestUtils(unittest.TestCase):
         new_book = data_receiver.parse_book(new_book_line)
         counter.add_book(new_book)
         self.assertEqual(counter.books['distributed systems 2'], new_book.authors)
+

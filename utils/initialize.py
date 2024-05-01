@@ -50,5 +50,23 @@ def initialize_log(logging_level):
     )
 
 
-def encode(data):
-    return data.encode('utf-8')
+def initialize_workers_environment(config_params):
+    config_params["id"] = int(config_params["id"])
+    config_params["n"] = int(config_params["n"])
+
+
+def initialize_multi_value_environment(config_params, params):
+    for param in params:
+        config_params[param] = config_params[param].split(",")
+
+
+def get_queue_names(config_params):
+    return config_params["output_queues"]
+
+
+def encode(message):
+    return message.encode('utf-8')
+
+
+def decode(message):
+    return message.decode('utf-8')

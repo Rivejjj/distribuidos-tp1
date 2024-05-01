@@ -4,10 +4,14 @@ import signal
 from common.data_receiver import DataReceiver
 from messages.book import Book
 from messages.review import Review
-from utils.initialize import encode
+from utils.initialize import decode, encode
 from rabbitmq.queue import QueueMiddleware
-# CAMBIAR, NO COLGAR CON ESTO
-MAX_BYTES = 1
+from utils.sockets import safe_receive, send_message, send_success
+
+
+MAX_MESSAGE_BYTES = 16
+SUCCESS_MSG = "suc"
+ERROR_MSG = "err"
 
 
 class Server:
@@ -35,49 +39,10 @@ class Server:
             try:
                 client_sock = self.__accept_new_connection()
                 self.client_sock = client_sock
-                self.__handle_client_connection()
+                self.handle_client_connection()
             except OSError:
                 break
 
-    def __handle_client_connection(self):
-        """
-        Read message from a specific client socket and closes the socket
-
-        If a problem arises in the communication with the client, the
-        client socket will also be closed
-        """
-        data_receiver = DataReceiver()
-        try:
-            while True:
-
-                msg = self.__safe_receive().decode().rstrip()
-                print(f'msg: {msg}')
-                if msg == "EOF":
-                    print("EOF received")
-                    self.queue.send_to_exchange(encode("EOF"))
-
-                # if msg == "":
-                #     break
-                # addr = self.client_sock.getpeername()
-
-                book = data_receiver.parse_book(msg)
-                if book:
-                    self.queue.send_to_exchange(encode(str(book)))
-                    # print(f'sending to comp.filter | msg: {str(book)}')
-                        
-                review = data_receiver.parse_review(msg)
-                if review:
-                    self.queue.send_to_exchange(encode(str(review)))
-                    # print(f'sending to comp.filter | msg: {str(review)}')
-
-                # logging.info(
-                    # f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
-        except OSError as e:
-            logging.error(
-                f"action: receive_message | result: fail | error: {e}")
-        finally:
-            print("CLOSING")
-            self._close_client_socket()
 
     def __accept_new_connection(self):
         """
@@ -114,22 +79,86 @@ class Server:
             self.client_sock = None
         logging.info('action: closing client socket | result: success')
 
-    # def __safe_send(self, message):
-    #     total_sent = 0
-    #     bytes_to_send = message.encode('utf-8')
+    def __receive_message_length(self):
+        try:
+            int_bytes = safe_receive(self.client_sock,
+                                     MAX_MESSAGE_BYTES)
+            print("receiving message length", int_bytes)
+            msg_length = int.from_bytes(int_bytes, "little")
 
-    #     while total_sent < len(message):
-    #         n = self.client_sock.send(bytes_to_send[total_sent:])
-    #         total_sent += n
-    #     return
+            logging.info(
+                f"action: receive_message_length | result: success | length: {msg_length}")
 
-    def __safe_receive(self):
-        # CAMBIAR ANTES DE ENTREGAR, NO COLGAR CON ESTO
+            send_success(self.client_sock)
 
-        received_data = b''
-        while True:
-            chunk = self.client_sock.recv(MAX_BYTES)
-            received_data += chunk
-            if chunk == b'\n' or not chunk:
-                break
-        return received_data
+            return msg_length
+        except socket.error as e:
+            logging.error(
+                f"action: receive_message_length | result: failed | error: client disconnected")
+            raise e
+        except Exception as e:
+            logging.error(
+                f"action: receive_message_length | result: failed | error: {e}")
+            raise e
+
+    def handle_client_connection(self):
+        """
+        Read message from a specific client socket and closes the socket
+
+        If a problem arises in the communication with the client, the
+        client socket will also be closed
+        """
+        try:
+
+            while True:
+                msg_length = self.__receive_message_length()
+
+                print(f"msg_length: {msg_length}")
+
+                if msg_length == 0:
+                    return
+
+                msg = decode(safe_receive(
+                    self.client_sock, msg_length)).rstrip()
+
+                self.__process_message(msg)
+
+                # self.__send_message(msg)
+
+        except OSError as e:
+            logging.error(
+                f"action: receive_message | result: fail | error: {e}")
+        except Exception as e:
+            logging.error(
+                f"action: any | result: fail | error: {e}")
+        self._close_client_socket()
+
+    def __process_message(self, msg):
+        # addr = self.client_sock.getpeername()
+        data_receiver = DataReceiver()
+
+        print(f'received message: {msg}')
+
+        if msg == "EOF":
+            self.queue.send_to_exchange(encode("EOF"))
+            return
+
+        book = data_receiver.parse_book(msg)
+        if book:
+            self.queue.send_to_exchange(encode(str(book)))
+            print(
+
+                f'sending to comp.filter | msg: {str(book)}')
+            return
+        review = data_receiver.parse_review(msg)
+        if review:
+            self.queue.send_to_exchange(encode(str(review)))
+            print(
+                f'sending to comp.filter | msg: {str(review)}')
+            return
+
+        print(f'invalid message: {msg}')
+
+    def __send_message(self, msg):
+        print(f'sending message: {msg}')
+        send_message(self.client_sock, msg)

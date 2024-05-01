@@ -31,12 +31,19 @@ services:
     container_name: gateway
     image: gateway:latest
     entrypoint: python3 /main.py
+    depends_on:
+      - rabbitmq
     links:
       - rabbitmq
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=INFO
       - EXCHANGE=query
+      - OUTPUT_QUEUES=fiction_category_books_reviews
+      - SAVE_BOOKS=True
+      - CATEGORY=fiction
+      - ID=0
+      - N=1
 
   published_year_filter:
     container_name: published_year_filter
@@ -133,3 +140,31 @@ services:
     #   networks:
     #     - testing_net
 
+  #sentiment_analyzer:
+   # container_name: sentiment_analyzer
+   # image: sentiment_analyzer:latest
+   # entrypoint: python3 /main.py
+   # depends_on:
+   #   - rabbitmq
+   # links:
+   #   - rabbitmq
+   # environment:
+   #   - PYTHONUNBUFFERED=1
+  #    - LOGGING_LEVEL=INFO
+  #    - INPUT_QUEUE=fiction_category_books_reviews
+  #    - OUTPUT_QUEUES=sentiment_score
+  
+
+  sentiment_score_accumulator:
+    container_name: sentiment_score_accumulator
+    image: sentiment_score_accumulator:latest
+    entrypoint: python3 /main.py
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - INPUT_QUEUE=sentiment_score
+      - OUTPUT_QUEUES=results

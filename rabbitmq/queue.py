@@ -2,6 +2,8 @@ import logging
 import time
 import pika
 
+from utils.initialize import encode
+
 
 class QueueMiddleware:
     def __init__(self, output_queues: list[str], input_queue=None, exchange=None):
@@ -85,3 +87,7 @@ class QueueMiddleware:
         for name in self.output_queues:
             if name != except_queue:
                 self.send(name, message)
+                
+    def send_eof(self):
+        print("[QUEUE] Sending EOF")
+        self.send_to_all(encode("EOF"))

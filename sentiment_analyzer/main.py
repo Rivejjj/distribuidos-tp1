@@ -4,55 +4,79 @@ import logging
 import os
 from common.sentiment_analyzer import SentimentAnalizer
 from messages.book import Book
+from messages.review import Review
+from parser_1.csv_parser import CsvParser
+from rabbitmq.queue import QueueMiddleware
+from utils.initialize import decode, encode, get_queue_names, initialize_config, initialize_log, initialize_multi_value_environment, initialize_workers_environment
 
 
-def initialize_config():
-    """ Parse env variables or config file to find program config params
+def initialize():
+    all_params = ["logging_level", "input_queue",
+                  "output_queues", "exchange"]
 
-    Function that search and parse program configuration parameters in the
-    program environment variables first and the in a config file. 
-    If at least one of the config parameters is not found a KeyError exception 
-    is thrown. If a parameter could not be parsed, a ValueError is thrown. 
-    If parsing succeeded, the function returns a ConfigParser object 
-    with config parameters
-    """
+    params = list(map(lambda param: (param, False), all_params))
 
-    config = ConfigParser(os.environ)
-    # If config.ini does not exists original config object is not modified
-    config.read("config.ini")
+    config_params = initialize_config(params)
+    logging.debug("Config: %s", config_params)
+    logging.info("Config: %s", config_params)
+    print(config_params)
 
-    config_params = {}
-    try:
-        config_params["logging_level"] = os.getenv("LOGGING", config["DEFAULT"]["LOGGING_LEVEL"])
-        
-    except KeyError as e:
-        raise KeyError(f"Missing configuration parameter: {e}. Aborting server")
-    except ValueError as e:
-        raise ValueError(f"Error parsing configuration parameter: {e}. Aborting server")
+    initialize_multi_value_environment(config_params, ["output_queues"])
+
+    # initialize_workers_environment(config_params)
+
+    initialize_log(config_params["logging_level"])
 
     return config_params
 
 
-def initialize_log(logging_level):
-    """
-    Python custom logging initialization
+def process_eof(queue_middleware: QueueMiddleware):
+    queue_middleware.send_eof()
 
-    Current timestamp is added to be able to identify in docker
-    compose logs the date when the log has arrived
-    """
-    logging.basicConfig(
-        format='%(asctime)s %(levelname)-8s %(message)s',
-        level=logging_level,
-        datefmt='%Y-%m-%d %H:%M:%S',
-    )
+
+def process_message(sentiment_analyzer: SentimentAnalizer, queue_middleware: QueueMiddleware):
+    def callback(ch, method, properties, body):
+        logging.info("Received message", decode(body))
+        msg_received = decode(body)
+
+        if msg_received == "EOF":
+            process_eof(queue_middleware)
+            return
+
+        line = CsvParser().parse_csv(msg_received)
+
+        review = Review(*line)
+
+        if review and review.sanitize():
+            print(f"[REVIEW]: Text {review.text}")
+            polarity_score = sentiment_analyzer.analyze(review.text)
+
+            if not polarity_score:
+                return
+
+            print(f"[POLARITY SCORE]: {polarity_score}")
+
+            message = f"{review.title},{polarity_score}"
+
+            print(f"[RESULT]: {message}")
+
+            queue_middleware.send_to_all(encode(message))
+
+    return callback
 
 
 def main():
 
-    config_params = initialize_config()
-    initialize_log(config_params["logging_level"])
+    config_params = initialize()
 
-    logging.debug("Config: %s", config_params)
+    sentiment_analyzer = SentimentAnalizer()
 
-    sentiment_analyzer= SentimentAnalizer()
+    queue_middleware = QueueMiddleware(
+        get_queue_names(config_params), input_queue=config_params["input_queue"], exchange=config_params["exchange"])
 
+    queue_middleware.start_consuming(
+        process_message(sentiment_analyzer, queue_middleware))
+
+
+if __name__ == "__main__":
+    main()

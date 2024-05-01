@@ -1,8 +1,6 @@
-
-import logging
-import socket
-from utils.initialize import initialize_config, initialize_log
 import time
+from common.client import Client
+from utils.initialize import decode, initialize_config, initialize_log
 
 
 def initialize():
@@ -15,48 +13,40 @@ def initialize():
     return config_params
 
 
-def send_message(socket, message: str):
-    if message == "EOF":
-        print("EOF sent")
-    socket.send(message.encode())
+def run(config_params):
+    client = Client(config_params["address"], config_params["port"])
+    time.sleep(40)
 
+    # with open('results.csv', 'w') as a:
+    with open(config_params["books_path"]) as file:
+        i = 0
+        for line in file:
+            print(line.strip())
+            client.send_message(line.strip())
+            if i == 1000:
+                break
+            i += 1
+            # msg = decode(client.receive_message())
+            # print(msg)
+            # a.write(msg + '\n')
+        print(i)
+    with open(config_params["books_reviews_path"]) as file:
+        i = 0
+        for line in file:
 
-def create_connection(address: str, port: int):
-    # Creates socket
-    _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # Connects to server
-    _socket.connect((address, port))
-    return _socket
-
-
-def close_connection(socket):
-    socket.close()
+            print(line.strip())
+            client.send_message(line.strip())
+            if i == 10000:
+                break
+            i += 1
+    client.send_message("EOF")
+    client.stop()
 
 
 def main():
     config_params = initialize()
     print(config_params)
-    socket = create_connection(config_params["address"], config_params["port"])
-    with open(config_params["books_path"]) as file:
-        i = 0
-        for line in file:
-            send_message(socket, line)
-            if i == 1000:
-                break
-            i += 1
-    # with open(config_params["books_reviews_path"]) as file:
-    with open("/data/ratings_reduced.csv") as file:
-        i = 0
-        for line in file:
-            send_message(socket, line)
-            # if i > 1000:
-            #     break
-            # i += 1
-
-    send_message(socket, "\nEOF\n")
-    socket.recv(1024)
-    close_connection(socket)
-
+    run(config_params)
 
 if __name__ == "__main__":
     main()
