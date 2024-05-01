@@ -65,6 +65,7 @@ services:
       - OUTPUT_QUEUES=computers
       - CATEGORY=Computers
       - ID=0
+      - N=1
 
   published_year_filter_q1:
     container_name: published_year_filter_q1
@@ -80,8 +81,9 @@ services:
       - LOGGING_LEVEL=INFO
       - PUBLISHED_YEAR_RANGE=2000-2023
       - INPUT_QUEUE=computers
-      - OUTPUT_QUEUE=2000s_filtered
+      - OUTPUT_QUEUES=2000s_filtered
       - SAVE_BOOKS=True
+      - N=1
 
   title_contains_filter:
     container_name: title_contains_filter
@@ -97,8 +99,9 @@ services:
       - LOGGING_LEVEL=DEBUG
       - TITLE_CONTAINS=distributed
       - INPUT_QUEUE=2000s_filtered
-      - OUTPUT_QUEUE=result
+      - OUTPUT_QUEUES=results
       - QUERY=1
+      - N=1
 
   ###########################################################################
   #------------------------------------QUERY 2-------------------------------
@@ -118,8 +121,9 @@ services:
       - LOGGING_LEVEL=DEBUG
       - TOP=10
       - EXCHANGE=query
-      - OUTPUT_QUEUE=result
+      - OUTPUT_QUEUES=results
       - QUERY=2
+      - N=1
 
   ###########################################################################
   #------------------------------QUERIES 3 Y 4-------------------------------
@@ -139,8 +143,9 @@ services:
       - LOGGING_LEVEL=INFO
       - PUBLISHED_YEAR_RANGE=1990-1999
       - INPUT_QUEUE=computers
-      - OUTPUT_QUEUE=90s_filtered
+      - OUTPUT_QUEUES=90s_filtered
       - SAVE_BOOKS=True
+      - N=1
 
   reviews_counter:
     container_name: reviews_counter
@@ -154,10 +159,10 @@ services:
       - ID=5
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=INFO
-      - INPUT_QUEUE=90s_filter
-      - OUTPUT_QUEUE=result
-      - OUTPUT_QUEUE=500_reviews
+      - INPUT_QUEUE=90s_filtered
+      - OUTPUT_QUEUES=500_reviews,results
       - QUERY=3
+      - N=1
 
   #QUERY 4
   avg_rating_accumulator:
@@ -173,7 +178,7 @@ services:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=500_reviews
-      - OUTPUT_QUEUE=result
+      - OUTPUT_QUEUES=results
       - QUERY=4
 
   ###########################################################################
@@ -212,6 +217,7 @@ services:
       - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=fiction_category_books_reviews
       - OUTPUT_QUEUES=sentiment_score
+      - N=1
 
   sentiment_score_accumulator:
     container_name: sentiment_score_accumulator
