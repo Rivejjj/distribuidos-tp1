@@ -37,7 +37,7 @@ class DataReceiver:
         line = parser.parse_csv(data)
 
         if len(line) != TOTAL_FIELDS_COUNT:
-            raise ValueError("Invalid review data")
+            return None
 
         title, score, text = line[1], line[6], line[9]
         review = Review(title, score, text)

@@ -1,8 +1,5 @@
-
-import logging
-import socket
-from utils.initialize import initialize_config, initialize_log
-import time
+from common.client import Client
+from utils.initialize import decode, initialize_config, initialize_log
 
 
 def initialize():
@@ -15,40 +12,36 @@ def initialize():
     return config_params
 
 
-def send_message(socket, message: str):
-    socket.send(message.encode())
+def run(config_params):
+    client = Client(config_params["address"], config_params["port"])
 
+    # with open('results.csv', 'w') as a:
+    with open(config_params["books_path"]) as file:
+        i = 0
+        for line in file:
+            print(line.strip())
+            client.send_message(line.strip())
+            if i == 70000:
+                break
+            i += 1
+            msg = decode(client.receive_message())
 
-def create_connection(address: str, port: int):
-    # Creates socket
-    _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # Connects to server
-    _socket.connect((address, port))
-    return _socket
+            print(msg)
 
+            # a.write(msg + '\n')
 
-def close_connection(socket):
-    socket.close()
+        print(i)
+        # with open(config_params["books_reviews_path"]) as file:
+        #     for line in file:
+        #         send_message(socket, line)
+
+    client.stop()
 
 
 def main():
     config_params = initialize()
     print(config_params)
-    socket = create_connection(config_params["address"], config_params["port"])
-    with open(config_params["books_path"]) as file:
-        i = 0
-        for line in file:
-            send_message(socket, line)
-            if i == 70000:
-                break
-            i += 1
-        print(i)
-    # with open(config_params["books_reviews_path"]) as file:
-    #     for line in file:
-    #         send_message(socket, line)
-
-    socket.recv(1024)
-    close_connection(socket)
+    run(config_params)
 
 
 if __name__ == "__main__":
