@@ -43,6 +43,7 @@ class Server:
             except OSError:
                 break
 
+
     def __accept_new_connection(self):
         """
         Accept new connections

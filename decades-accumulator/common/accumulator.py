@@ -28,7 +28,7 @@ class Accumulator:
 
 
     def __get_decade(self,year):
-        return (year // 10) * 10
+        return year // 10 * 10
 
 
     def __get_year_regex(self,year):

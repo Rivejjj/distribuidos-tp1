@@ -27,22 +27,19 @@ def run(config_params):
                 break
             i += 1
             # msg = decode(client.receive_message())
-
             # print(msg)
-
             # a.write(msg + '\n')
-
         print(i)
     with open(config_params["books_reviews_path"]) as file:
         i = 0
         for line in file:
+
             print(line.strip())
             client.send_message(line.strip())
             if i == 10000:
                 break
             i += 1
     client.send_message("EOF")
-
     client.stop()
 
 
@@ -50,7 +47,6 @@ def main():
     config_params = initialize()
     print(config_params)
     run(config_params)
-
 
 if __name__ == "__main__":
     main()

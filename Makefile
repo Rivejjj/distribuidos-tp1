@@ -1,11 +1,9 @@
 SHELL := /bin/bash
 PWD := $(shell pwd)
 
-
 default: build
 
 all:
-
 
 docker-image:
 	docker build -f ./rabbitmq/rabbitmq.dockerfile -t "rabbitmq:latest" .
@@ -13,6 +11,7 @@ docker-image:
 	docker build -f ./book-filter/Dockerfile -t "book-filter:latest" .
 	docker build -f ./client/Dockerfile -t "client:latest" .
 	docker build -f ./decades-accumulator/Dockerfile -t "decades-accumulator:latest" .
+	docker build -f ./accumulator/Dockerfile -t "accumulator:latest" .
 	docker build -f ./reviews_counter_accum/Dockerfile -t "reviews_counter_accum:latest" .
 	docker build -f ./sentiment_score_accumulator/Dockerfile -t "sentiment_score_accumulator:latest" .
 	docker build -f ./sentiment_analyzer/Dockerfile -t "sentiment_analyzer:latest" .
