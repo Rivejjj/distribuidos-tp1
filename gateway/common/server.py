@@ -1,6 +1,7 @@
 import socket
 import logging
 import signal
+import threading
 from common.data_receiver import DataReceiver
 from messages.book import Book
 from messages.review import Review
@@ -10,22 +11,32 @@ from utils.sockets import safe_receive, send_message, send_success
 
 
 MAX_MESSAGE_BYTES = 16
-SUCCESS_MSG = "suc"
-ERROR_MSG = "err"
 
 
 class Server:
-    def __init__(self, port, listen_backlog, input_queue=None, exchange=None):
+    def __init__(self, port, results_port, listen_backlog, query_count, input_queue=None, exchange=None):
         # Initialize server socket
         signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
-        self.client_sock = None
-        self.queue = QueueMiddleware(
-            [], input_queue=input_queue, exchange=exchange)
 
-        self.receiving_books = True
+        self.results_server_socket = socket.socket(
+            socket.AF_INET, socket.SOCK_STREAM)
+        self.results_server_socket.bind(('', results_port))
+        self.results_server_socket.listen(listen_backlog)
+
+        self.client_sock = None
+        self.results_client_sock = None
+
+        self.results_thread = None
+        self.queue = QueueMiddleware(
+            [], input_queue='ignore', exchange=exchange)
+
+        self.receiver_queue = QueueMiddleware(
+            [], input_queue=input_queue, wait_for_rmq=False)
+
+        self.query_count = query_count
 
     def run(self):
         """
@@ -35,16 +46,44 @@ class Server:
         communication with a client. After client with communucation
         finishes, servers starts to accept new connections again
         """
+        threading.Thread(target=self.run_results).start()
+        threading.Thread(target=self.run_client).start()
+
+    def run_client(self):
         while True:
             try:
-                client_sock = self.__accept_new_connection()
+                print(f"waiting for connection")
+                client_sock = self.__accept_new_connection(self._server_socket)
                 self.client_sock = client_sock
                 self.handle_client_connection()
             except OSError:
                 break
 
+        self.client_sock.close()
 
-    def __accept_new_connection(self):
+    def run_results(self):
+        """
+        Dummy Server loop
+
+        Server that accept a new connections and establishes a
+        communication with a client. After client with communucation
+        finishes, servers starts to accept new connections again
+        """
+        while True:
+            try:
+                print(f"waiting for connection for results")
+                client_sock = self.__accept_new_connection(
+                    self.results_server_socket)
+
+                print(f"results client sock: {client_sock}")
+                self.results_client_sock = client_sock
+                self.receiver_queue.start_consuming(self.handle_result())
+            except OSError:
+                break
+
+        self.results_client_sock.close()
+
+    def __accept_new_connection(self, socket):
         """
         Accept new connections
 
@@ -54,7 +93,7 @@ class Server:
 
         # Connection arrived
         logging.info('action: accept_connections | result: in_progress')
-        c, addr = self._server_socket.accept()
+        c, addr = socket.accept()
         logging.info(
             f'action: accept_connections | result: success | ip: {addr[0]}')
         return c
@@ -158,6 +197,20 @@ class Server:
             return
 
         print(f'invalid message: {msg}')
+
+    def handle_result(self):
+        def callback(ch, method, properties, body):
+            print(f"[QUERY RESULT]: {decode(body)}")
+            msg = decode(body)
+            print(self.client_sock)
+
+            if msg == "EOF":
+                self.query_count -= 1
+                if self.query_count > 0:
+                    return
+
+            send_message(self.results_client_sock, msg)
+        return callback
 
     def __send_message(self, msg):
         print(f'sending message: {msg}')

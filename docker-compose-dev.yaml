@@ -39,6 +39,38 @@ services:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=INFO
       - EXCHANGE=query
+      - INPUT_QUEUE=results
+      - QUERY_COUNT=2
+
+  computers_category_filter_1:
+    container_name: computers_category_filter_1
+    image: book-filter:latest
+    entrypoint: python3 /main.py
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=DEBUG
+      - EXCHANGE=query
+      - OUTPUT_QUEUES=results
+      - CATEGORY=Computers
+      - ID=0
+      - N=1
+      - QUERY=1
+  fiction_category_filter_1:
+    container_name: fiction_category_filter_1
+    image: book-filter:latest
+    entrypoint: python3 /main.py
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=DEBUG
+      - EXCHANGE=query
       - OUTPUT_QUEUES=fiction_category_books_reviews
       - SAVE_BOOKS=True
       - CATEGORY=fiction
@@ -80,53 +112,52 @@ services:
       - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=500_reviews
       - OUTPUT_QUEUE=result
+    # decades-accumulator:
+    #   container_name: decades-accumulator
+    #   image: decades-accumulator:latest
+    #   entrypoint: python3 /main.py
+    #   environment:
+    #     - ID=1
+    #     - PYTHONUNBUFFERED=1
+    #     - LOGGING_LEVEL=DEBUG
+    #     - TOP=10
+    #     - EXCHANGE=query
+    #     - OUTPUT_QUEUE=result
 
-  # decades-accumulator:
-  #   container_name: decades-accumulator
-  #   image: decades-accumulator:latest
-  #   entrypoint: python3 /main.py
-  #   environment:
-  #     - ID=1
-  #     - PYTHONUNBUFFERED=1
-  #     - LOGGING_LEVEL=DEBUG
-  #     - TOP=10
-  #     - EXCHANGE=query
-  #     - OUTPUT_QUEUE=result
-
-  # category_filter:
-  #   container_name: category_filter
-  #   image: book-filter:latest
-  #   entrypoint: python3 /main.py
-  #   depends_on:
-  #     - rabbitmq
-  #   links:
-  #     - rabbitmq
-  #   environment:
-  #     - ID=1
-  #     - PYTHONUNBUFFERED=1
-  #     - LOGGING_LEVEL=DEBUG
-  #     - CATEGORY=Computers
-  #     - OUTPUT_QUEUE=computers_filtered
-  #     - EXCHANGE=query
+    # category_filter:
+    #   container_name: category_filter
+    #   image: book-filter:latest
+    #   entrypoint: python3 /main.py
+    #   depends_on:
+    #     - rabbitmq
+    #   links:
+    #     - rabbitmq
+    #   environment:
+    #     - ID=1
+    #     - PYTHONUNBUFFERED=1
+    #     - LOGGING_LEVEL=DEBUG
+    #     - CATEGORY=Computers
+    #     - OUTPUT_QUEUE=computers_filtered
+    #     - EXCHANGE=query
 
 
-  # title_contains_filter:
-  #   container_name: title_contains_filter
-  #   image: book-filter:latest
-  #   entrypoint: python3 /main.py
-  #   depends_on:
-  #     - rabbitmq
-  #   links:
-  #     - rabbitmq
-  #   environment:
-  #     - ID=3
-  #     - PYTHONUNBUFFERED=1
-  #     - LOGGING_LEVEL=DEBUG
-  #     - TITLE_CONTAINS=distributed
-  #     - INPUT_QUEUE=published_year_filtered
-  #     - OUTPUT_QUEUE=result
+    # title_contains_filter:
+    #   container_name: title_contains_filter
+    #   image: book-filter:latest
+    #   entrypoint: python3 /main.py
+    #   depends_on:
+    #     - rabbitmq
+    #   links:
+    #     - rabbitmq
+    #   environment:
+    #     - ID=3
+    #     - PYTHONUNBUFFERED=1
+    #     - LOGGING_LEVEL=DEBUG
+    #     - TITLE_CONTAINS=distributed
+    #     - INPUT_QUEUE=published_year_filtered
+    #     - OUTPUT_QUEUE=result
 
-    
+
 
 
     # title_contains_filter:
@@ -140,20 +171,20 @@ services:
     #   networks:
     #     - testing_net
 
-  #sentiment_analyzer:
-   # container_name: sentiment_analyzer
-   # image: sentiment_analyzer:latest
-   # entrypoint: python3 /main.py
-   # depends_on:
-   #   - rabbitmq
-   # links:
-   #   - rabbitmq
-   # environment:
-   #   - PYTHONUNBUFFERED=1
-  #    - LOGGING_LEVEL=INFO
-  #    - INPUT_QUEUE=fiction_category_books_reviews
-  #    - OUTPUT_QUEUES=sentiment_score
-  
+    #sentiment_analyzer:
+    # container_name: sentiment_analyzer
+    # image: sentiment_analyzer:latest
+    # entrypoint: python3 /main.py
+    # depends_on:
+    #   - rabbitmq
+    # links:
+    #   - rabbitmq
+    # environment:
+    #   - PYTHONUNBUFFERED=1
+    #    - LOGGING_LEVEL=INFO
+    #    - INPUT_QUEUE=fiction_category_books_reviews
+    #    - OUTPUT_QUEUES=sentiment_score
+
 
   sentiment_score_accumulator:
     container_name: sentiment_score_accumulator
@@ -168,3 +199,4 @@ services:
       - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=sentiment_score
       - OUTPUT_QUEUES=results
+      - QUERY=5

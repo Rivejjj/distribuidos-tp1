@@ -6,11 +6,12 @@ from utils.initialize import encode
 
 
 class QueueMiddleware:
-    def __init__(self, output_queues: list[str], input_queue=None, exchange=None):
+    def __init__(self, output_queues: list[str], input_queue=None, exchange=None, wait_for_rmq=True):
         # logging.info("Connecting to queue: queue_names=%s", queue_names)
 
         # Waits for rabbitmq
-        time.sleep(32)
+        if wait_for_rmq:
+            time.sleep(30)
 
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(host='rabbitmq'))
@@ -65,14 +66,14 @@ class QueueMiddleware:
         self.connection.close()
 
     def send(self, name, message):
-        #logging.info(f"Sending message to queue {name}: {message}")
+        # logging.info(f"Sending message to queue {name}: {message}")
         self.channel.basic_publish(
             exchange='', routing_key=name, body=message, properties=pika.BasicProperties(
                 delivery_mode=2,  # make message persistent
             ))
 
     def send_to_exchange(self, message, routing_key=''):
-        #logging.info(f"Sending message to exchange: {message}")
+        # logging.info(f"Sending message to exchange: {message}")
         if message == "EOF":
             print("EOF to exchange")
 
@@ -80,6 +81,7 @@ class QueueMiddleware:
             exchange=self.exchange, routing_key=routing_key, body=message)
 
     def send_to_all(self, message):
+        print(f"[QUEUE] Sending message to all: {message}")
         for name in self.output_queues:
             self.send(name, message)
 
@@ -87,7 +89,7 @@ class QueueMiddleware:
         for name in self.output_queues:
             if name != except_queue:
                 self.send(name, message)
-                
+
     def send_eof(self):
         print("[QUEUE] Sending EOF")
         self.send_to_all(encode("EOF"))

@@ -70,3 +70,7 @@ def encode(message):
 
 def decode(message):
     return message.decode('utf-8')
+
+
+def add_query_to_message(message, query):
+    return f"{query}:{message}"
