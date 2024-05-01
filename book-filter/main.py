@@ -52,7 +52,7 @@ def process_message(book_filter: BookFilter, parser: CsvParser,data_receiver: Da
         book = data_receiver.parse_book(msg_received)
 
         if book and book_filter.filter(book):
-            print("Book accepted: ", book.title)
+            print("Book accepted: ", book)
             if review_filter:
                 review_filter.add_title(book.title)
             queue_middleware.send_to_all(encode(str(book)))
