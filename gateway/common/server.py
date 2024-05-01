@@ -60,8 +60,8 @@ class Server:
                 if book:
                     self.queue.send_to_exchange(encode(str(book)))
                     print(
-
                         f'sending to comp.filter | msg: {str(book)}')
+                        
                 review = data_receiver.parse_review(msg)
                 if review:
                     self.queue.send_to_exchange(encode(str(review)))

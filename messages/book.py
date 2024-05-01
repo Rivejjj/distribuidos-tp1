@@ -12,8 +12,7 @@ class Book:
     def sanitize(self):
         self.published_year = self.get_year_regex(self.published_year)
         if not self.title or not self.authors or not self.categories or not self.published_year:
-            print("Missing title, authors, categories or published year",
-                  self.title, self.authors, self.categories, self.published_year)
+            print(f"Missing title, authors, categories or published year: {self.title}, {self.authors}, {self.categories}, {self.published_year}")
             return False
         return True
 

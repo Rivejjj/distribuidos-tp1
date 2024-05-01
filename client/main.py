@@ -39,14 +39,19 @@ def main():
         i = 0
         for line in file:
             send_message(socket, line)
-            if i == 70000:
+            if i == 1000:
                 break
             i += 1
-        print(i)
     # with open(config_params["books_reviews_path"]) as file:
-    #     for line in file:
-    #         send_message(socket, line)
+    with open("/data/ratings_reduced.csv") as file:
+        i = 0
+        for line in file:
+            send_message(socket, line)
+            # if i > 1000:
+            #     break
+            # i += 1
 
+    print(i)
     socket.recv(1024)
     close_connection(socket)
 

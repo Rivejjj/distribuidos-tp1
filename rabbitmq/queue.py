@@ -8,7 +8,7 @@ class QueueMiddleware:
         # logging.info("Connecting to queue: queue_names=%s", queue_names)
 
         # Waits for rabbitmq
-        time.sleep(30)
+        time.sleep(32)
 
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(host='rabbitmq'))

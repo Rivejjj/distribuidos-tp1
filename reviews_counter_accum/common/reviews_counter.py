@@ -1,7 +1,6 @@
 
 class ReviewsCounter:
-    def __init__(self, amount = 0):
-        self.amount = amount
+    def __init__(self):
         self.books = {} # title -> Book
         self.reviews = {} # title -> (review_count,average_rating)
 
@@ -11,8 +10,14 @@ class ReviewsCounter:
     def add_review(self,review):
         if review.title in self.reviews:
             count, average = self.reviews[review.title]
-            new_avg = average + (review.score - average) / (count + 1)
+            review_score = review.score
+            new_avg = float(average) + (float(review_score) - float(average)) / (count + 1)
             self.reviews[review.title] = (count + 1, new_avg)
         else:
-            self.reviews[review.title] = (1, review.score)
+            score = review.score
+            self.reviews[review.title] = (1, score)
+        
+        if float(self.reviews[review.title][0]) > 4:
+            return review.title, self.reviews[review.title][0]
+        return None, None
 

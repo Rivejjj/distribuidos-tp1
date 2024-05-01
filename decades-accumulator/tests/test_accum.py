@@ -2,10 +2,12 @@ import unittest
 from common.accumulator import Accumulator
 from messages.book import Book
 from messages.review import Review
-class TestUtils(unittest.TestCase):
-    base_book = Book('distributed systems', 'description', 'authors', 'image', 'preview_link', 'publisher',2019, 'info_link', ['category', 'category2'], 'ratings_count')
+from gateway.common.data_receiver import DataReceiver
 
-    base_review = Review(1,'distributed systems', 10, 1, 'profile_name', 'helpfulness', 5, 'time', 'summary', 'text')
+class TestUtils(unittest.TestCase):
+    book_like = "distributed systems, description,['authors'], image, preview_link, publisher,2019, info_link, ['category', 'category2'], ratings_count"
+
+    review_line = "1,distributed systems, 10, 1, profile_name, helpfulness, 5, time, summary, text"
 
     '''
     def test_get_year_regex(self):
@@ -36,8 +38,9 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(acum.authors['author2'][2020], 1)
     '''
     def test_add_book(self):
+        book = DataReceiver().parse_book(self.line)
         accum = Accumulator()
-        accum.add_book(self.base_book)
+        accum.add_book(book)
         self.assertEqual(accum.authors['authors'][2010], 1)
-        accum.add_book(self.base_book)
+        accum.add_book(book)
         self.assertEqual(accum.authors['authors'][2010], 2)
