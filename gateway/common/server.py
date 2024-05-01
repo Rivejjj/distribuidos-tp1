@@ -6,7 +6,7 @@ from messages.book import Book
 from messages.review import Review
 from utils.initialize import decode, encode
 from rabbitmq.queue import QueueMiddleware
-from utils.sockets import safe_receive, send_message
+from utils.sockets import safe_receive, send_message, send_success
 
 
 MAX_MESSAGE_BYTES = 16
@@ -22,8 +22,8 @@ class Server:
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
         self.client_sock = None
-        # self.queue = QueueMiddleware(
-        #     [], input_queue=input_queue, exchange=exchange)
+        self.queue = QueueMiddleware(
+            [], input_queue=input_queue, exchange=exchange)
 
         self.receiving_books = True
 
@@ -88,6 +88,8 @@ class Server:
             logging.info(
                 f"action: receive_message_length | result: success | length: {msg_length}")
 
+            send_success(self.client_sock)
+
             return msg_length
         except socket.error as e:
             logging.error(
@@ -135,6 +137,10 @@ class Server:
         data_receiver = DataReceiver()
 
         print(f'received message: {msg}')
+
+        if msg == "EOF":
+            self.queue.send_to_exchange(encode("EOF"))
+            return
 
         book = data_receiver.parse_book(msg)
         if book:

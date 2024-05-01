@@ -1,3 +1,4 @@
+import time
 from common.client import Client
 from utils.initialize import decode, initialize_config, initialize_log
 
@@ -14,6 +15,7 @@ def initialize():
 
 def run(config_params):
     client = Client(config_params["address"], config_params["port"])
+    time.sleep(40)
 
     # with open('results.csv', 'w') as a:
     with open(config_params["books_path"]) as file:
@@ -21,19 +23,25 @@ def run(config_params):
         for line in file:
             print(line.strip())
             client.send_message(line.strip())
-            if i == 70000:
+            if i == 1000:
                 break
             i += 1
-            msg = decode(client.receive_message())
+            # msg = decode(client.receive_message())
 
-            print(msg)
+            # print(msg)
 
             # a.write(msg + '\n')
 
         print(i)
-        # with open(config_params["books_reviews_path"]) as file:
-        #     for line in file:
-        #         send_message(socket, line)
+    with open(config_params["books_reviews_path"]) as file:
+        i = 0
+        for line in file:
+            print(line.strip())
+            client.send_message(line.strip())
+            if i == 10000:
+                break
+            i += 1
+    client.send_message("EOF")
 
     client.stop()
 

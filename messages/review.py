@@ -1,5 +1,8 @@
 
 
+from parser_1.csv_parser import CsvParser
+
+
 class Review:
     def __init__(self, title, score, text):
         self.title = title
@@ -15,3 +18,13 @@ class Review:
                   self.title, self.score, self.text)
             return False
         return True
+
+    @staticmethod
+    def from_csv_line(line):
+        parser = CsvParser()
+        # print("Processing message: %s", line)
+        parsed_line = parser.parse_csv(line)
+        if len(parsed_line) != 3:
+            return None
+
+        return Review(*parsed_line)

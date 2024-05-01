@@ -31,11 +31,12 @@ def parse_message(msg_received):
     if len(line) != 2:
         return None
     title, score = line
-    return title, int(score)
+    return title, float(score)
 
 
 def send_results(sentiment_acc: SentimentScoreAccumulator, queue_middleware: QueueMiddleware):
     for title, score in sentiment_acc.calculate_90th_percentile():
+        print(f"[SENTIMENT RESULT]: {title}, {score}")
         queue_middleware.send_to_all(encode(f"{title},{score}"))
 
 
@@ -47,7 +48,7 @@ def process_eof(queue_middleware: QueueMiddleware, sentiment_acc: SentimentScore
 
 def process_message(sentiment_acc: SentimentScoreAccumulator, queue_middleware: QueueMiddleware):
     def callback(ch, method, properties, body):
-        logging.info("Received message", decode(body))
+        print("Received message", decode(body))
         msg_received = decode(body)
 
         if msg_received == "EOF":
@@ -57,7 +58,6 @@ def process_message(sentiment_acc: SentimentScoreAccumulator, queue_middleware: 
 
         line = parse_message(msg_received)
 
-        print(f"[SENTIMENT RESULT]: {line}")
         if not line:
             return
 

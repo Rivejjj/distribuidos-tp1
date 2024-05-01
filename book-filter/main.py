@@ -6,6 +6,7 @@ from common.review_filter import ReviewFilter
 from messages.book import Book
 from messages.review import Review
 from rabbitmq.queue import QueueMiddleware
+from utils.data_receiver import DataReceiver
 from utils.initialize import decode, encode, get_queue_names, initialize_config, initialize_log, initialize_multi_value_environment, initialize_workers_environment
 from parser_1.csv_parser import CsvParser
 
@@ -43,15 +44,16 @@ def process_eof(queue_middleware: QueueMiddleware, review_filter: ReviewFilter):
 
 def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_middleware: QueueMiddleware):
     def callback(ch, method, properties, body):
-        logging.info("Received message", body.decode())
+        print("Received message", body.decode())
         msg_received = decode(body)
 
         if msg_received == "EOF":
-            process_eof(queue_middleware)
+            process_eof(queue_middleware, review_filter)
             return
 
-        line = CsvParser().parse_csv(msg_received)
-        book = Book(*line)
+        print("Line: ", body)
+
+        book = Book.from_csv_line(msg_received)
 
         if book and book_filter.filter(book):
             print("Book accepted: ", book.title)
@@ -63,7 +65,7 @@ def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_
 
             return
 
-        review = Review(*line)
+        review = Review.from_csv_line(msg_received)
 
         if review and review_filter.filter(review):
             print("Review accepted: ", review.title)

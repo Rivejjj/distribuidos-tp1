@@ -33,4 +33,10 @@ def send_message(sock: socket.socket, msg: str):
     safe_send(sock, len(bytes_to_send).to_bytes(
         MAX_MESSAGE_BYTES, "little"))
 
+    safe_receive(sock, INFO_MSG_BYTES)
+
     safe_send(sock, bytes_to_send)
+
+
+def send_success(sock: socket.socket):
+    safe_send(sock, encode("suc"))

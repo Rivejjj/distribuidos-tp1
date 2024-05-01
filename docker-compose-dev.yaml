@@ -49,8 +49,9 @@ services:
       - rabbitmq
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=DEBUG
+      - LOGGING_LEVEL=INFO
       - EXCHANGE=query
+      - INPUT_QUEUE=results
 
   fiction_category_filter:
     container_name: fiction_category_filter
