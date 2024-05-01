@@ -61,7 +61,6 @@ def process_message(counter: ReviewsCounter,parser: CsvParser, data_receiver: Da
     def callback(ch, method, properties, body):
         msg_received = body.decode()
         book = data_receiver.parse_book(msg_received)
-
         if book:
             counter.add_book(book)
             print("Book accepted: %s", book.title)

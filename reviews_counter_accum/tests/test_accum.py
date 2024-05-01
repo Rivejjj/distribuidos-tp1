@@ -31,10 +31,10 @@ class TestUtils(unittest.TestCase):
         book = data_receiver.parse_book(self.book_line)
         counter.add_book(book)
 
-        self.assertEqual(counter.books['distributed systems'], book)
+        self.assertEqual(counter.books['distributed systems'], book.authors)
 
         new_book_line = """distributed systems 2, description,['authors'], image, preview_link, publisher,2019, info_link, "['category', 'category2']", ratings_count"""
 
         new_book = data_receiver.parse_book(new_book_line)
         counter.add_book(new_book)
-        self.assertEqual(counter.books['distributed systems 2'], new_book)
+        self.assertEqual(counter.books['distributed systems 2'], new_book.authors)

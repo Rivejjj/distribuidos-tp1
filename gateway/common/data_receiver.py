@@ -33,6 +33,7 @@ class DataReceiver:
         book = Book(title, authors, publisher, published_year, categories)
         if book.sanitize():
             return book
+        print("Invalid book: %s", book)
         return None
 
     def parse_review(self, data):

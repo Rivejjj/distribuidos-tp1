@@ -59,14 +59,12 @@ class Server:
                 book = data_receiver.parse_book(msg)
                 if book:
                     self.queue.send_to_exchange(encode(str(book)))
-                    print(
-                        f'sending to comp.filter | msg: {str(book)}')
+                    # print(f'sending to comp.filter | msg: {str(book)}')
                         
                 review = data_receiver.parse_review(msg)
                 if review:
                     self.queue.send_to_exchange(encode(str(review)))
-                    print(
-                        f'sending to comp.filter | msg: {str(review)}')
+                    # print(f'sending to comp.filter | msg: {str(review)}')
 
                 # logging.info(
                     # f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')

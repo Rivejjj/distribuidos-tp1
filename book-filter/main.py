@@ -53,10 +53,9 @@ def process_message(book_filter: BookFilter, parser: CsvParser,data_receiver: Da
 
         if book and book_filter.filter(book):
             print("Book accepted: ", book.title)
-            if not review_filter:
-                queue_middleware.send_to_all(encode(str(book)))
-            else:
+            if review_filter:
                 review_filter.add_title(book.title)
+            queue_middleware.send_to_all(encode(str(book)))
             return
 
         review = data_receiver.parse_review(msg_received)
