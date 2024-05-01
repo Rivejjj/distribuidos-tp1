@@ -4,7 +4,7 @@ import signal
 from common.data_receiver import DataReceiver
 from messages.book import Book
 from messages.review import Review
-from utils.initialize import decode
+from utils.initialize import decode, encode
 from rabbitmq.queue import QueueMiddleware
 from utils.sockets import safe_receive, send_message
 
@@ -120,7 +120,7 @@ class Server:
 
                 self.__process_message(msg)
 
-                self.__send_message(msg)
+                # self.__send_message(msg)
 
         except OSError as e:
             logging.error(
@@ -138,14 +138,14 @@ class Server:
 
         book = data_receiver.parse_book(msg)
         if book:
-            # self.queue.send_to_exchange(encode(str(book)))
+            self.queue.send_to_exchange(encode(str(book)))
             print(
 
                 f'sending to comp.filter | msg: {str(book)}')
             return
         review = data_receiver.parse_review(msg)
         if review:
-            # self.queue.send_to_exchange(encode(str(review)))
+            self.queue.send_to_exchange(encode(str(review)))
             print(
                 f'sending to comp.filter | msg: {str(review)}')
             return
