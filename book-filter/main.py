@@ -39,6 +39,10 @@ def process_eof(queue_middleware: QueueMiddleware, review_filter: ReviewFilter):
     queue_middleware.send_eof()
 
 
+def format_for_results(book: Book, query):
+    return add_query_to_message(f"{book.title},{book.authors},{book.publisher}", query)
+
+
 def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_middleware: QueueMiddleware, query=None):
     def callback(ch, method, properties, body):
      # query3
@@ -66,7 +70,7 @@ def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_
                 message = str(book)
 
                 if query:
-                    message = add_query_to_message(message, query)
+                    message = format_for_results(book, query)
                 queue_middleware.send_to_all(encode(message))
             else:
                 review_filter.add_title(book.title)

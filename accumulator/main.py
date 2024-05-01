@@ -3,71 +3,53 @@ import logging
 import os
 from common.accumulator import Accumulator
 from rabbitmq.queue import QueueMiddleware
-from utils.initialize import encode, initialize_config, initialize_log
+from utils.initialize import add_query_to_message, decode, encode, get_queue_names, initialize_config, initialize_log, initialize_multi_value_environment, initialize_workers_environment
 from parser_1.csv_parser import CsvParser
 from gateway.common.data_receiver import DataReceiver
 
+
 def initialize():
-    all_params = ["logging_level", "category",
-                  "published_year_range", "title_contains", "id", "last", "input_queue", "output_queue", "exchange", "save_books"]
-    env = os.environ
-    params = []
-    for param in all_params:
-        param = param.upper()
-        if param in env:
-            params.append((param, True))
-        else:
-            params.append((param, False))
+    all_params = ["logging_level", "id", "n",
+                  "input_queue", "output_queues", "exchange", "query"]
+
+    params = list(map(lambda param: (param, False), all_params))
 
     config_params = initialize_config(params)
     logging.debug("Config: %s", config_params)
     logging.info("Config: %s", config_params)
     print(config_params)
 
-    if config_params["PUBLISHED_YEAR_RANGE"]:
-        config_params["PUBLISHED_YEAR_RANGE"] = tuple(
-            map(int, config_params["PUBLISHED_YEAR_RANGE"].split("-")))
+    if config_params["published_year_range"]:
+        config_params["published_year_range"] = tuple(
+            map(int, config_params["published_year_range"].split("-")))
 
-    if "LAST" in config_params:
-        config_params["LAST"] = bool(config_params["LAST"])
+    initialize_multi_value_environment(config_params, ["output_queues"])
 
-    if "ID" in config_params:
-        config_params["ID"] = int(config_params["ID"])
+    initialize_workers_environment(config_params)
 
-    initialize_log(config_params["LOGGING_LEVEL"])
+    initialize_log(config_params["logging_level"])
 
     return config_params
 
 
-
-def initialize_log(logging_level):
-    """
-    Python custom logging initialization
-
-    Current timestamp is added to be able to identify in docker
-    compose logs the date when the log has arrived
-    """
-    logging.basicConfig(
-        format='%(asctime)s %(levelname)-8s %(message)s',
-        level=logging_level,
-        datefmt='%Y-%m-%d %H:%M:%S',
-    )
-
-def get_queue_names(config_params):
-    return [config_params["OUTPUT_QUEUE"]]
+def process_eof(queue_middleware: QueueMiddleware, accum: Accumulator, query=None):
+    print("EOF received")
+    top = accum.get_top()
+    result = ""
+    for i in top:
+        result += add_query_to_message(f"{i[0]},{i[1]}\n", query)
+    print("sending to result:", result)
+    queue_middleware.send_to_all(encode(result))
+    accum.clear()
+    queue_middleware.send_eof()
 
 
-def process_message(accum: Accumulator,parser: CsvParser, queue_middleware: QueueMiddleware ):
+def process_message(accum: Accumulator, parser: CsvParser, queue_middleware: QueueMiddleware, query):
     def callback(ch, method, properties, body):
-        msg_received = body.decode()
+        msg_received = decode(body)
         if msg_received == "EOF":
-            print("EOF received")
-            top = accum.get_top()
-            result = ""
-            for i in top:
-                result += f"{i[0]}: {i[1]}\n"
-            print("sending to result:", result)
-            queue_middleware.send_to_all(encode(result))
+            process_eof(queue_middleware, accum, query)
+            return
 
         book = parser.parse_csv(msg_received)
         if len(book) == 2:
@@ -76,21 +58,21 @@ def process_message(accum: Accumulator,parser: CsvParser, queue_middleware: Queu
 
     return callback
 
+
 def main():
 
     config_params = initialize()
-    initialize_log(config_params["LOGGING_LEVEL"])
     logging.debug("Config: %s", config_params)
 
     top = 10
     accum = Accumulator(top)
 
     queue_middleware = QueueMiddleware(get_queue_names(
-        config_params), exchange=config_params["EXCHANGE"], input_queue=config_params["INPUT_QUEUE"])
+        config_params), exchange=config_params["exchange"], input_queue=config_params["input_queue"])
 
     parser = CsvParser()
     queue_middleware.start_consuming(
-        process_message(accum, parser, queue_middleware))
+        process_message(accum, parser, queue_middleware, query=config_params["query"]))
 
 
 if __name__ == "__main__":
