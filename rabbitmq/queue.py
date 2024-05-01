@@ -2,13 +2,16 @@ import logging
 import time
 import pika
 
+from rabbitmq.eof_queue import EOFQueue
+from utils.initialize import decode, encode
+
 
 class QueueMiddleware:
-    def __init__(self, output_queues: list[str], input_queue=None, exchange=None):
+    def __init__(self, output_queues: list[str], input_queue=None, exchange=None, id=None, total_workers=None, eof_callback=None):
         # logging.info("Connecting to queue: queue_names=%s", queue_names)
 
         # Waits for rabbitmq
-        time.sleep(30)
+        time.sleep(15)
 
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(host='rabbitmq'))
@@ -48,15 +51,26 @@ class QueueMiddleware:
             # self.channel.basic_consume(
             #     queue=input_queue, on_message_callback=callback, auto_ack=True)
 
-        self.channel.start_consuming()
+        self.eof_queue = None
+        # if id is not None and total_workers:
+        #     print("Creating EOFQueue")
+        #     self.eof_queue = EOFQueue(
+        #         id, total_workers, eof_callback, lambda _: self.send_to_all(encode("EOF")))
 
     def start_consuming(self, callback):
+        print("Starting to consume messages")
+        cb = self.handle_message(callback)
         if self.input_queue:
+            print("Consuming input queue")
             self.channel.basic_consume(
                 queue=self.input_queue, on_message_callback=callback, auto_ack=True)
         if self.exchange_queue_name:
+            print("Consuming exchange queue")
             self.channel.basic_consume(
                 queue=self.exchange_queue_name, on_message_callback=callback, auto_ack=True)
+
+        if self.eof_queue:
+            self.eof_queue.set_service_callback(callback)
         self.channel.start_consuming()
 
     def end(self):
@@ -78,3 +92,11 @@ class QueueMiddleware:
     def send_to_all(self, message):
         for name in self.output_queues:
             self.send(name, message)
+
+    def handle_message(self, service_cb):
+        def callback(ch, method, properties, body):
+            if decode(body) == "EOF" and self.eof_queue:
+                self.eof_queue.propagate_eof(body)
+            service_cb(ch, method, properties, body)
+
+        return callback

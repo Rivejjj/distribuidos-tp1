@@ -56,20 +56,24 @@ class Server:
                     break
                 # addr = self.client_sock.getpeername()
 
-                book = data_receiver.parse_book(msg)
-                if book:
-                    self.queue.send_to_exchange(encode(str(book)))
-                    print(
+                # book = data_receiver.parse_book(msg)
+                # if book:
+                #     self.queue.send_to_exchange(encode(str(book)))
+                #     print(
 
-                        f'sending to comp.filter | msg: {str(book)}')
-                review = data_receiver.parse_review(msg)
-                if review:
-                    self.queue.send_to_exchange(encode(str(review)))
-                    print(
-                        f'sending to comp.filter | msg: {str(review)}')
+                #         f'sending to comp.filter | msg: {str(book)}')
+                # review = data_receiver.parse_review(msg)
+                # if review:
+                #     self.queue.send_to_exchange(encode(str(review)))
+                #     print(
+                #         f'sending to comp.filter | msg: {str(review)}')
+
+                self.queue.send_to_exchange(encode("EOF"))
+
+                break
 
                 # logging.info(
-                    # f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
+                # f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
         except OSError as e:
             logging.error(
                 f"action: receive_message | result: fail | error: {e}")
