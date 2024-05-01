@@ -5,94 +5,72 @@ import os
 from common.accumulator import Accumulator
 from messages.book import Book
 from rabbitmq.queue import QueueMiddleware
-from utils.initialize import encode, initialize_config, initialize_log
+from utils.initialize import add_query_to_message, decode, encode, get_queue_names, initialize_config, initialize_log, initialize_multi_value_environment, initialize_workers_environment
 from parser_1.csv_parser import CsvParser
 
 
 def initialize():
-    all_params = ["logging_level", "category",
-                  "published_year_range", "title_contains", "id", "last", "input_queue", "output_queue", "exchange"]
-    env = os.environ
+    all_params = ["logging_level", "id", "n",
+                  "input_queue", "output_queues", "exchange", "query"]
 
-    params = []
-
-    for param in all_params:
-        param = param.upper()
-        if param in env:
-            params.append((param, True))
-        else:
-            params.append((param, False))
+    params = list(map(lambda param: (param, False), all_params))
 
     config_params = initialize_config(params)
     logging.debug("Config: %s", config_params)
     logging.info("Config: %s", config_params)
     print(config_params)
 
-    if config_params["PUBLISHED_YEAR_RANGE"]:
-        config_params["PUBLISHED_YEAR_RANGE"] = tuple(
-            map(int, config_params["PUBLISHED_YEAR_RANGE"].split("-")))
+    initialize_multi_value_environment(config_params, ["output_queues"])
 
-    if "LAST" in config_params:
-        config_params["LAST"] = bool(config_params["LAST"])
+    initialize_workers_environment(config_params)
 
-    if "ID" in config_params:
-        config_params["ID"] = int(config_params["ID"])
-
-    initialize_log(config_params["LOGGING_LEVEL"])
+    initialize_log(config_params["logging_level"])
 
     return config_params
 
 
-def initialize_log(logging_level):
-    """
-    Python custom logging initialization
+def process_eof(queue_middleware: QueueMiddleware, accum: Accumulator, query=None):
+    authors = accum.get_result()
+    final_result = "\n".join([f"{author}" for author in authors])
 
-    Current timestamp is added to be able to identify in docker
-    compose logs the date when the log has arrived
-    """
-    logging.basicConfig(
-        format='%(asctime)s %(levelname)-8s %(message)s',
-        level=logging_level,
-        datefmt='%Y-%m-%d %H:%M:%S',
-    )
+    if query:
+        final_result = add_query_to_message(final_result, query)
 
-def get_queue_names(config_params):
-    return [config_params["OUTPUT_QUEUE"]]
+    queue_middleware.send_to_all(encode(final_result))
 
-def process_message(accum: Accumulator, queue_middleware: QueueMiddleware):
+    accum.clear()
+    queue_middleware.send_eof()
+
+
+def process_message(accum: Accumulator, queue_middleware: QueueMiddleware, query=None):
     def callback(ch, method, properties, body):
-        msg_received = body.decode()
-        line = CsvParser().parse_csv(msg_received)
+        msg_received = decode(body)
 
-        book = Book(*line)
         if msg_received == "EOF":
-            logging.info("Received EOF, shutting down")
-            authors = accum.get_result()
-            final_result = "\n".join([f"{author}" for author in authors])
-            queue_middleware.send_to_all(encode(final_result))
-            queue_middleware.stop_consuming()
+            process_eof(queue_middleware, accum, query)
             return
 
-        if book and msg_received != "EOF":
+        book = Book.from_csv_line(msg_received)
+
+        if book:
             accum.add_book(book)
     return callback
-
 
 
 def main():
 
     config_params = initialize()
-    initialize_log(config_params["LOGGING_LEVEL"])
 
     logging.debug("Config: %s", config_params)
 
     accum = Accumulator()
 
     queue_middleware = QueueMiddleware(get_queue_names(
-        config_params), exchange=config_params["EXCHANGE"])
-    
+        config_params), exchange=config_params["exchange"])
+
     queue_middleware.start_consuming(
         process_message(accum, queue_middleware))
+
 
 if __name__ == "__main__":
     main()
