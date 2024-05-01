@@ -7,13 +7,13 @@ from messages.book import Book
 from messages.review import Review
 from rabbitmq.queue import QueueMiddleware
 from utils.data_receiver import DataReceiver
-from utils.initialize import decode, encode, get_queue_names, initialize_config, initialize_log, initialize_multi_value_environment, initialize_workers_environment
+from utils.initialize import add_query_to_message, decode, encode, get_queue_names, initialize_config, initialize_log, initialize_multi_value_environment, initialize_workers_environment
 from parser_1.csv_parser import CsvParser
 
 
 def initialize():
     all_params = ["logging_level", "category",
-                  "published_year_range", "title_contains", "id", "n", "input_queue", "output_queues", "exchange", "save_books"]
+                  "published_year_range", "title_contains", "id", "n", "input_queue", "output_queues", "exchange", "save_books", "query"]
 
     params = list(map(lambda param: (param, False), all_params))
 
@@ -42,7 +42,7 @@ def process_eof(queue_middleware: QueueMiddleware, review_filter: ReviewFilter):
     queue_middleware.send_eof()
 
 
-def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_middleware: QueueMiddleware):
+def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_middleware: QueueMiddleware, query=None):
     def callback(ch, method, properties, body):
         print("Received message", body.decode())
         msg_received = decode(body)
@@ -59,7 +59,11 @@ def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_
             print("Book accepted: ", book.title)
 
             if not review_filter:
-                queue_middleware.send_to_all(encode(str(book)))
+                message = str(book)
+
+                if query:
+                    message = add_query_to_message(message, query)
+                queue_middleware.send_to_all(encode(message))
             else:
                 review_filter.add_title(book.title)
 
@@ -67,7 +71,7 @@ def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_
 
         review = Review.from_csv_line(msg_received)
 
-        if review and review_filter.filter(review):
+        if review and review_filter and review_filter.filter(review):
             print("Review accepted: ", review.title)
             queue_middleware.send_to_all(encode(str(review)))
     return callback
@@ -92,7 +96,7 @@ def main():
         config_params), exchange=config_params["exchange"], input_queue=config_params["input_queue"])
 
     queue_middleware.start_consuming(
-        process_message(book_filter, review_filter, queue_middleware))
+        process_message(book_filter, review_filter, queue_middleware, config_params["query"]))
 
 
 if __name__ == "__main__":

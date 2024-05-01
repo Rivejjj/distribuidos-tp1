@@ -1,6 +1,6 @@
 import socket
 import logging
-from utils.sockets import safe_receive, send_message
+from utils.sockets import safe_receive, send_message, send_success
 
 
 MAX_MESSAGE_BYTES = 16
@@ -36,6 +36,8 @@ class Client:
 
     def receive_message(self):
         msg_length = self.__receive_message_length()
+
+        send_success(self.socket)
 
         msg = safe_receive(self.socket, msg_length)
         logging.info(

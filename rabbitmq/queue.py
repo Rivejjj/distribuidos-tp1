@@ -78,6 +78,7 @@ class QueueMiddleware:
             exchange=self.exchange, routing_key=routing_key, body=message)
 
     def send_to_all(self, message):
+        print(f"[QUEUE] Sending message to all: {message}")
         for name in self.output_queues:
             self.send(name, message)
 

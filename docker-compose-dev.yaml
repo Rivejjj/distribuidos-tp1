@@ -53,8 +53,25 @@ services:
       - EXCHANGE=query
       - INPUT_QUEUE=results
 
-  fiction_category_filter:
-    container_name: fiction_category_filter
+  computers_category_filter_1:
+    container_name: computers_category_filter_1
+    image: book-filter:latest
+    entrypoint: python3 /main.py
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=DEBUG
+      - EXCHANGE=query
+      - OUTPUT_QUEUES=results
+      - CATEGORY=Computers
+      - ID=0
+      - N=1
+      - QUERY=1
+  fiction_category_filter_1:
+    container_name: fiction_category_filter_1
     image: book-filter:latest
     entrypoint: python3 /main.py
     depends_on:
@@ -98,3 +115,4 @@ services:
       - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=sentiment_score
       - OUTPUT_QUEUES=results
+      - QUERY=5

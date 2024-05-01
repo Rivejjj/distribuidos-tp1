@@ -33,15 +33,24 @@ def run(config_params):
             # a.write(msg + '\n')
 
         print(i)
-    with open(config_params["books_reviews_path"]) as file:
-        i = 0
-        for line in file:
-            print(line.strip())
-            client.send_message(line.strip())
-            if i == 10000:
-                break
-            i += 1
+    # with open(config_params["books_reviews_path"]) as file:
+    #     i = 0
+    #     for line in file:
+    #         print(line.strip())
+    #         client.send_message(line.strip())
+    #         if i == 10000:
+    #             break
+    #         i += 1
     client.send_message("EOF")
+
+    while True:
+        msg = decode(client.receive_message())
+        if msg == "EOF":
+            break
+        number, text = msg.split(':', 1)
+        filename = f"query{number}.txt"
+        with open(filename, 'a') as f:
+            f.write(text + '\n')
 
     client.stop()
 

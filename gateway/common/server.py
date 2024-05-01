@@ -1,3 +1,4 @@
+from multiprocessing import Process
 import socket
 import logging
 import signal
@@ -26,6 +27,11 @@ class Server:
             [], input_queue=input_queue, exchange=exchange)
 
         self.receiving_books = True
+
+        process = Process(
+            target=self.queue.start_consuming, args=(self.handle_result,))
+
+        process.start()
 
     def run(self):
         """
@@ -157,6 +163,14 @@ class Server:
             return
 
         print(f'invalid message: {msg}')
+
+    def handle_result(self, ch, method, properties, body):
+        print(f"[QUERY RESULT]: {decode(body)}")
+        msg = decode(body)
+        print(self.client_sock)
+
+        # Falla aca
+        self.__send_message(msg)
 
     def __send_message(self, msg):
         print(f'sending message: {msg}')
