@@ -56,8 +56,8 @@ class Server:
                     print("EOF received")
                     self.queue.send_to_exchange(encode("EOF"))
 
-                if msg == "":
-                    break
+                # if msg == "":
+                #     break
                 # addr = self.client_sock.getpeername()
 
                 book = data_receiver.parse_book(msg)

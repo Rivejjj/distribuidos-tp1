@@ -67,7 +67,7 @@ def process_message(accum: Accumulator,parser: CsvParser, queue_middleware: Queu
             for i in top:
                 result += f"{i[0]}: {i[1]}\n"
             print("sending to result:", result)
-            queue_middleware.send_to_all(encode(top))
+            queue_middleware.send_to_all(encode(result))
 
         book = parser.parse_csv(msg_received)
         if len(book) == 2:

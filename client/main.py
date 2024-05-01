@@ -53,8 +53,7 @@ def main():
             #     break
             # i += 1
 
-    print(i)
-    send_message(socket, "EOF")
+    send_message(socket, "\nEOF\n")
     socket.recv(1024)
     close_connection(socket)
 
