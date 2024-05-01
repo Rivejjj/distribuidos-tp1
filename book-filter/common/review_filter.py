@@ -9,3 +9,6 @@ class ReviewFilter:
 
     def filter(self, review) -> bool:
         return review.title in self.titles
+
+    def clear(self):
+        self.titles = set()

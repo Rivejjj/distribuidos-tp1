@@ -61,12 +61,7 @@ def initialize_multi_value_environment(config_params, params):
 
 
 def get_queue_names(config_params):
-    queue_names = [(config_params["input_queue"], False)]
-
-    for queue in config_params["output_queues"]:
-        queue_names.append((queue, True))
-
-    return queue_names
+    return config_params["output_queues"]
 
 
 def encode(message):
