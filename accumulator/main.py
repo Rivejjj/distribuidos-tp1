@@ -19,10 +19,6 @@ def initialize():
     logging.info("Config: %s", config_params)
     print(config_params)
 
-    if config_params["published_year_range"]:
-        config_params["published_year_range"] = tuple(
-            map(int, config_params["published_year_range"].split("-")))
-
     initialize_multi_value_environment(config_params, ["output_queues"])
 
     initialize_workers_environment(config_params)

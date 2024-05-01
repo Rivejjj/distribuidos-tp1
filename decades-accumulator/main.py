@@ -10,7 +10,7 @@ from parser_1.csv_parser import CsvParser
 
 
 def initialize():
-    all_params = ["logging_level", "id", "n",
+    all_params = ["logging_level",
                   "input_queue", "output_queues", "exchange", "query"]
 
     params = list(map(lambda param: (param, False), all_params))
@@ -21,8 +21,6 @@ def initialize():
     print(config_params)
 
     initialize_multi_value_environment(config_params, ["output_queues"])
-
-    initialize_workers_environment(config_params)
 
     initialize_log(config_params["logging_level"])
 
