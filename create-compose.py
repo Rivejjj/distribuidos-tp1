@@ -33,7 +33,7 @@ def create_docker_compose():
         build_query4(config['services'])
         build_query5(config['services'])
 
-        config['networks'] = build_network()
+        # config['networks'] = build_network()
 
         yaml.dump(config, file, sort_keys=False)
 
@@ -71,9 +71,6 @@ def build_gateway():
             f'QUERY_COUNT={WORKERS+WORKERS+WORKERS+2}',
             'ID=0'
         ],
-        'networks': [
-            'testing_net'
-        ]
 
     }
 
@@ -95,9 +92,6 @@ def build_client():
         'volumes': [
             './data:/data'
         ],
-        'networks': [
-            'testing_net'
-        ]
 
     }
 
@@ -160,9 +154,6 @@ def build_computer_category_filter(i):
             'CATEGORY=Computers',
             f'ID={i}'
         ],
-        'networks': [
-            'testing_net'
-        ]
 
     }
 
@@ -181,9 +172,6 @@ def build_2000s_published_year_filter(i):
             f'ID={i}',
             f'PREVIOUS_WORKERS={WORKERS}'
         ],
-        'networks': [
-            'testing_net'
-        ]
 
     }
 
@@ -203,9 +191,6 @@ def build_title_contains_filter(i):
             'QUERY=1',
             f'PREVIOUS_WORKERS={WORKERS}'
         ],
-        'networks': [
-            'testing_net'
-        ]
 
 
     }
@@ -225,9 +210,6 @@ def build_decades_accumulator(i):
             f'ID={i}',
             'QUERY=2',
         ],
-        'networks': [
-            'testing_net'
-        ]
 
     }
 
@@ -246,9 +228,6 @@ def build_1990s_published_year_filter(i):
             f'ID={i}',
             'SAVE_BOOKS=True',
         ],
-        'networks': [
-            'testing_net'
-        ]
 
     }
 
@@ -268,9 +247,6 @@ def build_reviews_counter(i):
             'QUERY=3',
             f'PREVIOUS_WORKERS={WORKERS}'
         ],
-        'networks': [
-            'testing_net'
-        ]
 
 
     }
@@ -290,9 +266,6 @@ def build_avg_rating_accumulator():
             'QUERY=4',
             f'PREVIOUS_WORKERS={WORKERS}'
         ],
-        'networks': [
-            'testing_net'
-        ]
 
     }
 
@@ -305,15 +278,12 @@ def build_fiction_category_filter(i):
         'environment': [
             'PYTHONUNBUFFERED=1',
             'LOGGING_LEVEL=INFO',
-            'INPUT_QUEUE=query1',
+            'INPUT_QUEUE=query4',
             f'OUTPUT_QUEUES=fiction:{WORKERS}',
             'CATEGORY=Fiction',
             f'ID={i}',
             'SAVE_BOOKS=True'
         ],
-        'networks': [
-            'testing_net'
-        ]
 
     }
 
@@ -331,9 +301,6 @@ def build_sentiment_analyzer(i):
             f'ID={i}',
             f'PREVIOUS_WORKERS={WORKERS}'
         ],
-        'networks': [
-            'testing_net'
-        ]
 
     }
 
@@ -352,9 +319,6 @@ def build_sentiment_score_accumulator():
             'QUERY=5',
             f'PREVIOUS_WORKERS={WORKERS}'
         ],
-        'networks': [
-            'testing_net'
-        ]
 
     }
 
