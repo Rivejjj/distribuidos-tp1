@@ -49,7 +49,7 @@ def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_
             process_eof(queue_middleware, review_filter)
             return
 
-        print("Line: ", body)
+        # print("Line: ", body)
 
         book = Book.from_csv_line(msg_received)
 

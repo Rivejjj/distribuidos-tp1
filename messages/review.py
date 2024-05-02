@@ -14,8 +14,7 @@ class Review:
 
     def sanitize(self):
         if not self.title or not self.score or not self.text:
-            print("Missing fields",
-                  self.title, self.score, self.text)
+            # print("Missing fields",self.title, self.score, self.text)
             return False
         return True
 

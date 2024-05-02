@@ -44,7 +44,7 @@ def process_message(sentiment_analyzer: SentimentAnalizer, queue_middleware: Que
         review = Review(*line)
 
         if review and review.sanitize():
-            print(f"[REVIEW]: Text {review.text}")
+            # print(f"[REVIEW]: Text {review.text}")
             polarity_score = sentiment_analyzer.analyze(review.text)
 
             if not polarity_score:

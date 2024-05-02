@@ -3,7 +3,7 @@ class SentimentScoreAccumulator:
         self.title_sentiment_score = set()
 
     def add_sentiment_score(self, title, sentiment_score):
-        print(f"[ACCUMULATOR]: {title}, {sentiment_score}")
+        # print(f"[ACCUMULATOR]: {title}, {sentiment_score}")
         self.title_sentiment_score.add((title, sentiment_score))
 
     def calculate_90th_percentile(self):

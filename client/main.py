@@ -3,7 +3,7 @@ from threading import Thread
 import time
 from common.client import Client
 from utils.initialize import decode, initialize_config, initialize_log
-
+import csv
 
 def initialize():
 
@@ -20,7 +20,7 @@ def receive_results(address, port):
     client = Client(address, port)
     while True:
         msg = decode(client.receive_message())
-        print(f"[RESULTS] Received: {msg}")
+        # print(f"[RESULTS] Received: {msg}")
         if msg == "EOF":
             break
 
@@ -41,18 +41,23 @@ def run(config_params):
     thread.start()
 
     # with open('results.csv', 'w') as a:
-    with open(config_params["books_path"]) as file:
-        i = 0
-        for line in file:
-            print(line.strip())
-            client.send_message(line.strip())
-            # if i == 1000:
-            #     break
-            i += 1
-            # msg = decode(client.receive_message())
-            # print(msg)
-            # a.write(msg + '\n')
-        print(i)
+    file = open(config_params["books_path"], "r")
+    line = file.readline()
+    batch_size = 10
+    batch = ""
+    # i = 0
+    while line:
+        try:
+            for _ in range(batch_size):
+                line = file.readline()
+                batch += line 
+            # print(f"[CLIENT] Sending batch: {batch}")
+            client.send_message(batch)
+            batch = ""
+        except Exception as e:
+            break
+        # i += 1
+    file.close()
     # with open(config_params["books_reviews_path"]) as file:
     #     i = 0
     #     for line in file:

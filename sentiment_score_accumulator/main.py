@@ -48,7 +48,7 @@ def process_eof(queue_middleware: QueueMiddleware, sentiment_acc: SentimentScore
 
 def process_message(sentiment_acc: SentimentScoreAccumulator, queue_middleware: QueueMiddleware, query=None):
     def callback(ch, method, properties, body):
-        print("Received message", decode(body))
+        # print("Received message", decode(body))
         msg_received = decode(body)
 
         if msg_received == "EOF":
