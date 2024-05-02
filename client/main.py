@@ -46,8 +46,8 @@ def run(config_params):
         for line in file:
             print(line.strip())
             client.send_message(line.strip())
-            if i == 1000:
-                break
+            # if i == 1000:
+            #     break
             i += 1
             # msg = decode(client.receive_message())
             # print(msg)

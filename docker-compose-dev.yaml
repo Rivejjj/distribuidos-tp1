@@ -42,9 +42,9 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=INFO
-      - OUTPUT_QUEUES=query1:5;query2:3;query3:3;query4:3
+      - OUTPUT_QUEUES=query1:3;query2:3;query3:3;query4:3
       - INPUT_QUEUE=results
-      - QUERY_COUNT=5
+      - QUERY_COUNT=1
       - ID=0
 
   ###########################################################################
@@ -110,7 +110,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=INFO
-      - CATEGORY=Computers
+      - PUBLISHED_YEAR_RANGE=2000-2023
       - INPUT_QUEUE=computers
       - OUTPUT_QUEUES=2000s_filtered:3
       - ID=0
@@ -126,7 +126,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=INFO
-      - CATEGORY=Computers
+      - PUBLISHED_YEAR_RANGE=2000-2023
       - INPUT_QUEUE=computers
       - OUTPUT_QUEUES=2000s_filtered:3
       - ID=1
@@ -142,7 +142,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=INFO
-      - CATEGORY=Computers
+      - PUBLISHED_YEAR_RANGE=2000-2023
       - INPUT_QUEUE=computers
       - OUTPUT_QUEUES=2000s_filtered:3
       - ID=2
@@ -159,7 +159,7 @@ services:
       - ID=0
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
-      - CATEGORY=Computers
+      - TITLE_CONTAINS=distributed
       - INPUT_QUEUE=2000s_filtered
       - OUTPUT_QUEUES=results:1
       - QUERY=1
@@ -176,7 +176,7 @@ services:
       - ID=1
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
-      - CATEGORY=Computers
+      - TITLE_CONTAINS=distributed
       - INPUT_QUEUE=2000s_filtered
       - OUTPUT_QUEUES=results:1
       - QUERY=1
@@ -193,7 +193,7 @@ services:
       - ID=2
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
-      - CATEGORY=Computers
+      - TITLE_CONTAINS=distributed
       - INPUT_QUEUE=2000s_filtered
       - OUTPUT_QUEUES=results:1
       - QUERY=1

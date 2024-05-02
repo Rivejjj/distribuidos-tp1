@@ -188,7 +188,8 @@ class Server:
             pool = [f"query{i}" for i in range(1, 5)]
 
             for name in pool:
-                self.queue.send_to_pool(name, encode(str(book)), book.title)
+                self.queue.send_to_pool(
+                    encode(str(book)), book.title, next_pool_name=name)
             print(
 
                 f'sending to comp.filter | msg: {str(book)}')
@@ -199,7 +200,7 @@ class Server:
 
             for name in pool:
                 self.queue.send_to_pool(
-                    name, encode(str(review)), review.title)
+                    encode(str(review)), review.title, next_pool_name=name)
             print(
                 f'sending to comp.filter | msg: {str(review)}')
             return
@@ -213,9 +214,10 @@ class Server:
             print(self.client_sock)
 
             if msg == "EOF":
-                self.query_count -= 1
-                if self.query_count > 0:
-                    return
+                return
+                # self.query_count -= 1
+                # if self.query_count > 0:
+                #     return
 
             send_message(self.results_client_sock, msg)
         return callback

@@ -99,7 +99,9 @@ class QueueMiddleware:
             f"[QUEUE] Calculating worker for {next_pool_name} with hash {hash_value}")
         return hash_value % len(output_queues)
 
-    def send_to_pool(self, next_pool_name, message, hash_key):
+    def send_to_pool(self, message, hash_key, next_pool_name=None):
+        if not next_pool_name and len(self.queue_pools) == 1:
+            next_pool_name = list(self.queue_pools.keys())[0]
         next = self.__calculate_worker(next_pool_name, hash_key)
 
         queue_name = self.__get_worker_name(next_pool_name, next)
