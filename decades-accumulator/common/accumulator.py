@@ -8,8 +8,7 @@ class Accumulator:
         if year is None:
             return
         decade = self.__get_decade(year)
-        for author in book.authors.split(","):
-            self.__add_author(author, decade)
+        self.__add_author(book.authors, decade)
 
     def get_result(self):
         authors = []
@@ -23,7 +22,7 @@ class Accumulator:
             self.authors[author] = {}
         self.authors[author][decade] = self.authors[author].get(decade, 0) + 1
         # if len(self.authors[author]) >= 10:
-            # print("author:", author, "->", self.authors[author])
+        # print("author:", author, "->", self.authors[author])
 
     def __get_decade(self, year):
         return year // 10 * 10

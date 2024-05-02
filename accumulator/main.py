@@ -30,9 +30,10 @@ def process_eof(queue_middleware: QueueMiddleware, accum: Accumulator, query=Non
         top = accum.get_top()
         result = ""
         for i in top:
-            result += add_query_to_message(f"{i[0]},{i[1]}\n", query)
+            result += f"{i[0]},{i[1]}\n"
         logging.info("sending to result:", result)
-        queue_middleware.send_to_all(encode(result))
+        queue_middleware.send_to_all(
+            encode(add_query_to_message(result, query)))
         accum.clear()
 
     queue_middleware.send_eof(callback)

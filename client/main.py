@@ -6,6 +6,7 @@ from common.client import Client
 from utils.initialize import decode, initialize_config, initialize_log
 import csv
 
+
 def initialize():
 
     config_params = initialize_config(
@@ -29,12 +30,13 @@ def receive_results(address, port):
         splitted = msg.split(':', 1)
         if len(splitted) != 2:
             continue
-        number, text = msg.split(':', 1)
-        filename = f"query{number}.txt"
+        number, text = splitted
+        filename = f"query/query{number}.csv"
         with open(filename, 'a') as f:
             f.write(text + '\n')
 
     client.stop()
+
 
 def send_file(client, filename, batch_size=10):
     file = open(filename, "r")
@@ -45,7 +47,7 @@ def send_file(client, filename, batch_size=10):
         try:
             for _ in range(batch_size):
                 line = file.readline()
-                batch += line 
+                batch += line
             # print(f"[CLIENT] Sending batch: {batch}")
             client.send_message(batch)
             batch = ""
@@ -57,7 +59,6 @@ def send_file(client, filename, batch_size=10):
 
 def run(config_params):
     client = Client(config_params["address"], config_params["port"])
-    time.sleep(20)
 
     thread = Thread(
         target=receive_results, args=(config_params["address"], config_params["results_port"]))
@@ -74,7 +75,7 @@ def run(config_params):
         try:
             for _ in range(10):
                 line = file.readline()
-                batch += line 
+                batch += line
             # print(f"[CLIENT] Sending batch: {batch}")
             client.send_message(batch)
             batch = ""
@@ -83,19 +84,9 @@ def run(config_params):
         # i += 1
     file.close()
 
-
     client.send_message("EOF")
 
-    
-    
-
-
-
-
     thread.join()
-
-    while True:
-        continue
 
 
 def main():

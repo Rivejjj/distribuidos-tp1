@@ -50,3 +50,19 @@ class Book:
             else:
                 i += 1
         return None
+
+    def parse_authors(self):
+        authors = self.authors.replace('"', "").replace(
+            "[", "").replace("]", "").replace("'", "").split(", ")
+        return authors
+
+    @staticmethod
+    def expand_authors(book):
+        authors = book.parse_authors()
+
+        books = []
+        for author in authors:
+            books.append(Book(book.title, author, book.publisher,
+                              book.published_year, book.categories))
+
+        return books

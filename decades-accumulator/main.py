@@ -50,7 +50,6 @@ def process_eof(queue_middleware: QueueMiddleware, accum: Accumulator, query=Non
     queue_middleware.send_eof(callback)
 
 
-
 def process_message(accum: Accumulator, queue_middleware: QueueMiddleware, query=None):
     def callback(ch, method, properties, body):
         msg_received = decode(body)
@@ -78,7 +77,7 @@ def main():
         config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
 
     queue_middleware.start_consuming(
-        process_message(accum, queue_middleware))
+        process_message(accum, queue_middleware, query=config_params["query"]))
 
 
 if __name__ == "__main__":

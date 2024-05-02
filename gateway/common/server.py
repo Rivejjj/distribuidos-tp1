@@ -175,18 +175,28 @@ class Server:
         # print(f'received message: {msg}')
 
         if msg == "EOF":
-            logging.info(f"action: receive_message | result: success | msg: {msg}")
-            
+            logging.info(
+                f"action: receive_message | result: success | msg: {msg}")
+
             self.queue.send_eof()
             return
 
         book = data_receiver.parse_book(msg)
         if book:
-            pool = [f"query{i}" for i in range(1, 5)]
+            pool = [f"query{i}" for i in range(1, 5) if i != 2]
             for name in pool:
                 self.queue.send_to_pool(
                     encode(str(book)), book.title, next_pool_name=name)
-            # logging.info(f'sending to comp.filter | msg: {str(book)}')
+
+            query2 = "query2"
+
+            books = Book.expand_authors(book)
+
+            for book in books:
+                self.queue.send_to_pool(
+                    encode(str(book)), book.authors, next_pool_name=query2)
+            logging.info(
+                f'sending to comp.filter | msg: {str(book)}')
 
             return
         review = data_receiver.parse_review(msg)

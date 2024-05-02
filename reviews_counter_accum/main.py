@@ -73,7 +73,7 @@ def main():
     config_params = initialize()
     logging.debug("Config: %s", config_params)
 
-    min_amount_of_reviews = 30
+    min_amount_of_reviews = 500
     counter = ReviewsCounter(min_amount_of_reviews)
 
     queue_middleware = QueueMiddleware(get_queue_names(

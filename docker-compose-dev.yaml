@@ -13,7 +13,7 @@ services:
       - BOOKS_REVIEWS_PATH=/data/Books_rating.csv
     volumes:
       - ./data:/data
-
+      - ./query:/query
   gateway:
     container_name: gateway
     image: gateway:latest
@@ -23,10 +23,9 @@ services:
       - LOGGING_LEVEL=INFO
       - OUTPUT_QUEUES=query1:3;query2:3;query3:3;query4:3
       - INPUT_QUEUE=results
-      - QUERY_COUNT=11
+      - QUERY_COUNT=3
       - ID=0
 
-      
   computers_category_filter_0:
     container_name: computers_category_filter_0
     image: book-filter:latest
@@ -361,10 +360,3 @@ services:
       - ID=0
       - QUERY=5
       - PREVIOUS_WORKERS=3
-
-networks:
-  testing_net:
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.25.125.0/24
