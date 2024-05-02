@@ -44,6 +44,8 @@ def format_for_results(book: Book, query):
 
 def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_middleware: QueueMiddleware, query=None):
     def callback(ch, method, properties, body):
+
+        #print("Received message", body.decode())
         msg_received = decode(body)
 
         if msg_received == "EOF":
@@ -56,19 +58,18 @@ def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_
 
         if book and book_filter.filter(book):
             print("Book accepted: ", book.title)
-
+            message = str(book)
             if not review_filter:
-                message = str(book)
-
                 if query:
                     message = format_for_results(book, query)
                 queue_middleware.send_to_pool(encode(message), book.title)
+
             else:
                 review_filter.add_title(book.title)
+                queue_middleware.send_to_all(encode(message))
             return
 
         review = Review.from_csv_line(msg_received)
-
         if review and review_filter and review_filter.filter(review):
             print("Review accepted: ", review.title)
             queue_middleware.send_to_pool(encode(message), review.title)

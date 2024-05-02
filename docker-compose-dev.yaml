@@ -28,6 +28,7 @@ services:
       - ID=0
     networks:
       - testing_net
+      
   computers_category_filter_0:
     container_name: computers_category_filter_0
     image: book-filter:latest

@@ -48,6 +48,7 @@ def process_eof(queue_middleware: QueueMiddleware, accum: Accumulator, query=Non
     queue_middleware.send_eof(callback)
 
 
+
 def process_message(accum: Accumulator, queue_middleware: QueueMiddleware, query=None):
     def callback(ch, method, properties, body):
         msg_received = decode(body)

@@ -9,7 +9,6 @@ from utils.initialize import decode, encode
 from rabbitmq.queue import QueueMiddleware
 from utils.sockets import safe_receive, send_message, send_success
 
-
 MAX_MESSAGE_BYTES = 16
 
 
@@ -123,11 +122,11 @@ class Server:
         try:
             int_bytes = safe_receive(self.client_sock,
                                      MAX_MESSAGE_BYTES)
+
+            # print("receiving message length", int_bytes)
             msg_length = int.from_bytes(int_bytes, "little")
 
-            logging.info(
-                f"action: receive_message_length | result: success | length: {msg_length}")
-
+            # logging.info(f"action: receive_message_length | result: success | length: {msg_length}")
             send_success(self.client_sock)
 
             return msg_length
@@ -148,20 +147,17 @@ class Server:
         client socket will also be closed
         """
         try:
-
             while True:
                 msg_length = self.__receive_message_length()
-
                 logging.info(f"msg_length: {msg_length}")
-
                 if msg_length == 0:
                     return
 
                 msg = decode(safe_receive(
                     self.client_sock, msg_length)).rstrip()
-
-                self.__process_message(msg)
-
+                for a in msg.split("\n"):
+                    # print(f"msg: {a}")
+                    self.__process_message(a)
                 # self.__send_message(msg)
 
         except OSError as e:
@@ -176,23 +172,24 @@ class Server:
         # addr = self.client_sock.getpeername()
         data_receiver = DataReceiver()
 
-        logging.info(f'received message: {msg}')
+        # print(f'received message: {msg}')
 
         if msg == "EOF":
+            logging.info(
+                f"action: receive_message | result: success | msg: {msg}")
+            
             self.queue.send_eof()
             return
 
         book = data_receiver.parse_book(msg)
         if book:
-
             pool = [f"query{i}" for i in range(1, 5)]
-
             for name in pool:
                 self.queue.send_to_pool(
                     encode(str(book)), book.title, next_pool_name=name)
             logging.info(
-
                 f'sending to comp.filter | msg: {str(book)}')
+
             return
         review = data_receiver.parse_review(msg)
         if review:
@@ -210,6 +207,7 @@ class Server:
     def handle_result(self):
         def callback(ch, method, properties, body):
             logging.info(f"[QUERY RESULT]: {decode(body)}")
+
             msg = decode(body)
             logging.info(self.client_sock)
 

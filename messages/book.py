@@ -21,7 +21,7 @@ class Book:
                 return False
         for i in range(len(fields)):
             if fields[i] == None or fields[i] == "":
-                print(f"Missing title, authors, categories or published year: {self.title}, {self.authors}, {self.categories}, {self.published_year}")
+                # print(f"Missing title, authors, categories or published year: {self.title}, {self.authors}, {self.categories}, {self.published_year}")
                 return False
         return True
 

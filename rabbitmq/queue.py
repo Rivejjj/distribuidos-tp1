@@ -8,7 +8,6 @@ from utils.initialize import add_query_to_message, encode
 class QueueMiddleware:
     def __init__(self, output_queues, input_queue=None, id=0, previous_workers=0, wait_for_rmq=True):
         # logging.info("Connecting to queue: queue_names=%s", queue_names)
-
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(host='rabbitmq'))
         logging.info("Connected to queue")
@@ -35,6 +34,7 @@ class QueueMiddleware:
     def __calculate_queue_pools(self, output_queues):
         for name, worker_count in output_queues:
             logging.info(f"[QUEUE] Calculating queue pool for {name}")
+
             self.queue_pools[name] = worker_count
 
     def __declare_output_queues(self, output_queues):
@@ -73,6 +73,7 @@ class QueueMiddleware:
 
     def send_to_all(self, message):
         logging.info(f"[QUEUE] Sending message to all: {message}")
+
         for name in self.output_queues:
             logging.info(f"[QUEUE] Sending message to {name}")
             self.send(name, message)
@@ -107,13 +108,11 @@ class QueueMiddleware:
         return f"{name}_{worker}"
 
     def __calculate_worker(self, next_pool_name, hash_key):
-
         output_queues = list(filter(
             lambda output_queue: next_pool_name in output_queue, self.output_queues))
 
         hash_value = hash(hash_key)
-        print(
-            f"[QUEUE] Calculating worker for {next_pool_name} with hash {hash_value}")
+        # print(f"[QUEUE] Calculating worker for {next_pool_name} with hash {hash_value}")
         return hash_value % len(output_queues)
 
     def send_to_pool(self, message, hash_key, next_pool_name=None):
@@ -123,5 +122,5 @@ class QueueMiddleware:
 
         queue_name = self.__get_worker_name(next_pool_name, next)
 
-        print(f"[QUEUE] Sending message to {queue_name}: {message}")
+        # print(f"[QUEUE] Sending message to {queue_name}: {message}")
         self.send(queue_name, message)

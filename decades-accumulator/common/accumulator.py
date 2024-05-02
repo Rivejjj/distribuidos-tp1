@@ -22,8 +22,8 @@ class Accumulator:
         if author not in self.authors:
             self.authors[author] = {}
         self.authors[author][decade] = self.authors[author].get(decade, 0) + 1
-        if len(self.authors[author]) >= 10:
-            print("author:", author, "->", self.authors[author])
+        # if len(self.authors[author]) >= 10:
+            # print("author:", author, "->", self.authors[author])
 
     def __get_decade(self, year):
         return year // 10 * 10

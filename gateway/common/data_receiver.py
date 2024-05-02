@@ -17,7 +17,7 @@ class DataReceiver:
         parser = CsvParser()
         # print("Processing message: %s", line)
         line = parser.parse_csv(data)
-
+        #len line
         if len(line) != TOTAL_FIELDS_COUNT and len(line) != BOOKS_FIELDS_COUNT:
             return None
         
@@ -33,7 +33,7 @@ class DataReceiver:
         book = Book(title, authors, publisher, published_year, categories)
         if book.sanitize():
             return book
-        print("Invalid book: %s", book)
+        # print("Invalid book: %s", book)
         return None
 
     def parse_review(self, data):
