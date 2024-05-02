@@ -14,7 +14,7 @@ MAX_MESSAGE_BYTES = 16
 
 
 class Server:
-    def __init__(self, port, results_port, listen_backlog, query_count, input_queue=None, exchange=None):
+    def __init__(self, port, results_port, listen_backlog, query_count, input_queue=None, output_queues=[], id=0):
         # Initialize server socket
         signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -31,10 +31,10 @@ class Server:
 
         self.results_thread = None
         self.queue = QueueMiddleware(
-            [], input_queue='ignore', exchange=exchange)
+            output_queues)
 
         self.receiver_queue = QueueMiddleware(
-            [], input_queue=input_queue, wait_for_rmq=False)
+            [], input_queue=input_queue, id=id, wait_for_rmq=False)
 
         self.query_count = query_count
 
@@ -179,19 +179,27 @@ class Server:
         print(f'received message: {msg}')
 
         if msg == "EOF":
-            self.queue.send_to_exchange(encode("EOF"))
+            self.queue.send_eof(encode("EOF"))
             return
 
         book = data_receiver.parse_book(msg)
         if book:
-            self.queue.send_to_exchange(encode(str(book)))
+
+            pool = [f"query{i}" for i in range(1, 5)]
+
+            for name in pool:
+                self.queue.send_to_pool(name, encode(str(book)), book.title)
             print(
 
                 f'sending to comp.filter | msg: {str(book)}')
             return
         review = data_receiver.parse_review(msg)
         if review:
-            self.queue.send_to_exchange(encode(str(review)))
+            pool = [f"query{i}" for i in range(3, 5)]
+
+            for name in pool:
+                self.queue.send_to_pool(
+                    name, encode(str(review)), review.title)
             print(
                 f'sending to comp.filter | msg: {str(review)}')
             return

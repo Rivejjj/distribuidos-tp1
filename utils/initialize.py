@@ -52,16 +52,18 @@ def initialize_log(logging_level):
 
 def initialize_workers_environment(config_params):
     config_params["id"] = int(config_params["id"])
-    config_params["n"] = int(config_params["n"])
 
 
-def initialize_multi_value_environment(config_params, params):
-    for param in params:
-        config_params[param] = config_params[param].split(",")
+def get_queue_with_worker_count(queue):
+    queue_name, worker_count = queue.split(":")
+    return queue_name, int(worker_count)
 
 
 def get_queue_names(config_params):
-    return config_params["output_queues"]
+    queues_with_count = config_params["output_queues"].split(";")
+
+    return list(
+        map(lambda x: get_queue_with_worker_count(x), queues_with_count))
 
 
 def encode(message):

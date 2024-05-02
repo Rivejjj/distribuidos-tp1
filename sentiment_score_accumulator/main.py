@@ -6,7 +6,7 @@ from parser_1.csv_parser import CsvParser
 from rabbitmq.queue import QueueMiddleware
 from common.sentiment_score_accumulator import SentimentScoreAccumulator
 from messages.book import Book
-from utils.initialize import add_query_to_message, encode, get_queue_names, initialize_config, initialize_log, initialize_multi_value_environment, initialize_workers_environment, decode
+from utils.initialize import add_query_to_message, encode, get_queue_names, initialize_config, initialize_log, decode
 
 
 def initialize():
@@ -15,10 +15,6 @@ def initialize():
 
     config_params = initialize_config(
         map(lambda param: (param, False), params))
-
-    initialize_multi_value_environment(config_params, ["output_queues"])
-
-    # initialize_workers_environment(config_params)
 
     initialize_log(config_params["logging_level"])
 

@@ -53,15 +53,15 @@ def run(config_params):
             # print(msg)
             # a.write(msg + '\n')
         print(i)
-    with open(config_params["books_reviews_path"]) as file:
-        i = 0
-        for line in file:
+    # with open(config_params["books_reviews_path"]) as file:
+    #     i = 0
+    #     for line in file:
 
-            print(line.strip())
-            client.send_message(line.strip())
-            if i == 5000:
-                break
-            i += 1
+    #         print(line.strip())
+    #         client.send_message(line.strip())
+    #         if i == 5000:
+    #             break
+    #         i += 1
     client.send_message("EOF")
 
     thread.join()

@@ -7,7 +7,7 @@ from messages.book import Book
 from messages.review import Review
 from parser_1.csv_parser import CsvParser
 from rabbitmq.queue import QueueMiddleware
-from utils.initialize import decode, encode, get_queue_names, initialize_config, initialize_log, initialize_multi_value_environment, initialize_workers_environment
+from utils.initialize import decode, encode, get_queue_names, initialize_config, initialize_log
 
 
 def initialize():
@@ -20,10 +20,6 @@ def initialize():
     logging.debug("Config: %s", config_params)
     logging.info("Config: %s", config_params)
     print(config_params)
-
-    initialize_multi_value_environment(config_params, ["output_queues"])
-
-    # initialize_workers_environment(config_params)
 
     initialize_log(config_params["logging_level"])
 

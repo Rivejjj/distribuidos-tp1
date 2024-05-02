@@ -42,9 +42,10 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=INFO
-      - EXCHANGE=query
+      - OUTPUT_QUEUES=query1:5;query2:3;query3:3;query4:3
       - INPUT_QUEUE=results
       - QUERY_COUNT=5
+      - ID=0
 
   ###########################################################################
   #------------------------------------QUERY 1-------------------------------
@@ -61,14 +62,110 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
-      - EXCHANGE=query
-      - OUTPUT_QUEUES=computers
+      - INPUT_QUEUE=query1
+      - OUTPUT_QUEUES=computers:3
       - CATEGORY=Computers
       - ID=0
-      - N=1
 
-  published_year_filter_q1:
-    container_name: published_year_filter_q1
+  computers_category_filter_2:
+    container_name: computers_category_filter_2
+    image: book-filter:latest
+    entrypoint: python3 /main.py
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=DEBUG
+      - INPUT_QUEUE=query1
+      - OUTPUT_QUEUES=computers:3
+      - CATEGORY=Computers
+      - ID=1
+
+  computers_category_filter_3:
+    container_name: computers_category_filter_3
+    image: book-filter:latest
+    entrypoint: python3 /main.py
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=DEBUG
+      - INPUT_QUEUE=query1
+      - OUTPUT_QUEUES=computers:3
+      - CATEGORY=Computers
+      - ID=2
+
+  2000s_published_year_filter_1:
+    container_name: 2000s_published_year_filter_1
+    image: book-filter:latest
+    entrypoint: python3 /main.py
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - CATEGORY=Computers
+      - INPUT_QUEUE=computers
+      - OUTPUT_QUEUES=2000s_filtered:3
+      - ID=0
+
+  2000s_published_year_filter_2:
+    container_name: 2000s_published_year_filter_2
+    image: book-filter:latest
+    entrypoint: python3 /main.py
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - CATEGORY=Computers
+      - INPUT_QUEUE=computers
+      - OUTPUT_QUEUES=2000s_filtered:3
+      - ID=1
+
+  2000s_published_year_filter_3:
+    container_name: 2000s_published_year_filter_3
+    image: book-filter:latest
+    entrypoint: python3 /main.py
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - CATEGORY=Computers
+      - INPUT_QUEUE=computers
+      - OUTPUT_QUEUES=2000s_filtered:3
+      - ID=2
+
+  title_contains_filter_1:
+    container_name: title_contains_filter_1
+    image: book-filter:latest
+    entrypoint: python3 /main.py
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
+    environment:
+      - ID=0
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=DEBUG
+      - CATEGORY=Computers
+      - INPUT_QUEUE=2000s_filtered
+      - OUTPUT_QUEUES=results:1
+      - QUERY=1
+
+  title_contains_filter_2:
+    container_name: title_contains_filter_2
     image: book-filter:latest
     entrypoint: python3 /main.py
     depends_on:
@@ -78,15 +175,14 @@ services:
     environment:
       - ID=1
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=INFO
-      - PUBLISHED_YEAR_RANGE=2000-2023
-      - INPUT_QUEUE=computers
-      - OUTPUT_QUEUES=2000s_filtered
-      - SAVE_BOOKS=True
-      - N=1
+      - LOGGING_LEVEL=DEBUG
+      - CATEGORY=Computers
+      - INPUT_QUEUE=2000s_filtered
+      - OUTPUT_QUEUES=results:1
+      - QUERY=1
 
-  title_contains_filter:
-    container_name: title_contains_filter
+  title_contains_filter_3:
+    container_name: title_contains_filter_3
     image: book-filter:latest
     entrypoint: python3 /main.py
     depends_on:
@@ -97,143 +193,136 @@ services:
       - ID=2
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
-      - TITLE_CONTAINS=distributed
+      - CATEGORY=Computers
       - INPUT_QUEUE=2000s_filtered
-      - OUTPUT_QUEUES=results
+      - OUTPUT_QUEUES=results:1
       - QUERY=1
-      - N=1
+    ###########################################################################
+    #------------------------------------QUERY 2-------------------------------
+    ###########################################################################
 
-  ###########################################################################
-  #------------------------------------QUERY 2-------------------------------
-  ###########################################################################
+    # decades-accumulator:
+    #   container_name: decades-accumulator
+    #   image: decades-accumulator:latest
+    #   entrypoint: python3 /main.py
+    #   depends_on:
+    #     - rabbitmq
+    #   links:
+    #     - rabbitmq
+    #   environment:
+    #     - ID=0
+    #     - PYTHONUNBUFFERED=1
+    #     - LOGGING_LEVEL=DEBUG
+    #     - TOP=10
+    #     - INPUT_QUEUE=query2
+    #     - OUTPUT_QUEUES=results:1
+    #     - QUERY=2
+    ###########################################################################
+    #------------------------------QUERIES 3 Y 4-------------------------------
+    ###########################################################################
 
-  decades-accumulator:
-    container_name: decades-accumulator
-    image: decades-accumulator:latest
-    entrypoint: python3 /main.py
-    depends_on:
-      - rabbitmq
-    links:
-      - rabbitmq
-    environment:
-      - ID=3
-      - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=DEBUG
-      - TOP=10
-      - EXCHANGE=query
-      - OUTPUT_QUEUES=results
-      - QUERY=2
-      - N=1
+    # 1990s_published_year_filter:
+    #   container_name: 1990s_published_year_filter
+    #   image: book-filter:latest
+    #   entrypoint: python3 /main.py
+    #   depends_on:
+    #     - rabbitmq
+    #   links:
+    #     - rabbitmq
+    #   environment:
+    #     - ID=0
+    #     - PYTHONUNBUFFERED=1
+    #     - LOGGING_LEVEL=INFO
+    #     - PUBLISHED_YEAR_RANGE=1990-1999
+    #     - INPUT_QUEUE=query3
+    #     - OUTPUT_QUEUES=90s_filtered:1
+    #     - SAVE_BOOKS=True
 
-  ###########################################################################
-  #------------------------------QUERIES 3 Y 4-------------------------------
-  ###########################################################################
+    # reviews_counter:
+    #   container_name: reviews_counter
+    #   image: reviews_counter_accum:latest
+    #   entrypoint: python3 /main.py
+    #   depends_on:
+    #     - rabbitmq
+    #   links:
+    #     - rabbitmq
+    #   environment:
+    #     - ID=5
+    #     - PYTHONUNBUFFERED=1
+    #     - LOGGING_LEVEL=INFO
+    #     - INPUT_QUEUE=90s_filtered
+    #     - OUTPUT_QUEUES=500_reviews,results
+    #     - QUERY=3
+    #     - N=1
+    #QUERY 4
+    # avg_rating_accumulator:
+    #   container_name: avg_rating_accumulator
+    #   image: accumulator:latest
+    #   entrypoint: python3 /main.py
+    #   depends_on:
+    #     - rabbitmq
+    #   links:
+    #     - rabbitmq
+    #   environment:
+    #     - ID=6
+    #     - PYTHONUNBUFFERED=1
+    #     - LOGGING_LEVEL=INFO
+    #     - INPUT_QUEUE=500_reviews
+    #     - OUTPUT_QUEUES=results
+    #     - QUERY=4
+    ###########################################################################
+    #------------------------------------QUERY 5-------------------------------
+    ###########################################################################
 
-  published_year_filter_q2:
-    container_name: published_year_filter_q2
-    image: book-filter:latest
-    entrypoint: python3 /main.py
-    depends_on:
-      - rabbitmq
-    links:
-      - rabbitmq
-    environment:
-      - ID=4
-      - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=INFO
-      - PUBLISHED_YEAR_RANGE=1990-1999
-      - INPUT_QUEUE=computers
-      - OUTPUT_QUEUES=90s_filtered
-      - SAVE_BOOKS=True
-      - N=1
+    # fiction_category_filter_q5:
+    #   container_name: fiction_category_filter_q5
+    #   image: book-filter:latest
+    #   entrypoint: python3 /main.py
+    #   depends_on:
+    #     - rabbitmq
+    #   links:
+    #     - rabbitmq
+    #   environment:
+    #     - PYTHONUNBUFFERED=1
+    #     - LOGGING_LEVEL=DEBUG
+    #     - EXCHANGE=query
+    #     - OUTPUT_QUEUES=fiction_category_books_reviews
+    #     - SAVE_BOOKS=True
+    #     - CATEGORY=fiction
+    #     - ID=7
+    #     - N=1
 
-  reviews_counter:
-    container_name: reviews_counter
-    image: reviews_counter_accum:latest
-    entrypoint: python3 /main.py
-    depends_on:
-      - rabbitmq
-    links:
-      - rabbitmq
-    environment:
-      - ID=5
-      - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=INFO
-      - INPUT_QUEUE=90s_filtered
-      - OUTPUT_QUEUES=500_reviews,results
-      - QUERY=3
-      - N=1
+    # sentiment_analyzer:
+    #   container_name: sentiment_analyzer
+    #   image: sentiment_analyzer:latest
+    #   entrypoint: python3 /main.py
+    #   depends_on:
+    #     - rabbitmq
+    #   links:
+    #     - rabbitmq
+    #   environment:
+    #     - ID=8
+    #     - PYTHONUNBUFFERED=1
+    #     - LOGGING_LEVEL=INFO
+    #     - INPUT_QUEUE=fiction_category_books_reviews
+    #     - OUTPUT_QUEUES=sentiment_score
+    #     - N=1
 
-  #QUERY 4
-  avg_rating_accumulator:
-    container_name: avg_rating_accumulator
-    image: accumulator:latest
-    entrypoint: python3 /main.py
-    depends_on:
-      - rabbitmq
-    links:
-      - rabbitmq
-    environment:
-      - ID=6
-      - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=INFO
-      - INPUT_QUEUE=500_reviews
-      - OUTPUT_QUEUES=results
-      - QUERY=4
-
-  ###########################################################################
-  #------------------------------------QUERY 5-------------------------------
-  ###########################################################################
-
-  fiction_category_filter_q5:
-    container_name: fiction_category_filter_q5
-    image: book-filter:latest
-    entrypoint: python3 /main.py
-    depends_on:
-      - rabbitmq
-    links:
-      - rabbitmq
-    environment:
-      - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=DEBUG
-      - EXCHANGE=query
-      - OUTPUT_QUEUES=fiction_category_books_reviews
-      - SAVE_BOOKS=True
-      - CATEGORY=fiction
-      - ID=7
-      - N=1
-
-  sentiment_analyzer:
-    container_name: sentiment_analyzer
-    image: sentiment_analyzer:latest
-    entrypoint: python3 /main.py
-    depends_on:
-      - rabbitmq
-    links:
-      - rabbitmq
-    environment:
-      - ID=8
-      - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=INFO
-      - INPUT_QUEUE=fiction_category_books_reviews
-      - OUTPUT_QUEUES=sentiment_score
-      - N=1
-
-  sentiment_score_accumulator:
-    container_name: sentiment_score_accumulator
-    image: sentiment_score_accumulator:latest
-    entrypoint: python3 /main.py
-    depends_on:
-      - rabbitmq
-    links:
-      - rabbitmq
-    environment:
-      - ID=9
-      - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=INFO
-      - INPUT_QUEUE=sentiment_score
-      - OUTPUT_QUEUES=results
-      - QUERY=5
+    # sentiment_score_accumulator:
+    #   container_name: sentiment_score_accumulator
+    #   image: sentiment_score_accumulator:latest
+    #   entrypoint: python3 /main.py
+    #   depends_on:
+    #     - rabbitmq
+    #   links:
+    #     - rabbitmq
+    #   environment:
+    #     - ID=9
+    #     - PYTHONUNBUFFERED=1
+    #     - LOGGING_LEVEL=INFO
+    #     - INPUT_QUEUE=sentiment_score
+    #     - OUTPUT_QUEUES=results
+    #     - QUERY=5
     ###########################################################################
     #                                 templates ???                           # 
 

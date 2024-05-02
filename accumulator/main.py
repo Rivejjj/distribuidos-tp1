@@ -1,16 +1,14 @@
 
 import logging
-import os
 from common.accumulator import Accumulator
 from rabbitmq.queue import QueueMiddleware
-from utils.initialize import add_query_to_message, decode, encode, get_queue_names, initialize_config, initialize_log, initialize_multi_value_environment, initialize_workers_environment
+from utils.initialize import add_query_to_message, decode, encode, get_queue_names, initialize_config, initialize_log, initialize_workers_environment
 from parser_1.csv_parser import CsvParser
-from gateway.common.data_receiver import DataReceiver
 
 
 def initialize():
-    all_params = ["logging_level", "id", "n",
-                  "input_queue", "output_queues", "exchange", "query"]
+    all_params = ["logging_level", "id",
+                  "input_queue", "output_queues", "query"]
 
     params = list(map(lambda param: (param, False), all_params))
 
@@ -18,8 +16,6 @@ def initialize():
     logging.debug("Config: %s", config_params)
     logging.info("Config: %s", config_params)
     print(config_params)
-
-    initialize_multi_value_environment(config_params, ["output_queues"])
 
     initialize_workers_environment(config_params)
 

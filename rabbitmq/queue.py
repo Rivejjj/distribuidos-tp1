@@ -6,7 +6,7 @@ from utils.initialize import encode
 
 
 class QueueMiddleware:
-    def __init__(self, output_queues: list[str], input_queue=None, exchange=None, wait_for_rmq=True):
+    def __init__(self, output_queues, input_queue=None, id=None, wait_for_rmq=True):
         # logging.info("Connecting to queue: queue_names=%s", queue_names)
 
         # Waits for rabbitmq
@@ -18,48 +18,48 @@ class QueueMiddleware:
         logging.info("Connected to queue")
         self.channel = self.connection.channel()
         self.channel.basic_qos(prefetch_count=1)
-        self.exchange_queue_name = None
+
         self.input_queue = None
 
-        self.output_queues = output_queues
-        for name in output_queues:
-            print("Declaring queue %s", name)
-            self.channel.queue_declare(queue=name, durable=True)
+        self.queue_pools = {}
 
-        if exchange:
-            self.exchange = exchange
-            self.channel.exchange_declare(
-                exchange=exchange, exchange_type='fanout')
+        self.__calculate_queue_pools(output_queues)
 
-            if not input_queue:
-                print("Declaring exchange queue")
-                result = self.channel.queue_declare(
-                    queue='', durable=True)
-                queue_name = result.method.queue
-
-                self.exchange_queue_name = queue_name
-                self.channel.queue_bind(
-                    exchange=exchange, queue=queue_name)
-                # self.channel.basic_consume(
-                #     queue=queue_name, on_message_callback=callback, auto_ack=True)
+        self.output_queues = []
+        self.__declare_output_queues(output_queues)
 
         if input_queue:
-            print("Declaring input queue")
-            self.input_queue = input_queue
-
-            self.channel.queue_declare(queue=input_queue, durable=True)
-            # self.channel.basic_consume(
-            #     queue=input_queue, on_message_callback=callback, auto_ack=True)
+            self.__declare_input_queue(input_queue, id)
 
         self.channel.start_consuming()
+
+    def __calculate_queue_pools(self, output_queues):
+        for name, worker_count in output_queues:
+            print(f"[QUEUE] Calculating queue pool for {name}")
+            self.queue_pools[name] = worker_count
+
+    def __declare_output_queues(self, output_queues):
+        for name, worker_count in output_queues:
+            print(f"[QUEUE] DECLARING QUEUE POOL", name)
+            for i in range(worker_count):
+                queue_name = self.__get_worker_name(name, i)
+                print(f"[QUEUE] DECLARING QUEUE", queue_name)
+                self.channel.queue_declare(queue=queue_name, durable=True)
+                self.output_queues.append(queue_name)
+
+    def __declare_input_queue(self, input_queue, id):
+        print(f"Declaring input queue with params: {input_queue}, {id}")
+        self.input_queue = f"{input_queue}_{id}"
+
+        print(f"[QUEUE] DECLARING INPUT QUEUE", self.input_queue)
+
+        self.channel.queue_declare(
+            queue=self.input_queue, durable=True)
 
     def start_consuming(self, callback):
         if self.input_queue:
             self.channel.basic_consume(
                 queue=self.input_queue, on_message_callback=callback, auto_ack=True)
-        if self.exchange_queue_name:
-            self.channel.basic_consume(
-                queue=self.exchange_queue_name, on_message_callback=callback, auto_ack=True)
         self.channel.start_consuming()
 
     def end(self):
@@ -71,14 +71,6 @@ class QueueMiddleware:
             exchange='', routing_key=name, body=message, properties=pika.BasicProperties(
                 delivery_mode=2,  # make message persistent
             ))
-
-    def send_to_exchange(self, message, routing_key=''):
-        # logging.info(f"Sending message to exchange: {message}")
-        if message == "EOF":
-            print("EOF to exchange")
-
-        self.channel.basic_publish(
-            exchange=self.exchange, routing_key=routing_key, body=message)
 
     def send_to_all(self, message):
         print(f"[QUEUE] Sending message to all: {message}")
@@ -93,3 +85,24 @@ class QueueMiddleware:
     def send_eof(self):
         print("[QUEUE] Sending EOF")
         self.send_to_all(encode("EOF"))
+
+    def __get_worker_name(self, name, worker):
+        return f"{name}_{worker}"
+
+    def __calculate_worker(self, next_pool_name, hash_key):
+
+        output_queues = list(filter(
+            lambda output_queue: next_pool_name in output_queue, self.output_queues))
+
+        hash_value = hash(hash_key)
+        print(
+            f"[QUEUE] Calculating worker for {next_pool_name} with hash {hash_value}")
+        return hash_value % len(output_queues)
+
+    def send_to_pool(self, next_pool_name, message, hash_key):
+        next = self.__calculate_worker(next_pool_name, hash_key)
+
+        queue_name = self.__get_worker_name(next_pool_name, next)
+
+        print(f"[QUEUE] Sending message to {queue_name}: {message}")
+        self.send(queue_name, message)
