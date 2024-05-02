@@ -21,6 +21,7 @@ def receive_results(address, port):
     while True:
         msg = decode(client.receive_message())
         # print(f"[RESULTS] Received: {msg}")
+
         if msg == "EOF":
             break
 

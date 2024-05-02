@@ -32,17 +32,14 @@ def process_eof(queue_middleware: QueueMiddleware):
 
 def process_message(sentiment_analyzer: SentimentAnalizer, queue_middleware: QueueMiddleware):
     def callback(ch, method, properties, body):
-        logging.info("Received message", decode(body))
+        # logging.info("Received message", decode(body))
         msg_received = decode(body)
 
         if msg_received == "EOF":
             process_eof(queue_middleware)
             return
 
-        line = CsvParser().parse_csv(msg_received)
-
-        review = Review(*line)
-
+        review = Review.from_csv_line(msg_received)
         if review and review.sanitize():
             # print(f"[REVIEW]: Text {review.text}")
             polarity_score = sentiment_analyzer.analyze(review.text)
@@ -50,11 +47,9 @@ def process_message(sentiment_analyzer: SentimentAnalizer, queue_middleware: Que
             if not polarity_score:
                 return
 
-            print(f"[POLARITY SCORE]: {polarity_score}")
-
+            # print(f"[POLARITY SCORE]: {polarity_score}")
             message = f"{review.title},{polarity_score}"
-
-            print(f"[RESULT]: {message}")
+            # print(f"[RESULT]: {message}")
 
             queue_middleware.send_to_all(encode(message))
 

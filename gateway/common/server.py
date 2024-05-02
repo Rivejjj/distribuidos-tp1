@@ -169,7 +169,6 @@ class Server:
     def __process_message(self, msg):
         # addr = self.client_sock.getpeername()
         data_receiver = DataReceiver()
-
         # print(f'received message: {msg}')
 
         if msg == "EOF":
