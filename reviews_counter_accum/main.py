@@ -9,10 +9,10 @@ from gateway.common.data_receiver import DataReceiver
 
 
 def initialize():
-    all_params = ["logging_level", "id", "n",
-                  "input_queue", "output_queues", "exchange", "query"]
+    params = ["logging_level", "id", "input_queue",
+              "output_queues", "query", "previous_workers"]
 
-    params = list(map(lambda param: (param, False), all_params))
+    params = list(map(lambda param: (param, False), params))
 
     config_params = initialize_config(params)
     logging.debug("Config: %s", config_params)
@@ -26,12 +26,17 @@ def initialize():
     return config_params
 
 
-def process_message(counter: ReviewsCounter, parser: CsvParser, data_receiver: DataReceiver, queue_middleware: QueueMiddleware, more_than_n, queue=None):
+def process_eof(queue_middleware: QueueMiddleware, counter: ReviewsCounter):
+    def callback():
+        counter.clear()
+    queue_middleware.send_eof(callback)
+
+
+def process_message(counter: ReviewsCounter, parser: CsvParser, data_receiver: DataReceiver, queue_middleware: QueueMiddleware, more_than_n, query=None):
     def callback(ch, method, properties, body):
         msg_received = decode(body)
         if msg_received == "EOF":
-            print("EOF received")
-            queue_middleware.send_eof()
+            process_eof(queue_middleware, counter)
             return
         book = data_receiver.parse_book(msg_received)
         print("msg: ",msg_received)
@@ -55,8 +60,8 @@ def process_message(counter: ReviewsCounter, parser: CsvParser, data_receiver: D
                       " | Total reviews: ", avg)
 
                 msg_to_result = f"{author},{title}"
-                if queue:
-                    msg_to_result = add_query_to_message(msg_to_result, queue)
+                if query:
+                    msg_to_result = add_query_to_message(msg_to_result, query)
                 queue_middleware.send("results", msg_to_result)
                 more_than_n[title] = True
 
@@ -72,13 +77,13 @@ def main():
     counter = ReviewsCounter(min_amount_of_reviews)
 
     queue_middleware = QueueMiddleware(get_queue_names(
-        config_params), exchange=config_params["exchange"], input_queue=config_params["input_queue"])
+        config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
 
     parser = CsvParser()
     data_receiver = DataReceiver()
     more_than_n = {}
     queue_middleware.start_consuming(
-        process_message(counter, parser, data_receiver, queue_middleware, more_than_n, queue=config_params["query"]))
+        process_message(counter, parser, data_receiver, queue_middleware, more_than_n, query=config_params["query"]))
 
 
 if __name__ == "__main__":

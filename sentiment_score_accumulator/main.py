@@ -6,15 +6,17 @@ from parser_1.csv_parser import CsvParser
 from rabbitmq.queue import QueueMiddleware
 from common.sentiment_score_accumulator import SentimentScoreAccumulator
 from messages.book import Book
-from utils.initialize import add_query_to_message, encode, get_queue_names, initialize_config, initialize_log, decode
+from utils.initialize import add_query_to_message, encode, get_queue_names, initialize_config, initialize_log, decode, initialize_workers_environment
 
 
 def initialize():
-    params = ["logging_level", "id", "n", "input_queue",
-              "output_queues", "exchange", "query"]
+    params = ["logging_level", "id", "input_queue",
+              "output_queues", "query", "previous_workers"]
 
     config_params = initialize_config(
         map(lambda param: (param, False), params))
+
+    initialize_workers_environment(config_params)
 
     initialize_log(config_params["logging_level"])
 
@@ -40,10 +42,11 @@ def send_results(sentiment_acc: SentimentScoreAccumulator, queue_middleware: Que
         queue_middleware.send_to_all(encode(message))
 
 
-def process_eof(queue_middleware: QueueMiddleware, sentiment_acc: SentimentScoreAccumulator):
-    send_results(sentiment_acc, queue_middleware)
-    sentiment_acc.clear()
-    queue_middleware.send_eof()
+def process_eof(queue_middleware: QueueMiddleware, sentiment_acc: SentimentScoreAccumulator, query=None):
+    def callback():
+        send_results(sentiment_acc, queue_middleware, query)
+        sentiment_acc.clear()
+    queue_middleware.send_eof(callback)
 
 
 def process_message(sentiment_acc: SentimentScoreAccumulator, queue_middleware: QueueMiddleware, query=None):
@@ -52,8 +55,7 @@ def process_message(sentiment_acc: SentimentScoreAccumulator, queue_middleware: 
         msg_received = decode(body)
 
         if msg_received == "EOF":
-            send_results(sentiment_acc, queue_middleware, query)
-            sentiment_acc.clear()
+            process_eof(queue_middleware, sentiment_acc, query)
             return
 
         line = parse_message(msg_received)
@@ -73,7 +75,7 @@ def main():
     accumulator = SentimentScoreAccumulator()
 
     queue_middleware = QueueMiddleware(get_queue_names(
-        config_params), exchange=config_params["exchange"], input_queue=config_params["input_queue"])
+        config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
 
     queue_middleware.start_consuming(
         process_message(accumulator, queue_middleware, config_params["query"]))

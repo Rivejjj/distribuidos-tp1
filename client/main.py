@@ -1,3 +1,4 @@
+import logging
 from multiprocessing import Process
 from threading import Thread
 import time
@@ -25,6 +26,9 @@ def receive_results(address, port):
         if msg == "EOF":
             break
 
+        splitted = msg.split(':', 1)
+        if len(splitted) != 2:
+            continue
         number, text = msg.split(':', 1)
         filename = f"query{number}.txt"
         with open(filename, 'a') as f:
@@ -35,13 +39,14 @@ def receive_results(address, port):
 
 def run(config_params):
     client = Client(config_params["address"], config_params["port"])
-    time.sleep(40)
+    time.sleep(20)
 
     thread = Thread(
         target=receive_results, args=(config_params["address"], config_params["results_port"]))
     thread.start()
 
     # with open('results.csv', 'w') as a:
+
     file = open(config_params["books_path"], "r")
     line = file.readline()
     batch_size = 10

@@ -8,7 +8,7 @@ from parser_1.csv_parser import CsvParser
 
 def initialize():
     all_params = ["logging_level", "id",
-                  "input_queue", "output_queues", "query"]
+                  "input_queue", "output_queues", "query", "previous_workers"]
 
     params = list(map(lambda param: (param, False), all_params))
 
@@ -25,15 +25,17 @@ def initialize():
 
 
 def process_eof(queue_middleware: QueueMiddleware, accum: Accumulator, query=None):
-    print("EOF received")
-    top = accum.get_top()
-    result = ""
-    for i in top:
-        result += add_query_to_message(f"{i[0]},{i[1]}\n", query)
-    print("sending to result:", result)
-    queue_middleware.send_to_all(encode(result))
-    accum.clear()
-    queue_middleware.send_eof()
+    def callback():
+        logging.info("EOF received")
+        top = accum.get_top()
+        result = ""
+        for i in top:
+            result += add_query_to_message(f"{i[0]},{i[1]}\n", query)
+        logging.info("sending to result:", result)
+        queue_middleware.send_to_all(encode(result))
+        accum.clear()
+
+    queue_middleware.send_eof(callback)
 
 
 def process_message(accum: Accumulator, parser: CsvParser, queue_middleware: QueueMiddleware, query):
@@ -60,7 +62,7 @@ def main():
     accum = Accumulator(top)
 
     queue_middleware = QueueMiddleware(get_queue_names(
-        config_params), exchange=config_params["exchange"], input_queue=config_params["input_queue"])
+        config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
 
     parser = CsvParser()
     queue_middleware.start_consuming(
