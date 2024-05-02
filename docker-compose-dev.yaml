@@ -51,7 +51,7 @@ services:
   ###########################################################################
 
   computers_category_filter_1:
-    container_name: computers_category_filter_1
+    container_name: computers_category_filter_q1
     image: book-filter:latest
     entrypoint: python3 /main.py
     depends_on:
@@ -86,7 +86,7 @@ services:
       - N=1
 
   title_contains_filter:
-    container_name: title_contains_filter
+    container_name: title_contains_filter_q1
     image: book-filter:latest
     entrypoint: python3 /main.py
     depends_on:
@@ -130,7 +130,7 @@ services:
   ###########################################################################
 
   published_year_filter_q2:
-    container_name: published_year_filter_q2
+    container_name: published_year_filter_1990s_q3
     image: book-filter:latest
     entrypoint: python3 /main.py
     depends_on:
@@ -142,13 +142,13 @@ services:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=INFO
       - PUBLISHED_YEAR_RANGE=1990-1999
-      - INPUT_QUEUE=computers
+      - EXCHANGE=query
       - OUTPUT_QUEUES=90s_filtered
       - SAVE_BOOKS=True
       - N=1
 
   reviews_counter:
-    container_name: reviews_counter
+    container_name: reviews_counter_500s_q3
     image: reviews_counter_accum:latest
     entrypoint: python3 /main.py
     depends_on:
@@ -166,7 +166,7 @@ services:
 
   #QUERY 4
   avg_rating_accumulator:
-    container_name: avg_rating_accumulator
+    container_name: avg_rating_accumulator_q4
     image: accumulator:latest
     entrypoint: python3 /main.py
     depends_on:
@@ -180,6 +180,7 @@ services:
       - INPUT_QUEUE=500_reviews
       - OUTPUT_QUEUES=results
       - QUERY=4
+      - N=1
 
   ###########################################################################
   #------------------------------------QUERY 5-------------------------------
@@ -204,7 +205,7 @@ services:
       - N=1
 
   sentiment_analyzer:
-    container_name: sentiment_analyzer
+    container_name: sentiment_analyzer_q5
     image: sentiment_analyzer:latest
     entrypoint: python3 /main.py
     depends_on:
@@ -220,7 +221,7 @@ services:
       - N=1
 
   sentiment_score_accumulator:
-    container_name: sentiment_score_accumulator
+    container_name: sentiment_score_accumulator_q5
     image: sentiment_score_accumulator:latest
     entrypoint: python3 /main.py
     depends_on:

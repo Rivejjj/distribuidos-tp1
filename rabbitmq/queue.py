@@ -11,7 +11,7 @@ class QueueMiddleware:
 
         # Waits for rabbitmq
         if wait_for_rmq:
-            time.sleep(30)
+            time.sleep(40)
 
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(host='rabbitmq'))

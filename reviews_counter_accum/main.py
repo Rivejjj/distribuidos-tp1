@@ -36,6 +36,7 @@ def process_message(counter: ReviewsCounter, parser: CsvParser, data_receiver: D
             queue_middleware.send_eof()
             return
         book = data_receiver.parse_book(msg_received)
+        print("msg: ",msg_received)
         if book:
             counter.add_book(book)
             print("Book accepted: %s", book.title)

@@ -151,9 +151,7 @@ class Server:
 
             while True:
                 msg_length = self.__receive_message_length()
-
-                print(f"msg_length: {msg_length}")
-
+                # print(f"msg_length: {msg_length}")
                 if msg_length == 0:
                     return
 
@@ -175,8 +173,7 @@ class Server:
     def __process_message(self, msg):
         # addr = self.client_sock.getpeername()
         data_receiver = DataReceiver()
-
-        print(f'received message: {msg}')
+        # print(f'received message: {msg}')
 
         if msg == "EOF":
             self.queue.send_to_exchange(encode("EOF"))
@@ -208,7 +205,7 @@ class Server:
                 self.query_count -= 1
                 if self.query_count > 0:
                     return
-
+            print("sending message: ", msg)
             send_message(self.results_client_sock, msg)
         return callback
 

@@ -33,9 +33,8 @@ def process_eof(queue_middleware: QueueMiddleware, accum: Accumulator, query=Non
 
     if query:
         final_result = add_query_to_message(final_result, query)
-
     queue_middleware.send_to_all(encode(final_result))
-
+    print("Final result: ", final_result)
     accum.clear()
     queue_middleware.send_eof()
 

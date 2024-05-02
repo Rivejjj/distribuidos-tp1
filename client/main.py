@@ -21,6 +21,8 @@ def receive_results(address, port):
     while True:
         msg = decode(client.receive_message())
         print(f"[RESULTS] Received: {msg}")
+        if msg == "":
+            continue
         if msg == "EOF":
             break
 
@@ -44,7 +46,7 @@ def run(config_params):
     with open(config_params["books_path"]) as file:
         i = 0
         for line in file:
-            print(line.strip())
+            # print(line.strip())
             client.send_message(line.strip())
             if i == 1000:
                 break
@@ -52,12 +54,10 @@ def run(config_params):
             # msg = decode(client.receive_message())
             # print(msg)
             # a.write(msg + '\n')
-        print(i)
     with open(config_params["books_reviews_path"]) as file:
         i = 0
         for line in file:
-
-            print(line.strip())
+            # print(line.strip())
             client.send_message(line.strip())
             if i == 5000:
                 break
