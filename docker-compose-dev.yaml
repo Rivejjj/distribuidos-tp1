@@ -302,7 +302,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=INFO
-      - INPUT_QUEUE=query1
+      - INPUT_QUEUE=query4
       - OUTPUT_QUEUES=fiction:3
       - CATEGORY=Fiction
       - ID=0
@@ -316,7 +316,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=INFO
-      - INPUT_QUEUE=query1
+      - INPUT_QUEUE=query4
       - OUTPUT_QUEUES=fiction:3
       - CATEGORY=Fiction
       - ID=1
@@ -330,7 +330,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=INFO
-      - INPUT_QUEUE=query1
+      - INPUT_QUEUE=query4
       - OUTPUT_QUEUES=fiction:3
       - CATEGORY=Fiction
       - ID=2
