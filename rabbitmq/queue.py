@@ -9,10 +9,6 @@ class QueueMiddleware:
     def __init__(self, output_queues, input_queue=None, id=0, previous_workers=0, wait_for_rmq=True):
         # logging.info("Connecting to queue: queue_names=%s", queue_names)
 
-        # Waits for rabbitmq
-        if wait_for_rmq:
-            time.sleep(20)
-
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(host='rabbitmq'))
         logging.info("Connected to queue")
@@ -38,23 +34,23 @@ class QueueMiddleware:
 
     def __calculate_queue_pools(self, output_queues):
         for name, worker_count in output_queues:
-            print(f"[QUEUE] Calculating queue pool for {name}")
+            logging.info(f"[QUEUE] Calculating queue pool for {name}")
             self.queue_pools[name] = worker_count
 
     def __declare_output_queues(self, output_queues):
         for name, worker_count in output_queues:
-            print(f"[QUEUE] DECLARING QUEUE POOL", name)
+            logging.info(f"[QUEUE] DECLARING QUEUE POOL {name}")
             for i in range(worker_count):
                 queue_name = self.__get_worker_name(name, i)
-                print(f"[QUEUE] DECLARING QUEUE", queue_name)
+                logging.info(f"[QUEUE] DECLARING QUEUE {queue_name}")
                 self.channel.queue_declare(queue=queue_name, durable=True)
                 self.output_queues.append(queue_name)
 
     def __declare_input_queue(self, input_queue, id):
-        print(f"Declaring input queue with params: {input_queue}, {id}")
+        logging.info(f"Declaring input queue with params: {input_queue}, {id}")
         self.input_queue = f"{input_queue}_{id}"
 
-        print(f"[QUEUE] DECLARING INPUT QUEUE", self.input_queue)
+        logging.info(f"[QUEUE] DECLARING INPUT QUEUE {self.input_queue}")
 
         self.channel.queue_declare(
             queue=self.input_queue, durable=True)
@@ -76,8 +72,9 @@ class QueueMiddleware:
             ))
 
     def send_to_all(self, message):
-        print(f"[QUEUE] Sending message to all: {message}")
+        logging.info(f"[QUEUE] Sending message to all: {message}")
         for name in self.output_queues:
+            logging.info(f"[QUEUE] Sending message to {name}")
             self.send(name, message)
 
     def send_to_all_except(self, message, except_queue):
@@ -85,15 +82,26 @@ class QueueMiddleware:
             if name != except_queue:
                 self.send(name, message)
 
-    def send_eof(self):
-        print("[QUEUE] Sending EOF")
+    def send_eof(self, callback=None):
         msg = "EOF"
 
         self.received_eofs += 1
+        logging.info(f"[QUEUE] Received EOFs {self.received_eofs}")
+
         if self.previous_workers <= self.received_eofs:
-            print("[QUEUE] Received EOFs of all workers")
+            logging.info("[QUEUE] Received EOFs of all workers")
             self.received_eofs = 0
+
+            if callback:
+                print("[QUEUE] Executing callback")
+                callback()
             self.send_to_all(encode(msg))
+
+            print(
+                f"[QUEUE] Sending EOF to next workers {self.output_queues}")
+            return True
+
+        return False
 
     def __get_worker_name(self, name, worker):
         return f"{name}_{worker}"

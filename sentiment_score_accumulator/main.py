@@ -43,9 +43,10 @@ def send_results(sentiment_acc: SentimentScoreAccumulator, queue_middleware: Que
 
 
 def process_eof(queue_middleware: QueueMiddleware, sentiment_acc: SentimentScoreAccumulator, query=None):
-    send_results(sentiment_acc, queue_middleware, query)
-    sentiment_acc.clear()
-    queue_middleware.send_eof()
+    def callback():
+        send_results(sentiment_acc, queue_middleware, query)
+        sentiment_acc.clear()
+    queue_middleware.send_eof(callback)
 
 
 def process_message(sentiment_acc: SentimentScoreAccumulator, queue_middleware: QueueMiddleware, query=None):

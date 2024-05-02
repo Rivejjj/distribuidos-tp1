@@ -27,13 +27,9 @@ def initialize():
 
 
 def process_eof(queue_middleware: QueueMiddleware, counter: ReviewsCounter):
-
-    msg = "EOF"
-    queue_middleware.send_to_all_except(
-        encode(msg), "results_0")
-
-    queue_middleware.send("results_0", encode(msg))
-    counter.clear()
+    def callback():
+        counter.clear()
+    queue_middleware.send_eof(callback)
 
 
 def process_message(counter: ReviewsCounter, parser: CsvParser, data_receiver: DataReceiver, queue_middleware: QueueMiddleware, more_than_n, query=None):

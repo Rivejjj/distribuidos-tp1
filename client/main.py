@@ -25,6 +25,9 @@ def receive_results(address, port):
         if msg == "EOF":
             break
 
+        splitted = msg.split(':', 1)
+        if len(splitted) != 2:
+            continue
         number, text = msg.split(':', 1)
         filename = f"query{number}.txt"
         with open(filename, 'a') as f:
@@ -35,7 +38,7 @@ def receive_results(address, port):
 
 def run(config_params):
     client = Client(config_params["address"], config_params["port"])
-    time.sleep(60)
+    time.sleep(20)
 
     thread = Thread(
         target=receive_results, args=(config_params["address"], config_params["results_port"]))

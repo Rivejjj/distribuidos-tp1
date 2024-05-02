@@ -34,6 +34,7 @@ up-nb:
 rmq-up: 
 	docker build -f ./rabbitmq/rabbitmq.dockerfile -t "rabbitmq:latest" .
 	docker compose -f docker-compose-rmq.yaml up --build
+.PHONY: docker-compose-rmq-up
 
 down:
 	docker compose -f docker-compose-dev.yaml stop -t 1

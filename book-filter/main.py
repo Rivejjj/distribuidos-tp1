@@ -31,10 +31,11 @@ def initialize():
 
 
 def process_eof(queue_middleware: QueueMiddleware, review_filter: ReviewFilter, query=None):
-    if review_filter:
-        review_filter.clear()
+    def callback():
+        if review_filter:
+            review_filter.clear()
 
-    queue_middleware.send_eof()
+    queue_middleware.send_eof(callback)
 
 
 def format_for_results(book: Book, query):
@@ -49,7 +50,7 @@ def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_
             process_eof(queue_middleware, review_filter, query)
             return
 
-        print("Line: ", body)
+        logging.info("Line: ", body)
 
         book = Book.from_csv_line(msg_received)
 

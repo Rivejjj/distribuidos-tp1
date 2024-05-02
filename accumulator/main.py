@@ -25,15 +25,17 @@ def initialize():
 
 
 def process_eof(queue_middleware: QueueMiddleware, accum: Accumulator, query=None):
-    print("EOF received")
-    top = accum.get_top()
-    result = ""
-    for i in top:
-        result += add_query_to_message(f"{i[0]},{i[1]}\n", query)
-    print("sending to result:", result)
-    queue_middleware.send_to_all(encode(result))
-    accum.clear()
-    queue_middleware.send_eof()
+    def callback():
+        logging.info("EOF received")
+        top = accum.get_top()
+        result = ""
+        for i in top:
+            result += add_query_to_message(f"{i[0]},{i[1]}\n", query)
+        logging.info("sending to result:", result)
+        queue_middleware.send_to_all(encode(result))
+        accum.clear()
+
+    queue_middleware.send_eof(callback)
 
 
 def process_message(accum: Accumulator, parser: CsvParser, queue_middleware: QueueMiddleware, query):

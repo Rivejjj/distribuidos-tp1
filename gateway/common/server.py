@@ -214,8 +214,9 @@ class Server:
             logging.info(self.client_sock)
 
             if msg == "EOF":
-                logging.info("[HOLA] EOF received")
                 self.received_eofs += 1
+                logging.info(f"[HOLA] EOF received {self.received_eofs}")
+
                 if self.received_eofs >= self.query_count:
                     logging.info("All queries finished")
                     send_message(self.results_client_sock, "EOF")
