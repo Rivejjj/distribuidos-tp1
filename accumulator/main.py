@@ -67,7 +67,7 @@ def main():
 
     parser = CsvParser()
     queue_middleware.start_consuming(
-        process_message(accum, parser, queue_middleware, query=config_params["query"]))
+        process_message(accum, parser, queue_middleware, config_params["query"]))
 
 
 if __name__ == "__main__":

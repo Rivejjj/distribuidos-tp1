@@ -23,7 +23,7 @@ services:
       - LOGGING_LEVEL=INFO
       - OUTPUT_QUEUES=query1:3;query2:3;query3:3;query4:3
       - INPUT_QUEUE=results
-      - QUERY_COUNT=3
+      - QUERY_COUNT=11
       - ID=0
 
   computers_category_filter_0:

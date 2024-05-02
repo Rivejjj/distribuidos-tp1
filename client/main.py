@@ -38,12 +38,13 @@ def receive_results(address, port):
     client.stop()
 
 
-def send_file(client, filename, batch_size=10):
+def send_file(client, filename, batch_size=10, max_batches=0):
     file = open(filename, "r")
     line = file.readline()
     batch = ""
+
     i = 0
-    while line and i < 1000:
+    while line and (max_batches == 0 or i < max_batches):
         try:
             for _ in range(batch_size):
                 line = file.readline()
@@ -53,6 +54,7 @@ def send_file(client, filename, batch_size=10):
             batch = ""
         except Exception as e:
             break
+
         i += 1
     file.close()
 
@@ -65,24 +67,7 @@ def run(config_params):
     thread.start()
 
     send_file(client, config_params["books_path"])
-    # send_file(client, "/data/ratings_reduced.csv")
-
-    file = open("/data/ratings_reduced.csv", "r")
-    line = file.readline()
-    batch = ""
-    i = 0
-    while line and i < 1000:
-        try:
-            for _ in range(10):
-                line = file.readline()
-                batch += line
-            # print(f"[CLIENT] Sending batch: {batch}")
-            client.send_message(batch)
-            batch = ""
-        except Exception as e:
-            break
-        # i += 1
-    file.close()
+    send_file(client, config_params["books_reviews_path"])
 
     client.send_message("EOF")
 
