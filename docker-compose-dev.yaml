@@ -13,8 +13,7 @@ services:
       - BOOKS_REVIEWS_PATH=/data/Books_rating.csv
     volumes:
       - ./data:/data
-    networks:
-      - testing_net
+
   gateway:
     container_name: gateway
     image: gateway:latest
@@ -26,8 +25,7 @@ services:
       - INPUT_QUEUE=results
       - QUERY_COUNT=11
       - ID=0
-    networks:
-      - testing_net
+
       
   computers_category_filter_0:
     container_name: computers_category_filter_0
@@ -40,8 +38,7 @@ services:
       - OUTPUT_QUEUES=computers:3
       - CATEGORY=Computers
       - ID=0
-    networks:
-      - testing_net
+
   computers_category_filter_1:
     container_name: computers_category_filter_1
     image: book-filter:latest
@@ -53,8 +50,7 @@ services:
       - OUTPUT_QUEUES=computers:3
       - CATEGORY=Computers
       - ID=1
-    networks:
-      - testing_net
+
   computers_category_filter_2:
     container_name: computers_category_filter_2
     image: book-filter:latest
@@ -66,8 +62,7 @@ services:
       - OUTPUT_QUEUES=computers:3
       - CATEGORY=Computers
       - ID=2
-    networks:
-      - testing_net
+
   2000s_published_year_filter_0:
     container_name: 2000s_published_year_filter_0
     image: book-filter:latest
@@ -80,8 +75,7 @@ services:
       - PUBLISHED_YEAR_RANGE=2000-2023
       - ID=0
       - PREVIOUS_WORKERS=3
-    networks:
-      - testing_net
+
   2000s_published_year_filter_1:
     container_name: 2000s_published_year_filter_1
     image: book-filter:latest
@@ -94,8 +88,7 @@ services:
       - PUBLISHED_YEAR_RANGE=2000-2023
       - ID=1
       - PREVIOUS_WORKERS=3
-    networks:
-      - testing_net
+
   2000s_published_year_filter_2:
     container_name: 2000s_published_year_filter_2
     image: book-filter:latest
@@ -108,8 +101,7 @@ services:
       - PUBLISHED_YEAR_RANGE=2000-2023
       - ID=2
       - PREVIOUS_WORKERS=3
-    networks:
-      - testing_net
+
   title_contains_filter_0:
     container_name: title_contains_filter_0
     image: book-filter:latest
@@ -123,8 +115,7 @@ services:
       - ID=0
       - QUERY=1
       - PREVIOUS_WORKERS=3
-    networks:
-      - testing_net
+
   title_contains_filter_1:
     container_name: title_contains_filter_1
     image: book-filter:latest
@@ -138,8 +129,7 @@ services:
       - ID=1
       - QUERY=1
       - PREVIOUS_WORKERS=3
-    networks:
-      - testing_net
+
   title_contains_filter_2:
     container_name: title_contains_filter_2
     image: book-filter:latest
@@ -153,8 +143,7 @@ services:
       - ID=2
       - QUERY=1
       - PREVIOUS_WORKERS=3
-    networks:
-      - testing_net
+
   decades-accumulator_0:
     container_name: decades-accumulator_0
     image: decades-accumulator:latest
@@ -167,8 +156,7 @@ services:
       - TOP=10
       - ID=0
       - QUERY=2
-    networks:
-      - testing_net
+
   decades-accumulator_1:
     container_name: decades-accumulator_1
     image: decades-accumulator:latest
@@ -181,8 +169,7 @@ services:
       - TOP=10
       - ID=1
       - QUERY=2
-    networks:
-      - testing_net
+
   decades-accumulator_2:
     container_name: decades-accumulator_2
     image: decades-accumulator:latest
@@ -195,8 +182,7 @@ services:
       - TOP=10
       - ID=2
       - QUERY=2
-    networks:
-      - testing_net
+
   1990s_published_year_filter_0:
     container_name: 1990s_published_year_filter_0
     image: book-filter:latest
@@ -209,8 +195,7 @@ services:
       - PUBLISHED_YEAR_RANGE=1990-1999
       - ID=0
       - SAVE_BOOKS=True
-    networks:
-      - testing_net
+
   1990s_published_year_filter_1:
     container_name: 1990s_published_year_filter_1
     image: book-filter:latest
@@ -223,8 +208,7 @@ services:
       - PUBLISHED_YEAR_RANGE=1990-1999
       - ID=1
       - SAVE_BOOKS=True
-    networks:
-      - testing_net
+
   1990s_published_year_filter_2:
     container_name: 1990s_published_year_filter_2
     image: book-filter:latest
@@ -237,8 +221,7 @@ services:
       - PUBLISHED_YEAR_RANGE=1990-1999
       - ID=2
       - SAVE_BOOKS=True
-    networks:
-      - testing_net
+
   reviews_counter_0:
     container_name: reviews_counter_0
     image: reviews_counter_accum:latest
@@ -251,8 +234,7 @@ services:
       - ID=0
       - QUERY=3
       - PREVIOUS_WORKERS=3
-    networks:
-      - testing_net
+
   reviews_counter_1:
     container_name: reviews_counter_1
     image: reviews_counter_accum:latest
@@ -265,8 +247,7 @@ services:
       - ID=1
       - QUERY=3
       - PREVIOUS_WORKERS=3
-    networks:
-      - testing_net
+
   reviews_counter_2:
     container_name: reviews_counter_2
     image: reviews_counter_accum:latest
@@ -279,8 +260,7 @@ services:
       - ID=2
       - QUERY=3
       - PREVIOUS_WORKERS=3
-    networks:
-      - testing_net
+
   avg_rating_accumulator:
     container_name: avg_rating_accumulator
     image: accumulator:latest
@@ -293,8 +273,7 @@ services:
       - ID=0
       - QUERY=4
       - PREVIOUS_WORKERS=3
-    networks:
-      - testing_net
+
   fiction_category_filter_0:
     container_name: fiction_category_filter_0
     image: book-filter:latest
@@ -307,8 +286,7 @@ services:
       - CATEGORY=Fiction
       - ID=0
       - SAVE_BOOKS=True
-    networks:
-      - testing_net
+
   fiction_category_filter_1:
     container_name: fiction_category_filter_1
     image: book-filter:latest
@@ -321,8 +299,7 @@ services:
       - CATEGORY=Fiction
       - ID=1
       - SAVE_BOOKS=True
-    networks:
-      - testing_net
+
   fiction_category_filter_2:
     container_name: fiction_category_filter_2
     image: book-filter:latest
@@ -335,8 +312,7 @@ services:
       - CATEGORY=Fiction
       - ID=2
       - SAVE_BOOKS=True
-    networks:
-      - testing_net
+
   sentiment_analyzer_0:
     container_name: sentiment_analyzer_0
     image: sentiment_analyzer:latest
@@ -348,8 +324,7 @@ services:
       - OUTPUT_QUEUES=sentiment_score:1
       - ID=0
       - PREVIOUS_WORKERS=3
-    networks:
-      - testing_net
+
   sentiment_analyzer_1:
     container_name: sentiment_analyzer_1
     image: sentiment_analyzer:latest
@@ -361,8 +336,7 @@ services:
       - OUTPUT_QUEUES=sentiment_score:1
       - ID=1
       - PREVIOUS_WORKERS=3
-    networks:
-      - testing_net
+
   sentiment_analyzer_2:
     container_name: sentiment_analyzer_2
     image: sentiment_analyzer:latest
@@ -374,8 +348,7 @@ services:
       - OUTPUT_QUEUES=sentiment_score:1
       - ID=2
       - PREVIOUS_WORKERS=3
-    networks:
-      - testing_net
+
   sentiment_score_accumulator:
     container_name: sentiment_score_accumulator
     image: sentiment_score_accumulator:latest
@@ -388,8 +361,7 @@ services:
       - ID=0
       - QUERY=5
       - PREVIOUS_WORKERS=3
-    networks:
-      - testing_net
+
 networks:
   testing_net:
     ipam:

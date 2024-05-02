@@ -52,7 +52,7 @@ def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_
             process_eof(queue_middleware, review_filter, query)
             return
 
-        logging.info("Line: ", body)
+        # logging.info("Line: ", body)
 
         book = Book.from_csv_line(msg_received)
 
@@ -71,6 +71,8 @@ def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_
 
         review = Review.from_csv_line(msg_received)
         if review and review_filter and review_filter.filter(review):
+            message = str(review)
+
             print("Review accepted: ", review.title)
             queue_middleware.send_to_pool(encode(message), review.title)
     return callback

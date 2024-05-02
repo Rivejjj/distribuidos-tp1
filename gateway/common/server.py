@@ -149,7 +149,7 @@ class Server:
         try:
             while True:
                 msg_length = self.__receive_message_length()
-                logging.info(f"msg_length: {msg_length}")
+                # logging.info(f"msg_length: {msg_length}")
                 if msg_length == 0:
                     return
 
@@ -175,8 +175,7 @@ class Server:
         # print(f'received message: {msg}')
 
         if msg == "EOF":
-            logging.info(
-                f"action: receive_message | result: success | msg: {msg}")
+            logging.info(f"action: receive_message | result: success | msg: {msg}")
             
             self.queue.send_eof()
             return
@@ -187,8 +186,7 @@ class Server:
             for name in pool:
                 self.queue.send_to_pool(
                     encode(str(book)), book.title, next_pool_name=name)
-            logging.info(
-                f'sending to comp.filter | msg: {str(book)}')
+            # logging.info(f'sending to comp.filter | msg: {str(book)}')
 
             return
         review = data_receiver.parse_review(msg)
@@ -198,22 +196,21 @@ class Server:
             for name in pool:
                 self.queue.send_to_pool(
                     encode(str(review)), review.title, next_pool_name=name)
-            logging.info(
-                f'sending to comp.filter | msg: {str(review)}')
+            # logging.info(f'sending to comp.filter | msg: {str(review)}')
             return
 
-        logging.info(f'invalid message: {msg}')
+        # logging.info(f'invalid message: {msg}')
 
     def handle_result(self):
         def callback(ch, method, properties, body):
             logging.info(f"[QUERY RESULT]: {decode(body)}")
 
             msg = decode(body)
-            logging.info(self.client_sock)
+            # logging.info(self.client_sock)
 
             if msg == "EOF":
                 self.received_eofs += 1
-                logging.info(f"[HOLA] EOF received {self.received_eofs}")
+                logging.info(f"[FINAL] EOF received {self.received_eofs}")
 
                 if self.received_eofs >= self.query_count:
                     logging.info("All queries finished")

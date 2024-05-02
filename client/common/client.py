@@ -29,6 +29,5 @@ class Client:
         msg_length = self.__receive_message_length()
         send_success(self.socket)
         msg = safe_receive(self.socket, msg_length)
-        logging.info(
-            f"action: receive_message | result: success | msg: {msg}")
+        # logging.info(f"action: receive_message | result: success | msg: {msg}")
         return msg

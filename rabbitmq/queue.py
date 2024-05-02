@@ -33,7 +33,7 @@ class QueueMiddleware:
 
     def __calculate_queue_pools(self, output_queues):
         for name, worker_count in output_queues:
-            logging.info(f"[QUEUE] Calculating queue pool for {name}")
+            # logging.info(f"[QUEUE] Calculating queue pool for {name}")
 
             self.queue_pools[name] = worker_count
 
@@ -72,10 +72,10 @@ class QueueMiddleware:
             ))
 
     def send_to_all(self, message):
-        logging.info(f"[QUEUE] Sending message to all: {message}")
+        # logging.info(f"[QUEUE] Sending message to all: {message}")
 
         for name in self.output_queues:
-            logging.info(f"[QUEUE] Sending message to {name}")
+            # logging.info(f"[QUEUE] Sending message to {name}")
             self.send(name, message)
 
     def send_to_all_except(self, message, except_queue):

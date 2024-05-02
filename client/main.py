@@ -36,23 +36,12 @@ def receive_results(address, port):
 
     client.stop()
 
-
-def run(config_params):
-    client = Client(config_params["address"], config_params["port"])
-    time.sleep(20)
-
-    thread = Thread(
-        target=receive_results, args=(config_params["address"], config_params["results_port"]))
-    thread.start()
-
-    # with open('results.csv', 'w') as a:
-
-    file = open(config_params["books_path"], "r")
+def send_file(client, filename, batch_size=10):
+    file = open(filename, "r")
     line = file.readline()
-    batch_size = 10
     batch = ""
-    # i = 0
-    while line:
+    i = 0
+    while line and i < 1000:
         try:
             for _ in range(batch_size):
                 line = file.readline()
@@ -62,18 +51,46 @@ def run(config_params):
             batch = ""
         except Exception as e:
             break
+        i += 1
+    file.close()
+
+
+def run(config_params):
+    client = Client(config_params["address"], config_params["port"])
+    time.sleep(20)
+
+    thread = Thread(
+        target=receive_results, args=(config_params["address"], config_params["results_port"]))
+    thread.start()
+
+    send_file(client, config_params["books_path"])
+    # send_file(client, "/data/ratings_reduced.csv")
+
+    file = open("/data/ratings_reduced.csv", "r")
+    line = file.readline()
+    batch = ""
+    i = 0
+    while line and i < 1000:
+        try:
+            for _ in range(10):
+                line = file.readline()
+                batch += line 
+            # print(f"[CLIENT] Sending batch: {batch}")
+            client.send_message(batch)
+            batch = ""
+        except Exception as e:
+            break
         # i += 1
     file.close()
-    # with open(config_params["books_reviews_path"]) as file:
-    #     i = 0
-    #     for line in file:
 
-    #         print(line.strip())
-    #         client.send_message(line.strip())
-    #         if i == 5000:
-    #             break
-    #         i += 1
+
     client.send_message("EOF")
+
+    
+    
+
+
+
 
     thread.join()
 
