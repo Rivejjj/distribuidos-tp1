@@ -102,8 +102,12 @@ def build_query1(config_services):
     for i in range(WORKERS):
         config_services[f'computers_category_filter_{i}'] = build_computer_category_filter(
             i)
+
+    for i in range(WORKERS):
         config_services[f'2000s_published_year_filter_{i}'] = build_2000s_published_year_filter(
             i)
+
+    for i in range(WORKERS):
         config_services[f'title_contains_filter_{i}'] = build_title_contains_filter(
             i)
 
@@ -118,6 +122,8 @@ def build_query3(config_services):
     for i in range(WORKERS):
         config_services[f'1990s_published_year_filter_{i}'] = build_1990s_published_year_filter(
             i)
+
+    for i in range(WORKERS):
         config_services[f'reviews_counter_{i}'] = build_reviews_counter(
             i)
 
@@ -130,6 +136,8 @@ def build_query5(config_services):
     for i in range(WORKERS):
         config_services[f'fiction_category_filter_{i}'] = build_fiction_category_filter(
             i)
+
+    for i in range(WORKERS):
         config_services[f'sentiment_analyzer_{i}'] = build_sentiment_analyzer(
             i)
     config_services['sentiment_score_accumulator'] = build_sentiment_score_accumulator()
