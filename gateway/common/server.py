@@ -37,6 +37,7 @@ class Server:
             [], input_queue=input_queue, id=id, wait_for_rmq=False)
 
         self.query_count = query_count
+        self.received_eofs = 0
 
     def run(self):
         """
@@ -179,7 +180,7 @@ class Server:
         print(f'received message: {msg}')
 
         if msg == "EOF":
-            self.queue.send_eof(encode("EOF"))
+            self.queue.send_eof()
             return
 
         book = data_receiver.parse_book(msg)
@@ -214,14 +215,13 @@ class Server:
             print(self.client_sock)
 
             if msg == "EOF":
+                print("[HOLA] EOF received")
+                self.received_eofs += 1
+                if self.received_eofs >= self.query_count:
+                    print("All queries finished")
+                    send_message(self.results_client_sock, "EOF")
+                    self.received_eofs = 0
                 return
-                # self.query_count -= 1
-                # if self.query_count > 0:
-                #     return
 
             send_message(self.results_client_sock, msg)
         return callback
-
-    def __send_message(self, msg):
-        print(f'sending message: {msg}')
-        send_message(self.client_sock, msg)

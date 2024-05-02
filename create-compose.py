@@ -72,7 +72,7 @@ def build_gateway():
             'LOGGING_LEVEL=INFO',
             f'OUTPUT_QUEUES=query1:{WORKERS};query2:{WORKERS};query3:{WORKERS};query4:{WORKERS}',
             'INPUT_QUEUE=results',
-            'QUERY_COUNT=1',
+            f'QUERY_COUNT={WORKERS+WORKERS+2}',
             'ID=0'
         ]
     }
@@ -182,7 +182,8 @@ def build_2000s_published_year_filter(i):
             'INPUT_QUEUE=computers',
             f'OUTPUT_QUEUES=2000s_filtered:{WORKERS}',
             'PUBLISHED_YEAR_RANGE=2000-2023',
-            f'ID={i}'
+            f'ID={i}',
+            f'PREVIOUS_WORKERS={WORKERS}'
         ]
     }
 
@@ -204,8 +205,9 @@ def build_title_contains_filter(i):
             'INPUT_QUEUE=2000s_filtered',
             f'OUTPUT_QUEUES=results:1',
             'TITLE_CONTAINS=distributed',
-            f'ID={i}'
-            'QUERY=1'
+            f'ID={i}',
+            'QUERY=1',
+            f'PREVIOUS_WORKERS={WORKERS}'
         ]
 
     }
@@ -228,8 +230,8 @@ def build_decades_accumulator(i):
             'INPUT_QUEUE=query2',
             'OUTPUT_QUEUES=results:1',
             'TOP=10',
-            f'ID={i}'
-            'QUERY=2'
+            f'ID={i}',
+            'QUERY=2',
         ]
     }
 
@@ -251,8 +253,8 @@ def build_1990s_published_year_filter(i):
             'INPUT_QUEUE=query3',
             f'OUTPUT_QUEUES=90s_filtered:{WORKERS}',
             'PUBLISHED_YEAR_RANGE=1990-1999',
-            f'ID={i}'
-            'SAVE_BOOKS=True'
+            f'ID={i}',
+            'SAVE_BOOKS=True',
         ]
     }
 
@@ -275,7 +277,8 @@ def build_reviews_counter(i):
             'INPUT_QUEUE=90s_filtered',
             'OUTPUT_QUEUES=500_reviews:1;results:1',
             f'ID={i}',
-            'QUERY=3'
+            'QUERY=3',
+            f'PREVIOUS_WORKERS={WORKERS}'
         ]
 
     }
@@ -298,7 +301,8 @@ def build_avg_rating_accumulator():
             'INPUT_QUEUE=500_reviews',
             'OUTPUT_QUEUES=results:1',
             'ID=0',
-            'QUERY=4'
+            'QUERY=4',
+            f'PREVIOUS_WORKERS={WORKERS}'
         ]
     }
 
@@ -320,7 +324,7 @@ def build_fiction_category_filter(i):
             'INPUT_QUEUE=query1',
             f'OUTPUT_QUEUES=fiction:{WORKERS}',
             'CATEGORY=Fiction',
-            f'ID={i}'
+            f'ID={i}',
             'SAVE_BOOKS=True'
         ]
     }
@@ -342,7 +346,8 @@ def build_sentiment_analyzer(i):
             'LOGGING_LEVEL=INFO',
             'INPUT_QUEUE=fiction',
             f'OUTPUT_QUEUES=sentiment_score:1',
-            f'ID={i}'
+            f'ID={i}',
+            f'PREVIOUS_WORKERS={WORKERS}'
         ]
     }
 
@@ -364,7 +369,8 @@ def build_sentiment_score_accumulator():
             'INPUT_QUEUE=sentiment_score',
             'OUTPUT_QUEUES=results:1',
             'ID=0',
-            'QUERY=5'
+            'QUERY=5',
+            f'PREVIOUS_WORKERS={WORKERS}'
         ]
     }
 

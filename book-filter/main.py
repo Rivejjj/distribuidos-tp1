@@ -10,7 +10,7 @@ from utils.initialize import add_query_to_message, decode, encode, get_queue_nam
 
 def initialize():
     all_params = ["logging_level", "category",
-                  "published_year_range", "title_contains", "id", "input_queue", "output_queues", "save_books", "query"]
+                  "published_year_range", "title_contains", "id", "input_queue", "output_queues", "save_books", "query", "previous_workers"]
 
     params = list(map(lambda param: (param, False), all_params))
 
@@ -30,7 +30,7 @@ def initialize():
     return config_params
 
 
-def process_eof(queue_middleware: QueueMiddleware, review_filter: ReviewFilter):
+def process_eof(queue_middleware: QueueMiddleware, review_filter: ReviewFilter, query=None):
     if review_filter:
         review_filter.clear()
 
@@ -46,7 +46,7 @@ def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_
         msg_received = decode(body)
 
         if msg_received == "EOF":
-            process_eof(queue_middleware, review_filter)
+            process_eof(queue_middleware, review_filter, query)
             return
 
         print("Line: ", body)
@@ -90,7 +90,7 @@ def main():
         review_filter = ReviewFilter()
 
     queue_middleware = QueueMiddleware(get_queue_names(
-        config_params), input_queue=config_params["input_queue"], id=config_params["id"])
+        config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
 
     queue_middleware.start_consuming(
         process_message(book_filter, review_filter, queue_middleware, config_params["query"]))

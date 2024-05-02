@@ -27,10 +27,18 @@ def initialize():
 
 def process_eof(queue_middleware: QueueMiddleware, accum: Accumulator, query=None):
     authors = accum.get_result()
-    final_result = "\n".join([f"{author}" for author in authors])
+    # final_result = "\n".join([add_query_to_message(
+    #     f"{author}", query) for author in authors])
 
-    if query:
-        final_result = add_query_to_message(final_result, query)
+    response = []
+
+    for author in authors:
+        msg = f"{author}"
+        if query:
+            msg = add_query_to_message(msg, query)
+        response.append(msg)
+
+    final_result = "\n".join(response)
 
     queue_middleware.send_to_all(encode(final_result))
 

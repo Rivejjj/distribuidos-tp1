@@ -40,8 +40,8 @@ def send_results(sentiment_acc: SentimentScoreAccumulator, queue_middleware: Que
         queue_middleware.send_to_all(encode(message))
 
 
-def process_eof(queue_middleware: QueueMiddleware, sentiment_acc: SentimentScoreAccumulator):
-    send_results(sentiment_acc, queue_middleware)
+def process_eof(queue_middleware: QueueMiddleware, sentiment_acc: SentimentScoreAccumulator, query=None):
+    send_results(sentiment_acc, queue_middleware, query)
     sentiment_acc.clear()
     queue_middleware.send_eof()
 
@@ -52,8 +52,7 @@ def process_message(sentiment_acc: SentimentScoreAccumulator, queue_middleware: 
         msg_received = decode(body)
 
         if msg_received == "EOF":
-            send_results(sentiment_acc, queue_middleware, query)
-            sentiment_acc.clear()
+            process_eof(queue_middleware, sentiment_acc, query)
             return
 
         line = parse_message(msg_received)

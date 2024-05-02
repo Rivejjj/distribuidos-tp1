@@ -53,6 +53,12 @@ def initialize_log(logging_level):
 def initialize_workers_environment(config_params):
     config_params["id"] = int(config_params["id"])
 
+    if not config_params["previous_workers"]:
+        config_params["previous_workers"] = 0
+    else:
+        config_params["previous_workers"] = int(
+            config_params["previous_workers"])
+
 
 def get_queue_with_worker_count(queue):
     queue_name, worker_count = queue.split(":")

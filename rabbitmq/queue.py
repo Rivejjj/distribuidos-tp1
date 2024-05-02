@@ -2,11 +2,11 @@ import logging
 import time
 import pika
 
-from utils.initialize import encode
+from utils.initialize import add_query_to_message, encode
 
 
 class QueueMiddleware:
-    def __init__(self, output_queues, input_queue=None, id=None, wait_for_rmq=True):
+    def __init__(self, output_queues, input_queue=None, id=None, previous_workers=0, wait_for_rmq=True):
         # logging.info("Connecting to queue: queue_names=%s", queue_names)
 
         # Waits for rabbitmq
@@ -32,6 +32,9 @@ class QueueMiddleware:
             self.__declare_input_queue(input_queue, id)
 
         self.channel.start_consuming()
+
+        self.previous_workers = previous_workers
+        self.received_eofs = 0
 
     def __calculate_queue_pools(self, output_queues):
         for name, worker_count in output_queues:
@@ -84,7 +87,13 @@ class QueueMiddleware:
 
     def send_eof(self):
         print("[QUEUE] Sending EOF")
-        self.send_to_all(encode("EOF"))
+        msg = "EOF"
+
+        self.received_eofs += 1
+        if self.previous_workers <= self.received_eofs:
+            print("[QUEUE] Received EOFs of all workers")
+            self.received_eofs = 0
+            self.send_to_all(encode(msg))
 
     def __get_worker_name(self, name, worker):
         return f"{name}_{worker}"

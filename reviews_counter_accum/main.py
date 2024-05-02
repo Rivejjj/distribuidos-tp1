@@ -26,12 +26,21 @@ def initialize():
     return config_params
 
 
-def process_message(counter: ReviewsCounter, parser: CsvParser, data_receiver: DataReceiver, queue_middleware: QueueMiddleware, more_than_n, queue=None):
+def process_eof(queue_middleware: QueueMiddleware, counter: ReviewsCounter):
+
+    msg = "EOF"
+    queue_middleware.send_to_all_except(
+        encode(msg), "results_0")
+
+    queue_middleware.send("results_0", encode(msg))
+    counter.clear()
+
+
+def process_message(counter: ReviewsCounter, parser: CsvParser, data_receiver: DataReceiver, queue_middleware: QueueMiddleware, more_than_n, query=None):
     def callback(ch, method, properties, body):
         msg_received = decode(body)
         if msg_received == "EOF":
-            print("EOF received")
-            queue_middleware.send_eof()
+            process_eof(queue_middleware, counter)
             return
         book = data_receiver.parse_book(msg_received)
         if book:
@@ -54,8 +63,8 @@ def process_message(counter: ReviewsCounter, parser: CsvParser, data_receiver: D
                       " | Total reviews: ", avg)
 
                 msg_to_result = f"{author},{title}"
-                if queue:
-                    msg_to_result = add_query_to_message(msg_to_result, queue)
+                if query:
+                    msg_to_result = add_query_to_message(msg_to_result, query)
                 queue_middleware.send("results", msg_to_result)
                 more_than_n[title] = True
 
@@ -77,7 +86,7 @@ def main():
     data_receiver = DataReceiver()
     more_than_n = {}
     queue_middleware.start_consuming(
-        process_message(counter, parser, data_receiver, queue_middleware, more_than_n, queue=config_params["query"]))
+        process_message(counter, parser, data_receiver, queue_middleware, more_than_n, query=config_params["query"]))
 
 
 if __name__ == "__main__":
