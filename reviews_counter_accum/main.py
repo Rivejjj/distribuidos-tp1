@@ -9,10 +9,10 @@ from gateway.common.data_receiver import DataReceiver
 
 
 def initialize():
-    all_params = ["logging_level", "id", "n",
-                  "input_queue", "output_queues", "exchange", "query"]
+    params = ["logging_level", "id", "input_queue",
+              "output_queues", "query", "previous_workers"]
 
-    params = list(map(lambda param: (param, False), all_params))
+    params = list(map(lambda param: (param, False), params))
 
     config_params = initialize_config(params)
     logging.debug("Config: %s", config_params)
@@ -80,7 +80,7 @@ def main():
     counter = ReviewsCounter(min_amount_of_reviews)
 
     queue_middleware = QueueMiddleware(get_queue_names(
-        config_params), exchange=config_params["exchange"], input_queue=config_params["input_queue"])
+        config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
 
     parser = CsvParser()
     data_receiver = DataReceiver()

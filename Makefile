@@ -6,7 +6,7 @@ default: build
 all:
 
 docker-image:
-	docker build -f ./rabbitmq/rabbitmq.dockerfile -t "rabbitmq:latest" .
+	
 	docker build -f ./gateway/Dockerfile -t "gateway:latest" .
 	docker build -f ./book-filter/Dockerfile -t "book-filter:latest" .
 	docker build -f ./client/Dockerfile -t "client:latest" .
@@ -31,6 +31,9 @@ up-nb:
 	docker compose -f docker-compose-dev.yaml up -d --build
 .PHONY: docker-compose-up-nb
 
+rmq-up: 
+	docker build -f ./rabbitmq/rabbitmq.dockerfile -t "rabbitmq:latest" .
+	docker compose -f docker-compose-rmq.yaml up --build
 
 down:
 	docker compose -f docker-compose-dev.yaml stop -t 1

@@ -1,3 +1,4 @@
+import logging
 from multiprocessing import Process
 from threading import Thread
 import time
@@ -34,7 +35,7 @@ def receive_results(address, port):
 
 def run(config_params):
     client = Client(config_params["address"], config_params["port"])
-    time.sleep(40)
+    time.sleep(60)
 
     thread = Thread(
         target=receive_results, args=(config_params["address"], config_params["results_port"]))
@@ -44,7 +45,7 @@ def run(config_params):
     with open(config_params["books_path"]) as file:
         i = 0
         for line in file:
-            print(line.strip())
+            logging.info(line.strip())
             client.send_message(line.strip())
             if i == 30:
                 break

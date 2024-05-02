@@ -51,9 +51,13 @@ def initialize_log(logging_level):
 
 
 def initialize_workers_environment(config_params):
-    config_params["id"] = int(config_params["id"])
+    if "id" not in config_params or not config_params["id"]:
+        config_params["id"] = 0
+    else:
+        config_params["id"] = int(
+            config_params["id"])
 
-    if not config_params["previous_workers"]:
+    if "previous_workers" not in config_params or not config_params["previous_workers"]:
         config_params["previous_workers"] = 0
     else:
         config_params["previous_workers"] = int(

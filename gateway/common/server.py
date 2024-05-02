@@ -53,7 +53,7 @@ class Server:
     def run_client(self):
         while True:
             try:
-                print(f"waiting for connection")
+                logging.info(f"waiting for connection")
                 client_sock = self.__accept_new_connection(self._server_socket)
                 self.client_sock = client_sock
                 self.handle_client_connection()
@@ -72,11 +72,11 @@ class Server:
         """
         while True:
             try:
-                print(f"waiting for connection for results")
+                logging.info(f"waiting for connection for results")
                 client_sock = self.__accept_new_connection(
                     self.results_server_socket)
 
-                print(f"results client sock: {client_sock}")
+                logging.info(f"results client sock: {client_sock}")
                 self.results_client_sock = client_sock
                 self.receiver_queue.start_consuming(self.handle_result())
             except OSError:
@@ -123,7 +123,6 @@ class Server:
         try:
             int_bytes = safe_receive(self.client_sock,
                                      MAX_MESSAGE_BYTES)
-            print("receiving message length", int_bytes)
             msg_length = int.from_bytes(int_bytes, "little")
 
             logging.info(
@@ -153,7 +152,7 @@ class Server:
             while True:
                 msg_length = self.__receive_message_length()
 
-                print(f"msg_length: {msg_length}")
+                logging.info(f"msg_length: {msg_length}")
 
                 if msg_length == 0:
                     return
@@ -177,7 +176,7 @@ class Server:
         # addr = self.client_sock.getpeername()
         data_receiver = DataReceiver()
 
-        print(f'received message: {msg}')
+        logging.info(f'received message: {msg}')
 
         if msg == "EOF":
             self.queue.send_eof()
@@ -191,7 +190,7 @@ class Server:
             for name in pool:
                 self.queue.send_to_pool(
                     encode(str(book)), book.title, next_pool_name=name)
-            print(
+            logging.info(
 
                 f'sending to comp.filter | msg: {str(book)}')
             return
@@ -202,23 +201,23 @@ class Server:
             for name in pool:
                 self.queue.send_to_pool(
                     encode(str(review)), review.title, next_pool_name=name)
-            print(
+            logging.info(
                 f'sending to comp.filter | msg: {str(review)}')
             return
 
-        print(f'invalid message: {msg}')
+        logging.info(f'invalid message: {msg}')
 
     def handle_result(self):
         def callback(ch, method, properties, body):
-            print(f"[QUERY RESULT]: {decode(body)}")
+            logging.info(f"[QUERY RESULT]: {decode(body)}")
             msg = decode(body)
-            print(self.client_sock)
+            logging.info(self.client_sock)
 
             if msg == "EOF":
-                print("[HOLA] EOF received")
+                logging.info("[HOLA] EOF received")
                 self.received_eofs += 1
                 if self.received_eofs >= self.query_count:
-                    print("All queries finished")
+                    logging.info("All queries finished")
                     send_message(self.results_client_sock, "EOF")
                     self.received_eofs = 0
                 return

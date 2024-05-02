@@ -6,12 +6,12 @@ from utils.initialize import add_query_to_message, encode
 
 
 class QueueMiddleware:
-    def __init__(self, output_queues, input_queue=None, id=None, previous_workers=0, wait_for_rmq=True):
+    def __init__(self, output_queues, input_queue=None, id=0, previous_workers=0, wait_for_rmq=True):
         # logging.info("Connecting to queue: queue_names=%s", queue_names)
 
         # Waits for rabbitmq
         if wait_for_rmq:
-            time.sleep(30)
+            time.sleep(20)
 
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(host='rabbitmq'))

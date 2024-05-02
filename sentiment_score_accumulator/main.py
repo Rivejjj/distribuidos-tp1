@@ -6,15 +6,17 @@ from parser_1.csv_parser import CsvParser
 from rabbitmq.queue import QueueMiddleware
 from common.sentiment_score_accumulator import SentimentScoreAccumulator
 from messages.book import Book
-from utils.initialize import add_query_to_message, encode, get_queue_names, initialize_config, initialize_log, decode
+from utils.initialize import add_query_to_message, encode, get_queue_names, initialize_config, initialize_log, decode, initialize_workers_environment
 
 
 def initialize():
-    params = ["logging_level", "id", "n", "input_queue",
-              "output_queues", "exchange", "query"]
+    params = ["logging_level", "id", "input_queue",
+              "output_queues", "query", "previous_workers"]
 
     config_params = initialize_config(
         map(lambda param: (param, False), params))
+
+    initialize_workers_environment(config_params)
 
     initialize_log(config_params["logging_level"])
 
@@ -72,7 +74,7 @@ def main():
     accumulator = SentimentScoreAccumulator()
 
     queue_middleware = QueueMiddleware(get_queue_names(
-        config_params), exchange=config_params["exchange"], input_queue=config_params["input_queue"])
+        config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
 
     queue_middleware.start_consuming(
         process_message(accumulator, queue_middleware, config_params["query"]))

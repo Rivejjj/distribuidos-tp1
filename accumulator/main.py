@@ -8,7 +8,7 @@ from parser_1.csv_parser import CsvParser
 
 def initialize():
     all_params = ["logging_level", "id",
-                  "input_queue", "output_queues", "query"]
+                  "input_queue", "output_queues", "query", "previous_workers"]
 
     params = list(map(lambda param: (param, False), all_params))
 
@@ -60,7 +60,7 @@ def main():
     accum = Accumulator(top)
 
     queue_middleware = QueueMiddleware(get_queue_names(
-        config_params), exchange=config_params["exchange"], input_queue=config_params["input_queue"])
+        config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
 
     parser = CsvParser()
     queue_middleware.start_consuming(

@@ -7,14 +7,14 @@ from messages.book import Book
 from messages.review import Review
 from parser_1.csv_parser import CsvParser
 from rabbitmq.queue import QueueMiddleware
-from utils.initialize import decode, encode, get_queue_names, initialize_config, initialize_log
+from utils.initialize import decode, encode, get_queue_names, initialize_config, initialize_log, initialize_workers_environment
 
 
 def initialize():
-    all_params = ["logging_level", "input_queue",
-                  "output_queues", "exchange"]
+    params = ["logging_level", "id", "input_queue",
+              "output_queues", "query", "previous_workers"]
 
-    params = list(map(lambda param: (param, False), all_params))
+    params = list(map(lambda param: (param, False), params))
 
     config_params = initialize_config(params)
     logging.debug("Config: %s", config_params)
@@ -22,6 +22,7 @@ def initialize():
     print(config_params)
 
     initialize_log(config_params["logging_level"])
+    initialize_workers_environment(config_params)
 
     return config_params
 
@@ -68,7 +69,7 @@ def main():
     sentiment_analyzer = SentimentAnalizer()
 
     queue_middleware = QueueMiddleware(
-        get_queue_names(config_params), input_queue=config_params["input_queue"], exchange=config_params["exchange"])
+        get_queue_names(config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
 
     queue_middleware.start_consuming(
         process_message(sentiment_analyzer, queue_middleware))

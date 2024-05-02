@@ -5,13 +5,13 @@ import os
 from common.accumulator import Accumulator
 from messages.book import Book
 from rabbitmq.queue import QueueMiddleware
-from utils.initialize import add_query_to_message, decode, encode, get_queue_names, initialize_config, initialize_log
+from utils.initialize import add_query_to_message, decode, encode, get_queue_names, initialize_config, initialize_log, initialize_workers_environment
 from parser_1.csv_parser import CsvParser
 
 
 def initialize():
     all_params = ["logging_level",
-                  "input_queue", "output_queues", "exchange", "query"]
+                  "input_queue", "output_queues", "query", "id", "previous_workers"]
 
     params = list(map(lambda param: (param, False), all_params))
 
@@ -19,6 +19,8 @@ def initialize():
     logging.debug("Config: %s", config_params)
     logging.info("Config: %s", config_params)
     print(config_params)
+
+    initialize_workers_environment(config_params)
 
     initialize_log(config_params["logging_level"])
 
@@ -70,7 +72,7 @@ def main():
     accum = Accumulator()
 
     queue_middleware = QueueMiddleware(get_queue_names(
-        config_params), exchange=config_params["exchange"])
+        config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
 
     queue_middleware.start_consuming(
         process_message(accum, queue_middleware))
