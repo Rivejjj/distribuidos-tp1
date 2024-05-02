@@ -3,13 +3,8 @@ class SentimentScoreAccumulator:
         self.title_sentiment_score = {} # title -> (count, average)
 
     def add_sentiment_score(self, title, sentiment_score):
-        print(f"[ACCUMULATOR]: {title}, {sentiment_score}")
-        if title not in self.title_sentiment_score:
-            self.title_sentiment_score[title] = (1,sentiment_score)
-        else:
-            count, average = self.title_sentiment_score[title]
-            new_avg = float(average) + (float(sentiment_score) - float(average)) / (count + 1)
-            self.title_sentiment_score[title] = (count + 1, new_avg)
+        # print(f"[ACCUMULATOR]: {title}, {sentiment_score}")
+        self.title_sentiment_score.add((title, sentiment_score))
 
     def calculate_90th_percentile(self):
         print("[ACCUMULATOR]: Calculating 90th percentile")

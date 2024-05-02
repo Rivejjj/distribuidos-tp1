@@ -9,12 +9,11 @@ from utils.initialize import decode, encode
 from rabbitmq.queue import QueueMiddleware
 from utils.sockets import safe_receive, send_message, send_success
 
-
 MAX_MESSAGE_BYTES = 16
 
 
 class Server:
-    def __init__(self, port, results_port, listen_backlog, query_count, input_queue=None, exchange=None):
+    def __init__(self, port, results_port, listen_backlog, query_count, input_queue=None, output_queues=[], id=0):
         # Initialize server socket
         signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -31,10 +30,10 @@ class Server:
 
         self.results_thread = None
         self.queue = QueueMiddleware(
-            [], input_queue='ignore', exchange=exchange)
+            output_queues)
 
         self.receiver_queue = QueueMiddleware(
-            [], input_queue=input_queue, wait_for_rmq=False)
+            [], input_queue=input_queue, id=id, wait_for_rmq=False)
 
         self.query_count = query_count
 
@@ -122,12 +121,10 @@ class Server:
         try:
             int_bytes = safe_receive(self.client_sock,
                                      MAX_MESSAGE_BYTES)
-            print("receiving message length", int_bytes)
+            # print("receiving message length", int_bytes)
             msg_length = int.from_bytes(int_bytes, "little")
 
-            logging.info(
-                f"action: receive_message_length | result: success | length: {msg_length}")
-
+            # logging.info(f"action: receive_message_length | result: success | length: {msg_length}")
             send_success(self.client_sock)
 
             return msg_length
@@ -148,7 +145,6 @@ class Server:
         client socket will also be closed
         """
         try:
-
             while True:
                 msg_length = self.__receive_message_length()
                 # print(f"msg_length: {msg_length}")
@@ -157,9 +153,9 @@ class Server:
 
                 msg = decode(safe_receive(
                     self.client_sock, msg_length)).rstrip()
-
-                self.__process_message(msg)
-
+                for a in msg.split("\n"):
+                    # print(f"msg: {a}")
+                    self.__process_message(a)
                 # self.__send_message(msg)
 
         except OSError as e:
@@ -176,39 +172,47 @@ class Server:
         # print(f'received message: {msg}')
 
         if msg == "EOF":
-            self.queue.send_to_exchange(encode("EOF"))
+            logging.info(
+                f"action: receive_message | result: success | msg: {msg}")
+            
+            self.queue.send_eof()
             return
 
         book = data_receiver.parse_book(msg)
         if book:
-            self.queue.send_to_exchange(encode(str(book)))
-            print(
-
-                f'sending to comp.filter | msg: {str(book)}')
+            pool = [f"query{i}" for i in range(1, 5)]
+            for name in pool:
+                self.queue.send_to_pool(
+                    encode(str(book)), book.title, next_pool_name=name)
+            # print(f'sending to comp.filter | msg: {str(book)}')
             return
         review = data_receiver.parse_review(msg)
         if review:
-            self.queue.send_to_exchange(encode(str(review)))
-            print(
-                f'sending to comp.filter | msg: {str(review)}')
+            pool = [f"query{i}" for i in range(3, 5)]
+
+            for name in pool:
+                self.queue.send_to_pool(
+                    encode(str(review)), review.title, next_pool_name=name)
+            # print(f'sending to comp.filter | msg: {str(review)}')
             return
 
-        print(f'invalid message: {msg}')
+        # print(f'invalid message: {msg}')
 
     def handle_result(self):
         def callback(ch, method, properties, body):
-            print(f"[QUERY RESULT]: {decode(body)}")
+            # print(f"[QUERY RESULT]: {decode(body)}")
             msg = decode(body)
             print(self.client_sock)
 
             if msg == "EOF":
-                self.query_count -= 1
-                if self.query_count > 0:
-                    return
-            print("sending message: ", msg)
+                return
+                # self.query_count -= 1
+                # if self.query_count > 0:
+                #     return
+
             send_message(self.results_client_sock, msg)
         return callback
 
     def __send_message(self, msg):
-        print(f'sending message: {msg}')
+        # print(f'sending message: {msg}')
         send_message(self.client_sock, msg)
