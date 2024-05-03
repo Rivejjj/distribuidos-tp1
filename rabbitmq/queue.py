@@ -1,4 +1,5 @@
 import logging
+import signal
 import time
 import pika
 
@@ -6,7 +7,8 @@ from utils.initialize import add_query_to_message, encode
 
 
 class QueueMiddleware:
-    def __init__(self, output_queues, input_queue=None, id=0, previous_workers=0, wait_for_rmq=True):
+    def __init__(self, output_queues, input_queue=None, id=0, previous_workers=0):
+        signal.signal(signal.SIGTERM, lambda signal, frame: self.end())
         # logging.info("Connecting to queue: queue_names=%s", queue_names)
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(host='rabbitmq'))
@@ -62,6 +64,7 @@ class QueueMiddleware:
         self.channel.start_consuming()
 
     def end(self):
+        self.channel.close()
         self.connection.close()
 
     def send(self, name, message):

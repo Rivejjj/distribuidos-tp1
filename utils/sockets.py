@@ -1,3 +1,4 @@
+import logging
 import socket
 
 from utils.initialize import decode, encode
@@ -40,3 +41,25 @@ def send_message(sock: socket.socket, msg: str):
 
 def send_success(sock: socket.socket):
     safe_send(sock, encode("suc"))
+
+
+def __receive_message_length(sock: socket.socket):
+    try:
+        int_bytes = safe_receive(sock,
+                                 MAX_MESSAGE_BYTES)
+
+        # print("receiving message length", int_bytes)
+        msg_length = int.from_bytes(int_bytes, "little")
+
+        # logging.info(f"action: receive_message_length | result: success | length: {msg_length}")
+        send_success(sock)
+
+        return msg_length
+    except socket.error as e:
+        logging.error(
+            f"action: receive_message_length | result: failed | error: client disconnected")
+        raise e
+    except Exception as e:
+        logging.error(
+            f"action: receive_message_length | result: failed | error: {e}")
+        raise e

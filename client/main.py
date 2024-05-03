@@ -22,7 +22,6 @@ def receive_results(address, port):
     client = Client(address, port)
     while True:
         msg = decode(client.receive_message())
-        # print(f"[RESULTS] Received: {msg}")
 
         if msg == "EOF":
             break
@@ -49,10 +48,10 @@ def send_file(client, filename, batch_size=10, max_batches=0):
             for _ in range(batch_size):
                 line = file.readline()
                 batch += line
-            # print(f"[CLIENT] Sending batch: {batch}")
             client.send_message(batch)
             batch = ""
         except Exception as e:
+            print(f"[CLIENT] Error sending batch: {e}")
             break
 
         i += 1
@@ -60,18 +59,22 @@ def send_file(client, filename, batch_size=10, max_batches=0):
 
 
 def run(config_params):
+    process = Process(target=receive_results, args=(
+        config_params["address"], config_params["results_port"]))
+
+    process.start()
+
     client = Client(config_params["address"], config_params["port"])
 
-    thread = Thread(
-        target=receive_results, args=(config_params["address"], config_params["results_port"]))
-    thread.start()
-
-    send_file(client, config_params["books_path"])
-    send_file(client, config_params["books_reviews_path"])
+    print("Sending books")
+    send_file(client, config_params["books_path"], 20, 10000)
+    print("Sending reviews")
+    send_file(client, config_params["books_reviews_path"], 20, 100000)
 
     client.send_message("EOF")
 
-    thread.join()
+    client.stop()
+    process.join()
 
 
 def main():

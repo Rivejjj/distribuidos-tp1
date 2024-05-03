@@ -1,7 +1,7 @@
 name: tp1
 services:
-  client:
-    container_name: client
+  sender_client:
+    container_name: sender_client
     image: client:latest
     entrypoint: python3 /main.py
     depends_on:

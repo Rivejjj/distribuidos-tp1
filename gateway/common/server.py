@@ -13,30 +13,17 @@ MAX_MESSAGE_BYTES = 16
 
 
 class Server:
-    def __init__(self, port, results_port, listen_backlog, query_count, input_queue=None, output_queues=[], id=0):
+    def __init__(self, port, listen_backlog, output_queues=[]):
         # Initialize server socket
         signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
 
-        self.results_server_socket = socket.socket(
-            socket.AF_INET, socket.SOCK_STREAM)
-        self.results_server_socket.bind(('', results_port))
-        self.results_server_socket.listen(listen_backlog)
-
         self.client_sock = None
-        self.results_client_sock = None
 
-        self.results_thread = None
         self.queue = QueueMiddleware(
             output_queues)
-
-        self.receiver_queue = QueueMiddleware(
-            [], input_queue=input_queue, id=id, wait_for_rmq=False)
-
-        self.query_count = query_count
-        self.received_eofs = 0
 
     def run(self):
         """
@@ -46,8 +33,7 @@ class Server:
         communication with a client. After client with communucation
         finishes, servers starts to accept new connections again
         """
-        threading.Thread(target=self.run_results).start()
-        threading.Thread(target=self.run_client).start()
+        self.run_client()
 
     def run_client(self):
         while True:
@@ -58,30 +44,6 @@ class Server:
                 self.handle_client_connection()
             except OSError:
                 break
-
-        self.client_sock.close()
-
-    def run_results(self):
-        """
-        Dummy Server loop
-
-        Server that accept a new connections and establishes a
-        communication with a client. After client with communucation
-        finishes, servers starts to accept new connections again
-        """
-        while True:
-            try:
-                logging.info(f"waiting for connection for results")
-                client_sock = self.__accept_new_connection(
-                    self.results_server_socket)
-
-                logging.info(f"results client sock: {client_sock}")
-                self.results_client_sock = client_sock
-                self.receiver_queue.start_consuming(self.handle_result())
-            except OSError:
-                break
-
-        self.results_client_sock.close()
 
     def __accept_new_connection(self, socket):
         """
@@ -149,7 +111,7 @@ class Server:
         try:
             while True:
                 msg_length = self.__receive_message_length()
-                # logging.info(f"msg_length: {msg_length}")
+                logging.info(f"msg_length: {msg_length}")
                 if msg_length == 0:
                     return
 
@@ -210,23 +172,3 @@ class Server:
             return
 
         # logging.info(f'invalid message: {msg}')
-
-    def handle_result(self):
-        def callback(ch, method, properties, body):
-            logging.info(f"[QUERY RESULT]: {decode(body)}")
-
-            msg = decode(body)
-            # logging.info(self.client_sock)
-
-            if msg == "EOF":
-                self.received_eofs += 1
-                logging.info(f"[FINAL] EOF received {self.received_eofs}")
-
-                if self.received_eofs >= self.query_count:
-                    logging.info("All queries finished")
-                    send_message(self.results_client_sock, "EOF")
-                    self.received_eofs = 0
-                return
-
-            send_message(self.results_client_sock, msg)
-        return callback

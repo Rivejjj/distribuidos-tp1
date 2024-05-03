@@ -36,6 +36,11 @@ rmq-up:
 	docker compose -f docker-compose-rmq.yaml up --build
 .PHONY: docker-compose-rmq-up
 
+rmq-down: 
+	docker compose -f docker-compose-rmq.yaml stop -t 1
+	docker compose -f docker-compose-rmq.yaml down
+.PHONY: docker-compose-rmq-down
+
 down:
 	docker compose -f docker-compose-dev.yaml stop -t 1
 	docker compose -f docker-compose-dev.yaml down
