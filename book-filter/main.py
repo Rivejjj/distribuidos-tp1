@@ -10,7 +10,7 @@ from utils.initialize import add_query_to_message, decode, encode, get_queue_nam
 
 def initialize():
     all_params = ["logging_level", "category",
-                  "published_year_range", "title_contains", "id", "input_queue", "output_queues", "save_books", "query", "previous_workers"]
+                  "published_year_range", "title_contains", "id", "input_queue", "output_queues", "save_books", "query", "previous_workers", "is_equal"]
 
     params = list(map(lambda param: (param, False), all_params))
 
@@ -22,6 +22,9 @@ def initialize():
     if config_params["published_year_range"]:
         config_params["published_year_range"] = tuple(
             map(int, config_params["published_year_range"].split("-")))
+
+    if config_params["save_books"]:
+        config_params["save_books"] = True
 
     initialize_workers_environment(config_params)
 
@@ -86,7 +89,8 @@ def main():
     book_filter = BookFilter(
         category=config_params["category"],
         published_year_range=config_params["published_year_range"],
-        title_contains=config_params["title_contains"]
+        title_contains=config_params["title_contains"],
+        is_equal=config_params["is_equal"]
     )
 
     review_filter = None

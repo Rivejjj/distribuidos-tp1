@@ -36,6 +36,7 @@ services:
       - INPUT_QUEUE=query1
       - OUTPUT_QUEUES=computers:3
       - CATEGORY=Computers
+      - IS_EQUAL=True
       - ID=0
 
   computers_category_filter_1:
@@ -48,6 +49,7 @@ services:
       - INPUT_QUEUE=query1
       - OUTPUT_QUEUES=computers:3
       - CATEGORY=Computers
+      - IS_EQUAL=True
       - ID=1
 
   computers_category_filter_2:
@@ -60,6 +62,7 @@ services:
       - INPUT_QUEUE=query1
       - OUTPUT_QUEUES=computers:3
       - CATEGORY=Computers
+      - IS_EQUAL=True
       - ID=2
 
   2000s_published_year_filter_0:

@@ -1,6 +1,7 @@
 class BookFilter:
-    def __init__(self, category=None, published_year_range=None, title_contains=None):
+    def __init__(self, category=None, published_year_range=None, title_contains=None, is_equal=None):
         self.category = category
+        self.is_equal = is_equal
         self.published_year_range = published_year_range
         self.title_contains = title_contains
 
@@ -20,6 +21,8 @@ class BookFilter:
         raise ValueError("No filter criteria was provided")
 
     def __filter_by_category(self, book) -> bool:
+        if self.is_equal:
+            return self.__is_equal(self.category, book.categories)
         return self.category in book.categories
 
     def __filter_by_published_year(self, book) -> bool:
@@ -27,3 +30,7 @@ class BookFilter:
 
     def __filter_by_title(self, book) -> bool:
         return self.title_contains.lower() in book.title.lower()
+
+    def __is_equal(self, category, book_categories):
+        categories = book_categories.strip('"[]').replace("'", "")
+        return categories == self.category
