@@ -92,7 +92,7 @@ class QueueMiddleware:
         self.received_eofs += 1
         logging.info(f"[QUEUE] Received EOFs {self.received_eofs}")
 
-        if self.previous_workers <= self.received_eofs:
+        if self.received_eofs >= self.previous_workers:
             logging.info("[QUEUE] Received EOFs of all workers")
             self.received_eofs = 0
 
@@ -100,7 +100,6 @@ class QueueMiddleware:
                 print("[QUEUE] Executing callback")
                 callback()
             self.send_to_all(encode(msg))
-
             print(
                 f"[QUEUE] Sending EOF to next workers {self.output_queues}")
             return True

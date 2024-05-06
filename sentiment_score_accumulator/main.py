@@ -55,6 +55,7 @@ def process_message(sentiment_acc: SentimentScoreAccumulator, queue_middleware: 
         msg_received = decode(body)
 
         if msg_received == "EOF":
+            print("Received EOF")
             process_eof(queue_middleware, sentiment_acc, query)
             return
 

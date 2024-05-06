@@ -49,6 +49,7 @@ def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_
         msg_received = decode(body)
 
         if msg_received == "EOF":
+            print("Received EOF")
             process_eof(queue_middleware, review_filter, query)
             return
 

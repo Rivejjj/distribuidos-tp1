@@ -92,7 +92,6 @@ class DataCollector:
     def handle_result(self):
         def callback(ch, method, properties, body):
             logging.info(f"[QUERY RESULT]: {decode(body)}")
-
             msg = decode(body)
             # logging.info(self.client_sock)
 

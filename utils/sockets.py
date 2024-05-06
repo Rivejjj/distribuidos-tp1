@@ -30,7 +30,7 @@ def safe_receive(sock: socket.socket, buffer_length: int):
 
 def send_message(sock: socket.socket, msg: str):
     bytes_to_send = encode(msg)
-
+    # print("sending message", msg)
     safe_send(sock, len(bytes_to_send).to_bytes(
         MAX_MESSAGE_BYTES, "little"))
 

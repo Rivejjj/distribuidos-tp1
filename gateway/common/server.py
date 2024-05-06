@@ -151,16 +151,14 @@ class Server:
                     encode(str(book)), book.title, next_pool_name=name)
 
             query2 = "query2"
-
             books = Book.expand_authors(book)
-
             for book in books:
                 self.queue.send_to_pool(
                     encode(str(book)), book.authors, next_pool_name=query2)
             logging.info(
                 f'sending to comp.filter | msg: {str(book)}')
-
             return
+        
         review = data_receiver.parse_review(msg)
         if review:
             pool = [f"query{i}" for i in range(3, 5)]

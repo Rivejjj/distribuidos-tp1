@@ -37,6 +37,7 @@ def process_message(sentiment_analyzer: SentimentAnalizer, queue_middleware: Que
         msg_received = decode(body)
 
         if msg_received == "EOF":
+            print("Received EOF")
             process_eof(queue_middleware)
             return
 
