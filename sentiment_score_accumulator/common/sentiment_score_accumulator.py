@@ -14,12 +14,10 @@ class SentimentScoreAccumulator:
 
     def calculate_90th_percentile(self):
         print("[ACCUMULATOR]: Calculating 90th percentile")
+        print("scores: ", self.title_sentiment_score)
         title_scores = [(title, score[1]) for title, score in self.title_sentiment_score.items()]
-        print("title scores: ",title_scores)
         title_scores.sort(key=lambda x: x[1])
-        print("title scores sorted: ",title_scores)
-        print("title scores length: ",len(title_scores))
-        print("title scores 90th percentile: ",title_scores[int(len(title_scores) * 0.9):])
+        print("quantile:", title_scores[int(len(title_scores) * 0.9):])
         return title_scores[int(len(title_scores) * 0.9):]
     
     

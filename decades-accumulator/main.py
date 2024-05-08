@@ -34,6 +34,7 @@ def process_eof(queue_middleware: QueueMiddleware, accum: Accumulator, query=Non
         for author in authors:
             msg += f"{author}\n"
 
+        print("Sending to result:", msg)
         if query:
             final_result = add_query_to_message(msg, query)
         queue_middleware.send_to_all(encode(final_result))

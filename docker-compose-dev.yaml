@@ -285,7 +285,7 @@ services:
       - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=query4
       - OUTPUT_QUEUES=fiction:3
-      - CATEGORY=Fiction
+      - CATEGORY=fiction
       - ID=0
       - SAVE_BOOKS=True
 
@@ -298,7 +298,7 @@ services:
       - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=query4
       - OUTPUT_QUEUES=fiction:3
-      - CATEGORY=Fiction
+      - CATEGORY=fiction
       - ID=1
       - SAVE_BOOKS=True
 
@@ -311,7 +311,7 @@ services:
       - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=query4
       - OUTPUT_QUEUES=fiction:3
-      - CATEGORY=Fiction
+      - CATEGORY=fiction
       - ID=2
       - SAVE_BOOKS=True
 

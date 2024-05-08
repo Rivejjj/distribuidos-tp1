@@ -67,7 +67,7 @@ def run(config_params):
     client = Client(config_params["address"], config_params["port"])
 
     print("Sending books")
-    send_file(client, config_params["books_path"], 20, 2750)
+    send_file(client, config_params["books_path"], 15, 3667)
     print("Sending reviews")
     send_file(client, config_params["books_reviews_path"], 20, 750)
     print("Sending EOF")

@@ -48,7 +48,7 @@ def process_message(accum: Accumulator, parser: CsvParser, queue_middleware: Que
 
         book = parser.parse_csv(msg_received)
         if len(book) == 2:
-            print("Book accepted: ", book)
+            # print("Book accepted: ", book)
             accum.add_book(book)
 
     return callback

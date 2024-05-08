@@ -13,7 +13,7 @@ class Accumulator:
     def get_result(self):
         authors = []
         for author in self.authors.keys():
-            if len(self.authors[author]) >= 10:
+            if author != "" and len(self.authors[author]) >= 10:
                 authors.append(author)
         return authors
 

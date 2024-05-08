@@ -155,8 +155,7 @@ class Server:
             for book in books:
                 self.queue.send_to_pool(
                     encode(str(book)), book.authors, next_pool_name=query2)
-            logging.info(
-                f'sending to comp.filter | msg: {str(book)}')
+            # logging.info(f'sending to comp.filter | msg: {str(book)}')
             return
         
         review = data_receiver.parse_review(msg)

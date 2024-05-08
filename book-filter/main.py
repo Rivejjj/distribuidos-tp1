@@ -61,7 +61,6 @@ def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_
         book = Book.from_csv_line(msg_received)
 
         if book and book_filter.filter(book):
-            print("Book accepted: ", book.title)
             message = str(book)
             if not review_filter:
                 if query:
@@ -70,6 +69,7 @@ def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_
 
             else:
                 review_filter.add_title(book.title)
+                print("Book accepted: ", book.title)
                 queue_middleware.send_to_all(encode(message))
             return
 

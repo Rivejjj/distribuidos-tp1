@@ -42,7 +42,7 @@ def process_message(counter: ReviewsCounter, parser: CsvParser, data_receiver: D
         # print("msg: ",msg_received)
         if book:
             counter.add_book(book)
-            print("Book accepted: %s", book.title)
+            # print("Book accepted: %s", book.title)
             # queue_middleware.send_to_all(encode(str(book)))
             return
 
@@ -50,15 +50,13 @@ def process_message(counter: ReviewsCounter, parser: CsvParser, data_receiver: D
         if review:
             author, title, avg = counter.add_review(review)
             if title:
-                print("Review forwarded: ", review.title,
-                      " | Total reviews: ", avg)
+                # print("Review forwarded: ", review.title," | Total reviews: ", avg)
                 msg_to_forward = f"{title},{avg}"
                 queue_middleware.send_to_all_except(
                     encode(msg_to_forward), "results_0")
                 
                 if title not in more_than_n:
-                    print("Review accepted: ", review.title,
-                        " | Total reviews: ", avg)
+                    # print("Review accepted: ", review.title," | Total reviews: ", avg)
 
                     msg_to_result = f"{author},{title}"
                     if query:

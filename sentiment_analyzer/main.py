@@ -35,7 +35,6 @@ def process_message(sentiment_analyzer: SentimentAnalizer, queue_middleware: Que
     def callback(ch, method, properties, body):
         # logging.info("Received message", decode(body))
         msg_received = decode(body)
-
         if msg_received == "EOF":
             print("Received EOF")
             process_eof(queue_middleware)
@@ -51,7 +50,7 @@ def process_message(sentiment_analyzer: SentimentAnalizer, queue_middleware: Que
 
             # print(f"[POLARITY SCORE]: {polarity_score}")
             message = f"{review.title},{polarity_score}"
-            # print(f"[RESULT]: {message}")
+            print(f"[RESULT]: {message}")
 
             queue_middleware.send_to_all(encode(message))
 
