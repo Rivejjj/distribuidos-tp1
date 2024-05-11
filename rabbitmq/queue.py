@@ -10,8 +10,19 @@ class QueueMiddleware:
     def __init__(self, output_queues, input_queue=None, id=0, previous_workers=0):
         signal.signal(signal.SIGTERM, lambda signal, frame: self.end())
         # logging.info("Connecting to queue: queue_names=%s", queue_names)
-        self.connection = pika.BlockingConnection(
-            pika.ConnectionParameters(host='rabbitmq'))
+        connected = False
+        self.connection = None
+        sleep_time = 1
+        while not connected:
+            try:
+                self.connection = pika.BlockingConnection(
+                    pika.ConnectionParameters(host='rabbitmq'))
+                connected = True
+            except Exception as e:
+                logging.error("Error connecting to queue")
+                time.sleep(sleep_time)
+                sleep_time *= 2
+        
         logging.info("Connected to queue")
         self.channel = self.connection.channel()
         self.channel.basic_qos(prefetch_count=1)
@@ -126,3 +137,9 @@ class QueueMiddleware:
 
         # print(f"[QUEUE] Sending message to {queue_name}: {message}")
         self.send(queue_name, message)
+
+    def handle_sigterm(self):
+        print("Received SIGTERM")
+        self.send_to_all("SIGTERM")
+        self.end()
+        return

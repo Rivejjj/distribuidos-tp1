@@ -1,4 +1,4 @@
-
+import signal
 import logging
 import os
 from common.reviews_counter import ReviewsCounter
@@ -35,6 +35,9 @@ def process_eof(queue_middleware: QueueMiddleware, counter: ReviewsCounter):
 def process_message(counter: ReviewsCounter, parser: CsvParser, data_receiver: DataReceiver, queue_middleware: QueueMiddleware, more_than_n, query=None):
     def callback(ch, method, properties, body):
         msg_received = decode(body)
+        if msg_received.startswith("SIGTERM"):
+            queue_middleware.handle_sigterm()
+            return
         if msg_received == "EOF":
             process_eof(queue_middleware, counter)
             return
@@ -78,6 +81,7 @@ def main():
     queue_middleware = QueueMiddleware(get_queue_names(
         config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
 
+    signal.signal(signal.SIGTERM, queue_middleware.handle_sigterm)    
     parser = CsvParser()
     data_receiver = DataReceiver()
     more_than_n = {}

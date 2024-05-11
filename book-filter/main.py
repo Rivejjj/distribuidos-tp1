@@ -1,4 +1,4 @@
-
+import signal
 import logging
 from common.book_filter import BookFilter
 from common.review_filter import ReviewFilter
@@ -50,6 +50,9 @@ def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_
 
         #print("Received message", body.decode())
         msg_received = decode(body)
+        if msg_received.startswith("SIGTERM"):
+            queue_middleware.handle_sigterm()
+            return
 
         if msg_received == "EOF":
             print("Received EOF")
@@ -100,6 +103,9 @@ def main():
 
     queue_middleware = QueueMiddleware(get_queue_names(
         config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
+
+    signal.signal(signal.SIGTERM, queue_middleware.handle_sigterm)    
+
 
     queue_middleware.start_consuming(
         process_message(book_filter, review_filter, queue_middleware, config_params["query"]))

@@ -1,4 +1,4 @@
-
+import signal
 import logging
 from common.accumulator import Accumulator
 from rabbitmq.queue import QueueMiddleware
@@ -42,6 +42,10 @@ def process_eof(queue_middleware: QueueMiddleware, accum: Accumulator, query=Non
 def process_message(accum: Accumulator, parser: CsvParser, queue_middleware: QueueMiddleware, query):
     def callback(ch, method, properties, body):
         msg_received = decode(body)
+        if msg_received.startswith("SIGTERM"):
+            queue_middleware.handle_sigterm()
+            return
+
         if msg_received == "EOF":
             process_eof(queue_middleware, accum, query)
             return
@@ -55,7 +59,6 @@ def process_message(accum: Accumulator, parser: CsvParser, queue_middleware: Que
 
 
 def main():
-
     config_params = initialize()
     logging.debug("Config: %s", config_params)
 
@@ -64,6 +67,8 @@ def main():
 
     queue_middleware = QueueMiddleware(get_queue_names(
         config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
+
+    signal.signal(signal.SIGTERM, queue_middleware.handle_sigterm)    
 
     parser = CsvParser()
     queue_middleware.start_consuming(

@@ -4,6 +4,12 @@ import os
 import socket
 
 
+def handle_sigterm(signum, frame, queue):
+    logging.info("Received SIGTERM signal. Exiting")
+    queue.end()
+    exit(0)
+
+
 def initialize_config(params):
     """ Parse env variables or config file to find program config params
 

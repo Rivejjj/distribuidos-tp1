@@ -43,6 +43,8 @@ class Server:
                 self.client_sock = client_sock
                 self.handle_client_connection()
             except OSError:
+                # i do this so the error propagates
+                self.queue.handle_sigterm()
                 break
 
     def __accept_new_connection(self, socket):
@@ -72,6 +74,7 @@ class Server:
 
         logging.info(
             f'action: receive_termination_signal | result: success')
+        self.queue.handle_sigterm()
 
     def _close_client_socket(self):
         logging.info('action: closing client socket | result: in_progress')
@@ -95,10 +98,12 @@ class Server:
         except socket.error as e:
             logging.error(
                 f"action: receive_message_length | result: failed | error: client disconnected")
+            self.queue.handle_sigterm()
             raise e
         except Exception as e:
             logging.error(
                 f"action: receive_message_length | result: failed | error: {e}")
+            self.queue.handle_sigterm()
             raise e
 
     def handle_client_connection(self):
@@ -125,9 +130,11 @@ class Server:
         except OSError as e:
             logging.error(
                 f"action: receive_message | result: fail | error: {e}")
+            self.queue.handle_sigterm()
         except Exception as e:
             logging.error(
                 f"action: any | result: fail | error: {e}")
+            self.queue.handle_sigterm()
         self._close_client_socket()
 
     def __process_message(self, msg):
@@ -135,6 +142,7 @@ class Server:
         data_receiver = DataReceiver()
 
         # print(f'received message: {msg}')
+        
 
         if msg == "EOF":
             logging.info(
