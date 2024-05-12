@@ -2,7 +2,7 @@ import logging
 from multiprocessing import Process
 from threading import Thread
 import time
-from common.client import Client
+from client.client import Client
 from utils.initialize import decode, initialize_config, initialize_log
 import csv
 

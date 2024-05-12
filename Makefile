@@ -8,13 +8,13 @@ all:
 docker-image:
 	
 	docker build -f ./gateway/Dockerfile -t "gateway:latest" .
-	docker build -f ./book-filter/Dockerfile -t "book-filter:latest" .
+	docker build -f ./data_processors/book-filter/Dockerfile -t "book-filter:latest" .
 	docker build -f ./client/Dockerfile -t "client:latest" .
-	docker build -f ./decades-accumulator/Dockerfile -t "decades-accumulator:latest" .
-	docker build -f ./accumulator/Dockerfile -t "accumulator:latest" .
-	docker build -f ./reviews_counter_accum/Dockerfile -t "reviews_counter_accum:latest" .
-	docker build -f ./sentiment_score_accumulator/Dockerfile -t "sentiment_score_accumulator:latest" .
-	docker build -f ./sentiment_analyzer/Dockerfile -t "sentiment_analyzer:latest" .
+	docker build -f ./data_processors/decades_accumulator/Dockerfile -t "decades_accumulator:latest" .
+	docker build -f ./data_processors/accumulator/Dockerfile -t "accumulator:latest" .
+	docker build -f ./data_processors/reviews_counter_accum/Dockerfile -t "reviews_counter_accum:latest" .
+	docker build -f ./data_processors/sentiment_score_accumulator/Dockerfile -t "sentiment_score_accumulator:latest" .
+	docker build -f ./data_processorssentiment_analyzer/Dockerfile -t "sentiment_analyzer:latest" .
 	
 	# Execute this command from time to time to clean up intermediate stages generated 
 	# during client build (your hard drive will like this :) ). Don't left uncommented if you 
@@ -24,6 +24,7 @@ docker-image:
 .PHONY: docker-image
 
 up: docker-image
+	sudo rm -rf query
 	docker compose -f docker-compose-dev.yaml up -d --build
 .PHONY: docker-compose-up
 

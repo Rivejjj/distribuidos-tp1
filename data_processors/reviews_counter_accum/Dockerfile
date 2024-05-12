@@ -1,9 +1,6 @@
 FROM rabbitmq-python-base:0.0.1
-COPY gateway /
-COPY parser_1/ /parser_1
+COPY data_processors/reviews_counter_accum /
 COPY entities /entities
 COPY rabbitmq/queue.py /rabbitmq/queue.py
 COPY utils /utils
-COPY gateway /gateway
-RUN pip3 install pika
-ENTRYPOINT ["/bin/sh"]
+ENTRYPOINT main.py

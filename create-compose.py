@@ -24,7 +24,7 @@ def create_docker_compose():
         }
 
         # config['services']['rabbitmq'] = build_rabbitmq()
-        config['services']['client'] = build_client()
+        config['services']['sender_client'] = build_client()
         config['services']['gateway'] = build_gateway()
 
         build_query1(config['services'])
@@ -77,7 +77,7 @@ def build_gateway():
 
 def build_client():
     return {
-        'container_name': 'client',
+        'container_name': 'sender_client',
         'image': 'client:latest',
         'entrypoint': 'python3 /main.py',
         'depends_on': [
@@ -90,7 +90,8 @@ def build_client():
             'BOOKS_REVIEWS_PATH=/data/Books_rating.csv'
         ],
         'volumes': [
-            './data:/data'
+            './data/csv:/data',
+            './data/query:/query'
         ],
 
     }
@@ -112,7 +113,7 @@ def build_query1(config_services):
 
 def build_query2(config_services):
     for i in range(WORKERS):
-        config_services[f'decades-accumulator_{i}'] = build_decades_accumulator(
+        config_services[f'decades_accumulator_{i}'] = build_decades_accumulator(
             i)
 
 
@@ -152,7 +153,8 @@ def build_computer_category_filter(i):
             'INPUT_QUEUE=query1',
             f'OUTPUT_QUEUES=computers:{WORKERS}',
             'CATEGORY=Computers',
-            f'ID={i}'
+            f'ID={i}',
+            'IS_EQUAL=True'
         ],
 
     }
@@ -198,8 +200,8 @@ def build_title_contains_filter(i):
 
 def build_decades_accumulator(i):
     return {
-        'container_name': f'decades-accumulator_{i}',
-        'image': 'decades-accumulator:latest',
+        'container_name': f'decades_accumulator_{i}',
+        'image': 'decades_accumulator:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
             'PYTHONUNBUFFERED=1',
@@ -280,7 +282,7 @@ def build_fiction_category_filter(i):
             'LOGGING_LEVEL=INFO',
             'INPUT_QUEUE=query4',
             f'OUTPUT_QUEUES=fiction:{WORKERS}',
-            'CATEGORY=Fiction',
+            'CATEGORY=fiction',
             f'ID={i}',
             'SAVE_BOOKS=True'
         ],

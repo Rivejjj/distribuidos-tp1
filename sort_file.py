@@ -42,14 +42,20 @@ def compare_files_with_rounding(file1, file2):
     print(f'Files {file1} and {file2} are identical')
 
 
+def sort_file(path, write_path):
+    with open(path, 'r') as f, open(write_path, 'w') as d:
+        reader = csv.reader(f)
+        rows = list(reader)
+        rows.sort(key=lambda x: x[0])
+
+        writer = csv.writer(d)
+        writer.writerows(rows)
+
+
 def main():
-    compare_files('query_result/query1.csv',
-                  'kaggle_results/query_1_kaggle.csv')
-    # compare_files('query/query2.csv', 'kaggle_results/query_2_kaggle.csv')
-    # compare_files('query/query3.csv', 'kaggle_results/query_3_kaggle.csv')
-    # compare_files('query/query4.csv', 'kaggle_results/query_4_kaggle.csv')
-    # compare_files_with_rounding(
-    #     'query/query5.csv', 'kaggle_results/query_5_kaggle.csv')
+    # sort_file('tests/test_results.csv', 'tests/test_results_sorted.csv')
+    for i in range(1, 2):
+        sort_file(f'query/query{i}.csv', f'query_result/query{i}.csv')
 
 
 if __name__ == '__main__':

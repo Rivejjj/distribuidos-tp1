@@ -1,0 +1,38 @@
+
+
+class Accumulator:
+    def __init__(self):
+        self.authors = {}  # author -> {decade -> count}
+        self.completed_authors = set()
+
+    def add_book(self, book):
+        year = int(book.published_year)
+        if year is None:
+            return
+        decade = self.__get_decade(year)
+        self.__add_author(book.authors, decade)
+
+        return self.check_valid_author(book.authors)
+
+    def check_valid_author(self, author):
+        if author in self.completed_authors:
+            return False
+
+        result = len(self.authors[author]) >= 10
+        if result:
+            print(
+                f"Author {author} has published books in 10 different decades")
+            self.completed_authors.add(author)
+        return result
+
+    def __add_author(self, author, decade):
+        if author not in self.authors:
+            self.authors[author] = set()
+        self.authors[author].add(decade)
+
+    def __get_decade(self, year):
+        return year // 10 * 10
+
+    def clear(self):
+        self.authors = {}
+        self.completed_authors = set()
