@@ -1,16 +1,12 @@
 import socket
 import logging
 import signal
-import threading
-from common.data_receiver import DataReceiver
-from gateway.parser import parse_book_from_client, parse_review_from_client
-from messages.book import Book
-from messages.review import Review
+from entities.query_message import BOOK_IDENTIFIER, REVIEW_IDENTIFIER, QueryMessage
+from client_parser import parse_book_from_client, parse_review_from_client
 from utils.initialize import decode, encode
 from rabbitmq.queue import QueueMiddleware
-from utils.sockets import receive, safe_receive, send_message, send_success
-
-MAX_MESSAGE_BYTES = 16
+from utils.parser import parse_query_msg
+from utils.sockets import receive
 
 
 class Server:
@@ -91,11 +87,7 @@ class Server:
         try:
             while True:
                 msg = decode(receive(self.client_sock)).rstrip()
-                print(msg)
-                for a in msg.split("\n"):
-                    # print(f"msg: {a}")
-                    self.__process_message(a)
-                # self.__send_message(msg)
+                self.__process_batch(msg)
 
         except OSError as e:
             logging.error(
@@ -105,36 +97,60 @@ class Server:
                 f"action: any | result: fail | error: {e}")
         self._close_client_socket()
 
-    def __process_message(self, msg):
+    def __process_book(self, msg):
+        book = parse_book_from_client(msg)
+        if not book:
+            return
+        logging.info(f"Received book: {book}")
+        query_message = QueryMessage(BOOK_IDENTIFIER, book)
+        logging.info(f"Sending to workers {query_message}")
+        pool = [f"query{i}" for i in range(1, 5) if i != 2]
+        for name in pool:
+            self.queue.send_to_pool(
+                encode(str(query_message)), book.title, next_pool_name=name)
 
-        if msg == "EOF":
+        query2 = "query2"
+        self.queue.send_to_pool(
+            encode(str(query_message)), book.authors, next_pool_name=query2)
+        logging.info(f'sending to workers')
+
+    def __process_review(self, msg):
+        review = parse_review_from_client(msg)
+
+        if not review:
+            return
+        logging.info(f"Received review: {review.title}")
+        query_message = QueryMessage(REVIEW_IDENTIFIER, review)
+        pool = [f"query{i}" for i in range(3, 5)]
+
+        for name in pool:
+            self.queue.send_to_pool(
+                encode(str(query_message)), review.title, next_pool_name=name)
+        logging.info(f'sending to workers')
+
+    def __process_batch(self, batch):
+        if batch == "EOF":
             logging.info(
-                f"action: receive_message | result: success | msg: {msg}")
+                f"action: receive_message | result: success | msg: {batch}")
 
             self.queue.send_eof()
             return
 
-        book = parse_book_from_client(msg)
-        if book:
-            pool = [f"query{i}" for i in range(1, 5) if i != 2]
-            for name in pool:
-                self.queue.send_to_pool(
-                    encode(str(book)), book.title, next_pool_name=name)
+        identifier, data = parse_query_msg(batch.strip())
 
-            query2 = "query2"
-            self.queue.send_to_pool(
-                encode(str(book)), book.authors, next_pool_name=query2)
-            # logging.info(f'sending to comp.filter | msg: {str(book)}')
-            return
+        msgs = data.split("\n")
 
-        review = parse_review_from_client(msg)
-        if review:
-            pool = [f"query{i}" for i in range(3, 5)]
+        for msg in msgs:
+            self.__process_message(identifier, msg)
 
-            for name in pool:
-                self.queue.send_to_pool(
-                    encode(str(review)), review.title, next_pool_name=name)
-            # logging.info(f'sending to comp.filter | msg: {str(review)}')
-            return
+    def __process_message(self, identifier, data):
+        logging.info(
+            f"action: receive_message | result: success | msg: {identifier}")
 
-        # logging.info(f'invalid message: {msg}')
+        if identifier == BOOK_IDENTIFIER:
+            self.__process_book(data)
+
+        elif identifier == REVIEW_IDENTIFIER:
+            self.__process_review(data)
+        else:
+            logging.info(f'invalid message: {identifier} {data}')

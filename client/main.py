@@ -1,10 +1,8 @@
 import logging
 from multiprocessing import Process
-from threading import Thread
-import time
-from client.client import Client
-from utils.initialize import decode, initialize_config, initialize_log
-import csv
+from client import Client
+from entities.query_message import BOOK_IDENTIFIER, QUERY_MSG_SEPARATOR, REVIEW_IDENTIFIER
+from utils.initialize import initialize_config, initialize_log
 
 
 def initialize():
@@ -14,7 +12,7 @@ def initialize():
 
     config_params["port"] = int(config_params["port"])
     config_params["results_port"] = int(config_params["results_port"])
-    initialize_log(config_params["logging_level"])
+    initialize_log(logging, config_params["logging_level"])
     return config_params
 
 
@@ -37,10 +35,10 @@ def receive_results(address, port):
     client.stop()
 
 
-def send_file(client, filename, batch_size=10, max_batches=0):
+def send_file(client, filename, identifier, batch_size=10, max_batches=0):
     file = open(filename, "r")
     line = file.readline()
-    batch = ""
+    batch = f"{identifier}{QUERY_MSG_SEPARATOR}"
 
     i = 0
     while line and (max_batches == 0 or i < max_batches):
@@ -49,7 +47,7 @@ def send_file(client, filename, batch_size=10, max_batches=0):
                 line = file.readline()
                 batch += line
             client.send_message(batch)
-            batch = ""
+            batch = f"{identifier}{QUERY_MSG_SEPARATOR}"
         except Exception as e:
             print(f"[CLIENT] Error sending batch: {e}")
             break
@@ -66,11 +64,12 @@ def run(config_params):
 
     client = Client(config_params["address"], config_params["port"])
 
-    print("Sending books")
-    send_file(client, config_params["books_path"], 30)
-    print("Sending reviews")
-    send_file(client, config_params["books_reviews_path"], 30)
-    print("Sending EOF")
+    logging.info("Sending books")
+    send_file(client, config_params["books_path"], BOOK_IDENTIFIER, 30)
+    logging.info("Sending reviews")
+    send_file(
+        client, config_params["books_reviews_path"], REVIEW_IDENTIFIER, 30)
+    logging.info("Sending EOF")
     client.send_message("EOF")
 
     client.stop()

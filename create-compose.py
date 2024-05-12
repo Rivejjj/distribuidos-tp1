@@ -28,10 +28,10 @@ def create_docker_compose():
         config['services']['gateway'] = build_gateway()
 
         build_query1(config['services'])
-        build_query2(config['services'])
-        build_query3(config['services'])
-        build_query4(config['services'])
-        build_query5(config['services'])
+        # build_query2(config['services'])
+        # build_query3(config['services'])
+        # build_query4(config['services'])
+        # build_query5(config['services'])
 
         # config['networks'] = build_network()
 
@@ -68,7 +68,7 @@ def build_gateway():
             'LOGGING_LEVEL=INFO',
             f'OUTPUT_QUEUES=query1:{WORKERS};query2:{WORKERS};query3:{WORKERS};query4:{WORKERS}',
             'INPUT_QUEUE=results',
-            f'QUERY_COUNT={WORKERS+WORKERS+WORKERS+2}',
+            f'QUERY_COUNT={WORKERS}',
             'ID=0'
         ],
 

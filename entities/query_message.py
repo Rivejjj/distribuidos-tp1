@@ -1,28 +1,19 @@
-BOOK_IDENTIFIER = 0
-REVIEW_IDENTIFIER = 1
+ANY_IDENTIFIER = 0
+BOOK_IDENTIFIER = 1
+REVIEW_IDENTIFIER = 2
+QUERY_MSG_SEPARATOR = ";"
 
 
 class QueryMessage:
-    def __init__(self, book=None, review=None):
-        self.book = book
-        self.review = review
+    def __init__(self, identifier, data):
+        self.identifier = identifier
+        self.data = data
 
-        if book:
-            self.type = BOOK_IDENTIFIER
-        elif review:
-            self.type = REVIEW_IDENTIFIER
+    def get_data(self):
+        return self.data
 
-    def get_entity(self):
-        if self.type == BOOK_IDENTIFIER:
-            return self.book
-        elif self.type == REVIEW_IDENTIFIER:
-            return self.review
-
-    def is_book(self):
-        return self.type == BOOK_IDENTIFIER
-
-    def is_review(self):
-        return self.type == REVIEW_IDENTIFIER
+    def get_identifier(self):
+        return self.identifier
 
     def __str__(self):
-        return f"{self.type}:{self.get_entity()}"
+        return f"{self.identifier}{QUERY_MSG_SEPARATOR}{self.data}"

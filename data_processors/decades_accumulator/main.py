@@ -1,12 +1,8 @@
 
-from configparser import ConfigParser
 import logging
-import os
 from data_processors.decades_accumulator.accumulator import Accumulator
-from messages.book import Book
 from rabbitmq.queue import QueueMiddleware
 from utils.initialize import add_query_to_message, decode, encode, get_queue_names, initialize_config, initialize_log, initialize_workers_environment
-from parser_1.csv_parser import CsvParser
 
 
 def initialize():
@@ -22,7 +18,7 @@ def initialize():
 
     initialize_workers_environment(config_params)
 
-    initialize_log(config_params["logging_level"])
+    initialize_log(logging, config_params["logging_level"])
 
     return config_params
 

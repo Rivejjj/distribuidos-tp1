@@ -1,17 +1,10 @@
 
-from configparser import ConfigParser
 import logging
 from multiprocessing import Process
-import os
 import signal
-import socket
-from common.data_receiver import DataReceiver
-from gateway.common.data_collector import DataCollector
-from messages.book import Book
-from rabbitmq.queue import QueueMiddleware
-
+from data_collector import DataCollector
+from server import Server
 from utils.initialize import get_queue_names, initialize_config, initialize_log
-from common.server import Server
 
 
 def initialize():
@@ -27,7 +20,7 @@ def initialize():
     config_params["query_count"] = int(config_params["query_count"])
     config_params["listen_backlog"] = int(config_params["listen_backlog"])
 
-    initialize_log(config_params["logging_level"])
+    initialize_log(logging, config_params["logging_level"])
     return config_params
 
 

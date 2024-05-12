@@ -1,15 +1,9 @@
 import socket
 import logging
 import signal
-import threading
-from common.data_receiver import DataReceiver
-from messages.book import Book
-from messages.review import Review
-from utils.initialize import decode, encode
+from utils.initialize import decode
 from rabbitmq.queue import QueueMiddleware
-from utils.sockets import safe_receive, send_message, send_success
-
-MAX_MESSAGE_BYTES = 16
+from utils.sockets import send_message
 
 
 class DataCollector:
