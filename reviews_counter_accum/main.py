@@ -54,13 +54,14 @@ def process_message(counter: ReviewsCounter, parser: CsvParser, data_receiver: D
                 msg_to_forward = f"{title},{avg}"
                 queue_middleware.send_to_all_except(
                     encode(msg_to_forward), "results_0")
-                
+
                 if title not in more_than_n:
                     # print("Review accepted: ", review.title," | Total reviews: ", avg)
 
-                    msg_to_result = f"{author},{title}"
+                    msg_to_result = f"{title},{author}"
                     if query:
-                        msg_to_result = add_query_to_message(msg_to_result, query)
+                        msg_to_result = add_query_to_message(
+                            msg_to_result, query)
                     queue_middleware.send("results_0", msg_to_result)
                     more_than_n[title] = True
 
@@ -72,7 +73,7 @@ def main():
     config_params = initialize()
     logging.debug("Config: %s", config_params)
 
-    min_amount_of_reviews = 30
+    min_amount_of_reviews = 500
     counter = ReviewsCounter(min_amount_of_reviews)
 
     queue_middleware = QueueMiddleware(get_queue_names(

@@ -9,6 +9,7 @@ TOTAL_FIELDS_COUNT = 10
 BOOKS_FIELDS_COUNT = 5
 REVIEW_FIELDS_COUNT = 3
 
+
 class DataReceiver:
     def __init__(self):
         pass
@@ -17,20 +18,22 @@ class DataReceiver:
         parser = CsvParser()
         # print("Processing message: %s", line)
         line = parser.parse_csv(data)
-        #len line
+        # len line
         if len(line) != TOTAL_FIELDS_COUNT and len(line) != BOOKS_FIELDS_COUNT:
             return None
-        
+
         if len(line) == TOTAL_FIELDS_COUNT:
-            line[CATEGORIES_POSITION] = line[CATEGORIES_POSITION].split(CATEGORIES_SEPARATOR)
+            line[CATEGORIES_POSITION] = line[CATEGORIES_POSITION].split(
+                CATEGORIES_SEPARATOR)
             title, authors, publisher, published_year, categories = line[
-            0], line[2], line[5], line[6], line[8]
+                0], line[2], line[5], line[6], line[8]
 
-        if len(line) == BOOKS_FIELDS_COUNT: 
+        if len(line) == BOOKS_FIELDS_COUNT:
             title, authors, publisher, published_year, categories = line[
-            0], line[1], line[2], line[3], line[4]
+                0], line[1], line[2], line[3], line[4]
 
-        book = Book(title, authors, publisher, published_year, categories)
+        book = Book(title, authors, publisher,
+                    published_year, categories)
         if book.sanitize():
             return book
         # print("Invalid book: %s", book)

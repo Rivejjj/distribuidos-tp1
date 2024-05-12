@@ -1,5 +1,9 @@
 from parser_1.csv_parser import CsvParser
 
+import re
+
+year_regex = re.compile('[^\d]*(\d{4})[^\d]*')
+
 
 class Book:
     def __init__(self, title, authors, publisher, published_year, categories):
@@ -7,13 +11,15 @@ class Book:
         self.authors = authors
         self.publisher = publisher
         self.published_year = published_year
+
+        if self.published_year:
+            self.published_year = self.get_year_regex(self.published_year)
         self.categories = categories
 
     def __str__(self):  # Title,description,authors,image,previewLink,publisher,publishedDate,infoLink,categories,ratingsCount
         return f"{self.title},{self.authors},{self.publisher},{self.published_year},{self.categories}"
 
     def sanitize(self):
-        self.published_year = self.get_year_regex(self.published_year)
         fields = [self.title, self.authors, self.published_year]
 
         if len(self.categories) == 1:
@@ -36,19 +42,9 @@ class Book:
         return Book(*parsed_line)
 
     def get_year_regex(self, text):
-        if text == "" or None:
-            return None
-        i = 0
-        while i < len(text):
-            if text[i].isdigit():
-                digits = ""
-                while i < len(text) and text[i].isdigit() and len(digits) < 4:
-                    digits += text[i]
-                    i += 1
-                if len(digits) == 4:
-                    return digits
-            else:
-                i += 1
+        if text:
+            result = year_regex.search(text)
+            return int(result.group(1)) if result else None
         return None
 
     def parse_authors(self):

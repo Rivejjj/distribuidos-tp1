@@ -7,7 +7,7 @@ from messages.book import Book
 from messages.review import Review
 from utils.initialize import decode, encode
 from rabbitmq.queue import QueueMiddleware
-from utils.sockets import safe_receive, send_message, send_success
+from utils.sockets import receive, safe_receive, send_message, send_success
 
 MAX_MESSAGE_BYTES = 16
 
@@ -80,27 +80,6 @@ class Server:
             self.client_sock = None
         logging.info('action: closing client socket | result: success')
 
-    def __receive_message_length(self):
-        try:
-            int_bytes = safe_receive(self.client_sock,
-                                     MAX_MESSAGE_BYTES)
-
-            # print("receiving message length", int_bytes)
-            msg_length = int.from_bytes(int_bytes, "little")
-
-            # logging.info(f"action: receive_message_length | result: success | length: {msg_length}")
-            send_success(self.client_sock)
-
-            return msg_length
-        except socket.error as e:
-            logging.error(
-                f"action: receive_message_length | result: failed | error: client disconnected")
-            raise e
-        except Exception as e:
-            logging.error(
-                f"action: receive_message_length | result: failed | error: {e}")
-            raise e
-
     def handle_client_connection(self):
         """
         Read message from a specific client socket and closes the socket
@@ -110,13 +89,8 @@ class Server:
         """
         try:
             while True:
-                msg_length = self.__receive_message_length()
-                logging.info(f"msg_length: {msg_length}")
-                if msg_length == 0:
-                    return
-
-                msg = decode(safe_receive(
-                    self.client_sock, msg_length)).rstrip()
+                msg = decode(receive(self.client_sock)).rstrip()
+                print(msg)
                 for a in msg.split("\n"):
                     # print(f"msg: {a}")
                     self.__process_message(a)
@@ -157,7 +131,7 @@ class Server:
                     encode(str(book)), book.authors, next_pool_name=query2)
             # logging.info(f'sending to comp.filter | msg: {str(book)}')
             return
-        
+
         review = data_receiver.parse_review(msg)
         if review:
             pool = [f"query{i}" for i in range(3, 5)]

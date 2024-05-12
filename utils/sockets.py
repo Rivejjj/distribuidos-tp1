@@ -6,6 +6,8 @@ from utils.initialize import decode, encode
 MAX_MESSAGE_BYTES = 16
 INFO_MSG_BYTES = 3
 
+MAX_READ_SIZE = 1024
+
 
 def safe_send(sock: socket.socket, bytes_to_send: bytes):
     total_sent = 0
@@ -17,49 +19,29 @@ def safe_send(sock: socket.socket, bytes_to_send: bytes):
 
 
 def safe_receive(sock: socket.socket, buffer_length: int):
-    n = 0
-
-    buffer = bytes()
-    while n < buffer_length:
-        message = sock.recv(buffer_length)
-        buffer += message
-        n += len(message)
-
-    return buffer
+    data = b''
+    while len(data) < buffer_length:
+        bytes_remaining = buffer_length - len(data)
+        new_data = sock.recv(min(MAX_READ_SIZE, bytes_remaining))
+        if not new_data:
+            raise EOFError("EOF reached while reading data")
+        data += new_data
+    return data
 
 
 def send_message(sock: socket.socket, msg: str):
     bytes_to_send = encode(msg)
-    # print("sending message", msg)
-    safe_send(sock, len(bytes_to_send).to_bytes(
-        MAX_MESSAGE_BYTES, "little"))
 
-    safe_receive(sock, INFO_MSG_BYTES)
+    total_msg = len(bytes_to_send).to_bytes(
+        MAX_MESSAGE_BYTES, "big") + bytes_to_send
 
-    safe_send(sock, bytes_to_send)
+    safe_send(sock, total_msg)
 
 
 def send_success(sock: socket.socket):
     safe_send(sock, encode("suc"))
 
 
-def __receive_message_length(sock: socket.socket):
-    try:
-        int_bytes = safe_receive(sock,
-                                 MAX_MESSAGE_BYTES)
-
-        # print("receiving message length", int_bytes)
-        msg_length = int.from_bytes(int_bytes, "little")
-
-        # logging.info(f"action: receive_message_length | result: success | length: {msg_length}")
-        send_success(sock)
-
-        return msg_length
-    except socket.error as e:
-        logging.error(
-            f"action: receive_message_length | result: failed | error: client disconnected")
-        raise e
-    except Exception as e:
-        logging.error(
-            f"action: receive_message_length | result: failed | error: {e}")
-        raise e
+def receive(sock: socket.socket):
+    msg_length = safe_receive(sock, MAX_MESSAGE_BYTES)
+    return safe_receive(sock, int.from_bytes(msg_length, "big"))
