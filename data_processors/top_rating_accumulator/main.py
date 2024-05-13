@@ -1,6 +1,7 @@
 
 import logging
-from data_processors.top_rating_accumulator.top_rating_accumulator import TopRatingAccumulator
+from top_rating_accumulator import TopRatingAccumulator
+from entities.query_message import ANY_IDENTIFIER, QueryMessage
 from rabbitmq.queue import QueueMiddleware
 from utils.initialize import add_query_to_message, decode, encode, get_queue_names, initialize_config, initialize_log, initialize_workers_environment
 from utils.parser import parse_query_msg, split_line
@@ -13,9 +14,6 @@ def initialize():
     params = list(map(lambda param: (param, False), all_params))
 
     config_params = initialize_config(params)
-    logging.debug("Config: %s", config_params)
-    logging.info("Config: %s", config_params)
-    print(config_params)
 
     initialize_workers_environment(config_params)
 
@@ -32,8 +30,11 @@ def process_eof(queue_middleware: QueueMiddleware, accum: TopRatingAccumulator, 
         for i in top:
             result += f"{i[0]},{i[1]}\n"
         logging.info("sending to result:", result)
+
+        msg = add_query_to_message(result, query)
+        query_msg = QueryMessage(ANY_IDENTIFIER, msg)
         queue_middleware.send_to_all(
-            encode(add_query_to_message(result, query)))
+            encode(str(query_msg)))
         accum.clear()
 
     queue_middleware.send_eof(callback)

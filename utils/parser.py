@@ -3,15 +3,21 @@ from entities.book import Book
 from entities.query_message import QUERY_MSG_SEPARATOR
 from entities.review import Review
 
+DATA_SEPARATOR = "\t"
+
 
 def parse_book(data):
-    line = split_line(data, "|")
-
-    return Book(*line)
+    line = data.split(DATA_SEPARATOR)
+    title = line[0].strip()
+    authors = line[1].strip()
+    publisher = line[2].strip()
+    published_year = line[3].strip()
+    categories = line[4].strip()
+    return Book(title, authors, publisher, published_year, categories)
 
 
 def parse_review(data):
-    line = split_line(data, "|")
+    line = data.split(DATA_SEPARATOR)
     return Review(*line)
 
 

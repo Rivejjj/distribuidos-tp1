@@ -1,7 +1,7 @@
 
 import logging
 from entities.book import Book
-from entities.query_message import BOOK_IDENTIFIER, REVIEW_IDENTIFIER
+from entities.query_message import BOOK_IDENTIFIER, REVIEW_IDENTIFIER, QueryMessage
 from rabbitmq.queue import QueueMiddleware
 from utils.initialize import add_query_to_message, decode, encode, get_queue_names, initialize_config, initialize_log, initialize_workers_environment
 from book_filter import BookFilter
@@ -40,27 +40,32 @@ def process_eof(queue_middleware: QueueMiddleware, review_filter: ReviewFilter, 
 
 
 def format_for_results(book: Book, query):
-    return add_query_to_message(f"{book.title},{book.authors},{book.publisher},{book.published_year}", query)
+    return add_query_to_message(f"{book.title},{book.authors},{book.publisher}", query)
 
 
 def process_book(book_filter: BookFilter, review_filter: ReviewFilter, queue_middleware: QueueMiddleware, book: Book, query=None):
     if not book_filter.filter(book):
         return
     message = str(book)
-    if not review_filter and query:
+    if query:
         message = format_for_results(book, query)
-    else:
+    if review_filter:
         review_filter.add_title(book.title)
-        print("Book accepted: ", book.title)
-    queue_middleware.send_to_pool(encode(message), book.title)
+
+    xd = len(message.split('\t'))
+    logging.info(f"Sent book: {xd}")
+
+    query_message = QueryMessage(BOOK_IDENTIFIER, message)
+    queue_middleware.send_to_pool(encode(str(query_message)), book.title)
 
 
 def process_review(review_filter: ReviewFilter, queue_middleware: QueueMiddleware, review):
-    if not review_filter or not review_filter.filter(review):
+    if not review_filter or (review_filter and not review_filter.filter(review)):
         return
-    message = str(review)
     print("Review accepted: ", review.title)
-    queue_middleware.send_to_pool(encode(message), review.title)
+    query_message = QueryMessage(REVIEW_IDENTIFIER, review)
+
+    queue_middleware.send_to_pool(encode(str(query_message)), review.title)
 
 
 def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_middleware: QueueMiddleware, query=None):
@@ -74,12 +79,15 @@ def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_
             process_eof(queue_middleware, review_filter, query)
             return
 
-        identifier, data = parse_query_msg(msg_received.strip())
+        identifier, data = parse_query_msg(msg_received)
 
         logging.info(f"Received message: {identifier} {data}")
         if identifier == BOOK_IDENTIFIER:
+            book = parse_book(data)
+            if not book:
+                return
             process_book(book_filter, review_filter, queue_middleware,
-                         parse_book(data), query)
+                         book, query)
         elif identifier == REVIEW_IDENTIFIER:
             process_review(review_filter, queue_middleware, parse_review(data))
 

@@ -8,7 +8,7 @@ class TopRatingAccumulator:
         self.books = {}  # title -> avg_rating
 
     def add_title(self, title, avg_rating):
-        self.books[title] = avg_rating
+        self.books[title] = float(avg_rating)
 
     def get_top(self):
         top_books = []

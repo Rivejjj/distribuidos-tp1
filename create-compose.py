@@ -1,5 +1,4 @@
 import yaml
-import sys
 
 WORKERS = 3
 
@@ -28,10 +27,10 @@ def create_docker_compose():
         config['services']['gateway'] = build_gateway()
 
         build_query1(config['services'])
-        # build_query2(config['services'])
-        # build_query3(config['services'])
-        # build_query4(config['services'])
-        # build_query5(config['services'])
+        build_query2(config['services'])
+        build_query3(config['services'])
+        build_query4(config['services'])
+        build_query5(config['services'])
 
         # config['networks'] = build_network()
 
@@ -68,7 +67,7 @@ def build_gateway():
             'LOGGING_LEVEL=INFO',
             f'OUTPUT_QUEUES=query1:{WORKERS};query2:{WORKERS};query3:{WORKERS};query4:{WORKERS}',
             'INPUT_QUEUE=results',
-            f'QUERY_COUNT={WORKERS}',
+            f'QUERY_COUNT={WORKERS+WORKERS+WORKERS+2}',
             'ID=0'
         ],
 
@@ -145,7 +144,7 @@ def build_query5(config_services):
 def build_computer_category_filter(i):
     return {
         'container_name': f'computers_category_filter_{i}',
-        'image': 'book-filter:latest',
+        'image': 'book_filter:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
             'PYTHONUNBUFFERED=1',
@@ -163,7 +162,7 @@ def build_computer_category_filter(i):
 def build_2000s_published_year_filter(i):
     return {
         'container_name': f'2000s_published_year_filter_{i}',
-        'image': 'book-filter:latest',
+        'image': 'book_filter:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
             'PYTHONUNBUFFERED=1',
@@ -181,7 +180,7 @@ def build_2000s_published_year_filter(i):
 def build_title_contains_filter(i):
     return {
         'container_name': f'title_contains_filter_{i}',
-        'image': 'book-filter:latest',
+        'image': 'book_filter:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
             'PYTHONUNBUFFERED=1',
@@ -219,7 +218,7 @@ def build_decades_accumulator(i):
 def build_1990s_published_year_filter(i):
     return {
         'container_name': f'1990s_published_year_filter_{i}',
-        'image': 'book-filter:latest',
+        'image': 'book_filter:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
             'PYTHONUNBUFFERED=1',
@@ -257,7 +256,7 @@ def build_reviews_counter(i):
 def build_avg_rating_accumulator():
     return {
         'container_name': 'avg_rating_accumulator',
-        'image': 'accumulator:latest',
+        'image': 'top_rating_accumulator:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
             'PYTHONUNBUFFERED=1',
@@ -275,7 +274,7 @@ def build_avg_rating_accumulator():
 def build_fiction_category_filter(i):
     return {
         'container_name': f'fiction_category_filter_{i}',
-        'image': 'book-filter:latest',
+        'image': 'book_filter:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
             'PYTHONUNBUFFERED=1',

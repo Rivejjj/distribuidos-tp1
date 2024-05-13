@@ -19,7 +19,7 @@ class ReviewsCounter:
             score = review.score
             self.reviews[review.title] = (1, score)
 
-        if int(self.reviews[review.title][0]) > self.min_reviews:
+        if int(self.reviews[review.title][0]) >= self.min_reviews:
             average = self.reviews[review.title][1]
             author = self.books[review.title]
             return author, review.title, average

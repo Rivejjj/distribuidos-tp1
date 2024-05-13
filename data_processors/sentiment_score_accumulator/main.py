@@ -1,12 +1,9 @@
-
-from configparser import ConfigParser
 import logging
-import os
-from parser_1.csv_parser import CsvParser
+from entities.query_message import ANY_IDENTIFIER, QueryMessage
 from rabbitmq.queue import QueueMiddleware
-from data_processors.sentiment_score_accumulator.sentiment_score_accumulator import SentimentScoreAccumulator
-from messages.book import Book
+from sentiment_score_accumulator import SentimentScoreAccumulator
 from utils.initialize import add_query_to_message, encode, get_queue_names, initialize_config, initialize_log, decode, initialize_workers_environment
+from utils.parser import parse_query_msg, split_line
 
 
 def initialize():
@@ -18,18 +15,9 @@ def initialize():
 
     initialize_workers_environment(config_params)
 
-    initialize_log(config_params["logging_level"])
+    initialize_log(logging, config_params["logging_level"])
 
     return config_params
-
-
-def parse_message(msg_received):
-    line = CsvParser().parse_csv(msg_received)
-
-    if len(line) != 2:
-        return None
-    title, score = line
-    return title, float(score)
 
 
 def send_results(sentiment_acc: SentimentScoreAccumulator, queue_middleware: QueueMiddleware, query=None):
@@ -39,7 +27,9 @@ def send_results(sentiment_acc: SentimentScoreAccumulator, queue_middleware: Que
 
         if query:
             message = add_query_to_message(message, query)
-        queue_middleware.send_to_all(encode(message))
+
+        query_message = QueryMessage(ANY_IDENTIFIER, message)
+        queue_middleware.send_to_all(encode(str(query_message)))
 
 
 def process_eof(queue_middleware: QueueMiddleware, sentiment_acc: SentimentScoreAccumulator, query=None):
@@ -55,16 +45,16 @@ def process_message(sentiment_acc: SentimentScoreAccumulator, queue_middleware: 
         msg_received = decode(body)
 
         if msg_received == "EOF":
-            print("Received EOF")
             process_eof(queue_middleware, sentiment_acc, query)
             return
 
-        line = parse_message(msg_received)
+        identifier, message = parse_query_msg(msg_received)
 
-        if not line:
-            return
+        if identifier == ANY_IDENTIFIER:
+            print(message)
+            title, score = split_line(message, '\t')
 
-        sentiment_acc.add_sentiment_score(*line)
+            sentiment_acc.add_sentiment_score(title, score)
 
     return callback
 
@@ -73,7 +63,7 @@ def main():
 
     config_params = initialize()
 
-    accumulator = SentimentScoreAccumulator(10)
+    accumulator = SentimentScoreAccumulator()
 
     queue_middleware = QueueMiddleware(get_queue_names(
         config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])

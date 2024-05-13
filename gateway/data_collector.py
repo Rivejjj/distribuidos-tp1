@@ -3,6 +3,7 @@ import logging
 import signal
 from utils.initialize import decode
 from rabbitmq.queue import QueueMiddleware
+from utils.parser import parse_query_msg
 from utils.sockets import send_message
 
 
@@ -86,7 +87,8 @@ class DataCollector:
     def handle_result(self):
         def callback(ch, method, properties, body):
             logging.info(f"[QUERY RESULT]: {decode(body)}")
-            msg = decode(body)
+            msg = decode(body).strip()
+
             # logging.info(self.client_sock)
 
             if msg == "EOF":
@@ -99,5 +101,7 @@ class DataCollector:
                     self.received_eofs = 0
                 return
 
-            send_message(self.client_sock, msg)
+            _, data = parse_query_msg(msg)
+
+            send_message(self.client_sock, data)
         return callback

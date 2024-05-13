@@ -1,3 +1,6 @@
+from entities.book import Book
+
+
 class BookFilter:
     def __init__(self, category=None, published_year_range=None, title_contains=None, is_equal=None):
         self.category = category
@@ -21,16 +24,28 @@ class BookFilter:
         raise ValueError("No filter criteria was provided")
 
     def __filter_by_category(self, book) -> bool:
+        result = False
         if self.is_equal:
-            return self.__is_equal(self.category, book.categories)
-        return self.category in book.categories
+            result = self.__is_equal(book.categories)
+        else:
+            result = self.category in book.categories
+
+        if result:
+            book.categories = None
+        return result
 
     def __filter_by_published_year(self, book) -> bool:
-        return self.published_year_range[0] <= int(book.published_year) <= self.published_year_range[1]
+        result = self.published_year_range[0] <= int(
+            book.published_year) <= self.published_year_range[1]
+
+        if result:
+            book.published_year = None
+
+        return result
 
     def __filter_by_title(self, book) -> bool:
         return self.title_contains.lower() in book.title.lower()
 
-    def __is_equal(self, category, book_categories):
+    def __is_equal(self, book_categories):
         categories = book_categories.strip('"[]').replace("'", "")
         return categories == self.category

@@ -20,8 +20,6 @@ class Accumulator:
 
         result = len(self.authors[author]) >= 10
         if result:
-            print(
-                f"Author {author} has published books in 10 different decades")
             self.completed_authors.add(author)
         return result
 

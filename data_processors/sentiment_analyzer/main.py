@@ -1,13 +1,10 @@
-
-from configparser import ConfigParser
 import logging
-import os
-from data_processors.sentiment_analyzer.sentiment_analyzer import SentimentAnalizer
-from messages.book import Book
-from messages.review import Review
-from parser_1.csv_parser import CsvParser
+from entities.query_message import ANY_IDENTIFIER, REVIEW_IDENTIFIER, QueryMessage
+from entities.review import Review
+from sentiment_analyzer import SentimentAnalizer
 from rabbitmq.queue import QueueMiddleware
 from utils.initialize import decode, encode, get_queue_names, initialize_config, initialize_log, initialize_workers_environment
+from utils.parser import parse_query_msg, parse_review
 
 
 def initialize():
@@ -17,11 +14,8 @@ def initialize():
     params = list(map(lambda param: (param, False), params))
 
     config_params = initialize_config(params)
-    logging.debug("Config: %s", config_params)
-    logging.info("Config: %s", config_params)
-    print(config_params)
 
-    initialize_log(config_params["logging_level"])
+    initialize_log(logging, config_params["logging_level"])
     initialize_workers_environment(config_params)
 
     return config_params
@@ -29,6 +23,19 @@ def initialize():
 
 def process_eof(queue_middleware: QueueMiddleware):
     queue_middleware.send_eof()
+
+
+def process_review(sentiment_analyzer: SentimentAnalizer, queue_middleware: QueueMiddleware, review: Review):
+    polarity_score = sentiment_analyzer.analyze(review.text)
+
+    if not polarity_score:
+        return
+
+    message = f"{review.title}\t{polarity_score}"
+
+    query_message = QueryMessage(ANY_IDENTIFIER, message)
+
+    queue_middleware.send_to_all(encode(str(query_message)))
 
 
 def process_message(sentiment_analyzer: SentimentAnalizer, queue_middleware: QueueMiddleware):
@@ -40,20 +47,11 @@ def process_message(sentiment_analyzer: SentimentAnalizer, queue_middleware: Que
             process_eof(queue_middleware)
             return
 
-        review = Review.from_csv_line(msg_received)
-        if review and review.sanitize():
-            # print(f"[REVIEW]: Text {review.text}")
-            polarity_score = sentiment_analyzer.analyze(review.text)
+        identifier, data = parse_query_msg(msg_received)
 
-            if not polarity_score:
-                return
-
-            # print(f"[POLARITY SCORE]: {polarity_score}")
-            message = f"{review.title},{polarity_score}"
-            print(f"[RESULT]: {message}")
-
-            queue_middleware.send_to_all(encode(message))
-
+        if identifier == REVIEW_IDENTIFIER:
+            process_review(sentiment_analyzer,
+                           queue_middleware, parse_review(data))
     return callback
 
 
