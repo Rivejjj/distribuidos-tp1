@@ -1,5 +1,4 @@
 from configparser import ConfigParser
-import logging
 import os
 import socket
 
@@ -36,7 +35,7 @@ def initialize_config(params):
     return config_params
 
 
-def initialize_log(logging_level):
+def initialize_log(logging, logging_level):
     """
     Python custom logging initialization
 
