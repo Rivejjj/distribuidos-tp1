@@ -55,19 +55,19 @@ def sort_file(path, write_path):
 
 
 def main():
-    # sort_file('data/query/query1.csv', 'data/query_result/query1.csv')
-    # sort_file('data/query/query2.csv', 'data/query_result/query2.csv')
-    # sort_file('data/query/query3.csv', 'data/query_result/query3.csv')
-    # sort_file('data/query/query4.csv', 'data/query_result/query4.csv')
+    sort_file('data/query/query1.csv', 'data/query_result/query1.csv')
+    sort_file('data/query/query2.csv', 'data/query_result/query2.csv')
+    sort_file('data/query/query3.csv', 'data/query_result/query3.csv')
+    sort_file('data/query/query4.csv', 'data/query_result/query4.csv')
     # sort_file('query5.csv', 'data/query_result/query5_bis.csv')
-    # compare_files('data/query_result/query1.csv',
-    #               'data/kaggle_results/query_1_kaggle.csv')
-    # compare_files('data/query_result/query2.csv',
-    #               'data/kaggle_results/query_2_kaggle.csv')
-    # compare_files('data/query_result/query3.csv',
-    #               'data/kaggle_results/query_3_kaggle.csv')
-    # compare_files_with_rounding('data/query/query4.csv',
-    #                             'data/kaggle_results/query_4_kaggle.csv')
+    compare_files('data/query_result/query1.csv',
+                  'data/kaggle_results/query_1_kaggle.csv')
+    compare_files('data/query_result/query2.csv',
+                  'data/kaggle_results/query_2_kaggle.csv')
+    compare_files('data/query_result/query3.csv',
+                  'data/kaggle_results/query_3_kaggle.csv')
+    compare_files_with_rounding('data/query/query4.csv',
+                                'data/kaggle_results/query_4_kaggle.csv')
     compare_files_with_rounding(
         'data/query_result/query5_bis.csv', 'data/kaggle_results/query_5_kaggle.csv')
 

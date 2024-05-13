@@ -4,7 +4,7 @@ from top_rating_accumulator import TopRatingAccumulator
 from entities.query_message import ANY_IDENTIFIER, QueryMessage
 from rabbitmq.queue import QueueMiddleware
 from utils.initialize import add_query_to_message, decode, encode, get_queue_names, initialize_config, initialize_log, initialize_workers_environment
-from utils.parser import parse_query_msg, split_line
+from utils.parser import DATA_SEPARATOR, parse_query_msg, split_line
 
 
 def initialize():
@@ -29,7 +29,7 @@ def process_eof(queue_middleware: QueueMiddleware, accum: TopRatingAccumulator, 
         result = ""
         for i in top:
             result += f"{i[0]},{i[1]}\n"
-        logging.info("sending to result:", result)
+        logging.info(f"sending to result: {result}")
 
         msg = add_query_to_message(result, query)
         query_msg = QueryMessage(ANY_IDENTIFIER, msg)
@@ -49,7 +49,7 @@ def process_message(accum: TopRatingAccumulator, queue_middleware: QueueMiddlewa
 
         _, data = parse_query_msg(msg_received)
 
-        data = split_line(data)
+        data = split_line(data, DATA_SEPARATOR)
 
         if len(data) == 2:
             logging.info(f"Received: {data}")

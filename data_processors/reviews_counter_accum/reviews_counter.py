@@ -25,6 +25,11 @@ class ReviewsCounter:
             return author, review.title, average
         return None, None, None
 
+    def get_results(self):
+        for title, (count, avg) in self.reviews.items():
+            if count >= self.min_reviews:
+                yield title, avg
+
     def clear(self):
         self.books = {}
         self.reviews = {}
