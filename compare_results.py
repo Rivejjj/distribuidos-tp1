@@ -7,24 +7,6 @@ ROUNDING_PRECISION = 5
 
 
 def compare_files(file1, file2):
-    diff_str = ''
-    with open(file1, 'r') as f1, open(file2, 'r') as f2:
-        diff = difflib.context_diff(
-            f1.readlines(),
-            f2.readlines(),
-            fromfile=file1,
-            tofile=file2
-        )
-
-        diff_str = ''.join(diff)
-
-    if diff_str:
-        print(diff_str)
-    else:
-        print(f'Files {file1} and {file2} are identical')
-
-
-def compare_files_with_rounding(file1, file2):
     with open(file1, 'r') as f1, open(file2, 'r') as f2:
         reader1 = csv.reader(f1)
         reader2 = csv.reader(f2)
@@ -37,11 +19,10 @@ def compare_files_with_rounding(file1, file2):
                     pass
                 finally:
                     if val1 != val2:
-                        print(f'Files {file1} and {file2} are different')
-                        print(f'Values {val1} and {val2} are different')
+                        print(f'Valores {val1} y {val2} son distintos')
                         return
 
-    print(f'Files {file1} and {file2} are identical')
+    print(f'Archivos {file1} y {file2} son iguales')
 
 
 def sort_file(path, write_path):
@@ -59,16 +40,16 @@ def main():
     sort_file('data/query/query2.csv', 'data/query_result/query2.csv')
     sort_file('data/query/query3.csv', 'data/query_result/query3.csv')
     sort_file('data/query/query4.csv', 'data/query_result/query4.csv')
-    # sort_file('query5.csv', 'data/query_result/query5_bis.csv')
+    sort_file('data/query/query5.csv', 'data/query_result/query5.csv')
     compare_files('data/query_result/query1.csv',
                   'data/kaggle_results/query_1_kaggle.csv')
     compare_files('data/query_result/query2.csv',
                   'data/kaggle_results/query_2_kaggle.csv')
     compare_files('data/query_result/query3.csv',
                   'data/kaggle_results/query_3_kaggle.csv')
-    compare_files_with_rounding('data/query_result/query4.csv',
-                                'data/kaggle_results/query_4_kaggle.csv')
-    compare_files_with_rounding(
+    compare_files('data/query_result/query4.csv',
+                  'data/kaggle_results/query_4_kaggle.csv')
+    compare_files(
         'data/query_result/query5.csv', 'data/kaggle_results/query_5_kaggle.csv')
 
 
