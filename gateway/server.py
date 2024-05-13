@@ -1,6 +1,7 @@
 import socket
 import logging
 import signal
+from entities.book import Book
 from entities.query_message import BOOK_IDENTIFIER, REVIEW_IDENTIFIER, QueryMessage
 from client_parser import parse_book_from_client, parse_review_from_client
 from utils.initialize import decode, encode
@@ -151,3 +152,8 @@ class Server:
             self.__process_review(data)
         else:
             logging.info(f'invalid message: {identifier} {data}')
+
+    def __eliminate_unnecesary_book_fields(self, book: Book, query_num: int):
+        fields_by_query = {
+
+        }
