@@ -131,7 +131,7 @@ class Server:
     def __process_batch(self, batch):
         if batch == "EOF":
             logging.info(
-                f"action: receive_message | result: success | msg: {batch}")
+                f"RECEIVED EOF, closing connection with client {self.client_sock}")
 
             self.queue.send_eof()
             return

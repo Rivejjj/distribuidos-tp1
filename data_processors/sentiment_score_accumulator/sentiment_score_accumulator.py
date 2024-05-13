@@ -12,10 +12,13 @@ class SentimentScoreAccumulator:
             self.title_sentiment_score[title] = (count + 1, new_avg)
 
     def calculate_90th_percentile(self):
-        title_scores = [(title, score[1])
-                        for title, score in self.title_sentiment_score.items()]
-        title_scores.sort(key=lambda x: x[1])
-        return title_scores[int(len(title_scores) * 0.9):]
+        scores = [score[1]
+                  for score in self.title_sentiment_score.values()]
+        scores.sort()
+
+        min_value = scores[int(len(scores) * 0.9)]
+
+        return [(title, score[1]) for title, score in self.title_sentiment_score.items() if score[1] >= min_value]
 
     def clear(self):
         self.title_sentiment_score = {}

@@ -66,10 +66,10 @@ def main():
                   'data/kaggle_results/query_2_kaggle.csv')
     compare_files('data/query_result/query3.csv',
                   'data/kaggle_results/query_3_kaggle.csv')
-    compare_files_with_rounding('data/query/query4.csv',
+    compare_files_with_rounding('data/query_result/query4.csv',
                                 'data/kaggle_results/query_4_kaggle.csv')
     compare_files_with_rounding(
-        'data/query_result/query5_bis.csv', 'data/kaggle_results/query_5_kaggle.csv')
+        'data/query_result/query5.csv', 'data/kaggle_results/query_5_kaggle.csv')
 
 
 if __name__ == '__main__':
