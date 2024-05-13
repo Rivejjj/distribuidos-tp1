@@ -26,11 +26,6 @@ def initialize():
 
 def process_eof(queue_middleware: QueueMiddleware, counter: ReviewsCounter):
     def callback():
-        for title, avg in counter.get_results():
-            query_msg = QueryMessage(ANY_IDENTIFIER, f"{title}\t{avg}")
-            queue_middleware.send_to_all_except(
-                encode(str(query_msg)), "results_0")
-
         counter.clear()
     queue_middleware.send_eof(callback)
 
@@ -56,19 +51,23 @@ def process_message(counter: ReviewsCounter, queue_middleware: QueueMiddleware, 
         elif identifier == REVIEW_IDENTIFIER:
             review = parse_review(data)
             author, title, avg = counter.add_review(review)
-            if title and title not in more_than_n:
-                # print("Review accepted: ", review.title," | Total reviews: ", avg)
-                msg = f"{title},{author}"
-                if query:
-                    msg = add_query_to_message(
-                        msg, query)
+            if title:
+                query_msg = QueryMessage(ANY_IDENTIFIER, f"{title}\t{avg}")
+                queue_middleware.send_to_all_except(
+                    encode(str(query_msg)), "results_0")
 
-                query_msg = QueryMessage(
-                    ANY_IDENTIFIER, msg)
+                if title not in more_than_n:
+                    # print("Review accepted: ", review.title," | Total reviews: ", avg)
+                    msg = f"{title},{author}"
+                    if query:
+                        msg = add_query_to_message(
+                            msg, query)
 
-                queue_middleware.send("results_0", encode(str(query_msg)))
-                more_than_n[title] = True
+                    query_msg = QueryMessage(
+                        ANY_IDENTIFIER, msg)
 
+                    queue_middleware.send("results_0", encode(str(query_msg)))
+                    more_than_n[title] = True
     return callback
 
 

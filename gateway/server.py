@@ -101,9 +101,9 @@ class Server:
         book = parse_book_from_client(msg)
         if not book:
             return
-        logging.info(f"Received book: {book}")
+        # logging.info(f"Received book: {book}")
         query_message = QueryMessage(BOOK_IDENTIFIER, book)
-        logging.info(f"Sending to workers {query_message}")
+        # logging.info(f"Sending to workers {query_message}")
         pool = [f"query{i}" for i in range(1, 5) if i != 2]
         for name in pool:
             self.queue.send_to_pool(
@@ -112,21 +112,21 @@ class Server:
         query2 = "query2"
         self.queue.send_to_pool(
             encode(str(query_message)), book.authors, next_pool_name=query2)
-        logging.info(f'sending to workers')
+        # logging.info(f'sending to workers')
 
     def __process_review(self, msg):
         review = parse_review_from_client(msg)
 
         if not review:
             return
-        logging.info(f"Received review: {review.title}")
+        # logging.info(f"Received review: {review.title}")
         query_message = QueryMessage(REVIEW_IDENTIFIER, review)
         pool = [f"query{i}" for i in range(3, 5)]
 
         for name in pool:
             self.queue.send_to_pool(
                 encode(str(query_message)), review.title, next_pool_name=name)
-        logging.info(f'sending to workers')
+        # logging.info(f'sending to workers')
 
     def __process_batch(self, batch):
         if batch == "EOF":
@@ -144,9 +144,6 @@ class Server:
             self.__process_message(identifier, msg)
 
     def __process_message(self, identifier, data):
-        logging.info(
-            f"action: receive_message | result: success | msg: {identifier}")
-
         if identifier == BOOK_IDENTIFIER:
             self.__process_book(data)
 
