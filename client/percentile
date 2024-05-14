@@ -1,0 +1,20 @@
+def calculate_percentile(data, percentile):
+    if not data:
+        raise ValueError("The data array is empty.")
+    if not all(isinstance(x, (int, float)) for x in data):
+        raise ValueError("The data array should contain only numeric values.")
+    
+    data.sort()  # Sort the data
+    k = (len(data) - 1) * (percentile / 100)  # Calculate the index
+    f = int(k)  # Get the floor index
+    c = f + 1  # Get the ceiling index
+    if c >= len(data):  # Handle case where c is out of bounds
+        return data[f]
+    d0 = data[f] * (c - k)
+    d1 = data[c] * (k - f)
+    return d0 + d1
+
+# Example usage
+data = [-0.043,0.4048,0.4288,0,5725,0.1835,0.3092,0.143,0.0908,0.425,0.2841,0.0397,0.2108]
+percentile_90 = calculate_percentile(data, 90)
+print(f"The 90th percentile is: {percentile_90}")
