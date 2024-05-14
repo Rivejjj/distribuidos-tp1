@@ -8,7 +8,7 @@ from utils.initialize import add_query_to_message, encode
 
 class QueueMiddleware:
     def __init__(self, output_queues, input_queue=None, id=0, previous_workers=0):
-        # signal.signal(signal.SIGTERM, lambda signal, frame: self.end())
+        signal.signal(signal.SIGTERM, lambda signal, frame: self.end())
         # logging.info("Connecting to queue: queue_names=%s", queue_names)
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(host='rabbitmq'))
