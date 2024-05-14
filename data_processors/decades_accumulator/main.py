@@ -46,7 +46,7 @@ def process_message(accum: Accumulator, queue_middleware: QueueMiddleware, query
         msg_received = decode(body)
 
         if msg_received == "EOF":
-            process_eof(queue_middleware, accum, query)
+            process_eof(queue_middleware, accum)
             return
 
         _, data = parse_query_msg(msg_received)

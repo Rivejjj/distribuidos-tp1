@@ -1,3 +1,5 @@
+import logging
+
 class SentimentScoreAccumulator:
     def __init__(self):
         self.title_sentiment_score = {}  # title -> (count, average)
@@ -12,10 +14,23 @@ class SentimentScoreAccumulator:
             self.title_sentiment_score[title] = (count + 1, new_avg)
 
     def calculate_90th_percentile(self):
-        title_scores = [(title, score[1])
-                        for title, score in self.title_sentiment_score.items()]
-        title_scores.sort(key=lambda x: x[1])
-        return title_scores[int(len(title_scores) * 0.9):]
+        scores = [score[1] for score in self.title_sentiment_score.values()]
+        scores.sort()
+        percentile = self.calculate_percentile(scores, 90)
+
+        logging.info(f"90th percentile: {percentile}")
+
+        return [(title, score[1]) for title, score in self.title_sentiment_score.items() if score[1] >= percentile]
+    
+    def calculate_percentile(self,data, percentile):
+        index = (len(data) - 1) * (percentile / 100)  
+        floor = int(index)  
+        ceiling = floor + 1  
+        if ceiling >= len(data):  
+            return data[index]
+        d0 = data[floor] * (ceiling - index)
+        d1 = data[ceiling] * (index - floor)
+        return d0 + d1
 
     def clear(self):
         self.title_sentiment_score = {}
