@@ -2,28 +2,13 @@
 import logging
 from accumulator import Accumulator
 from entities.book import Book
-from entities.query_message import ANY_IDENTIFIER, BOOK_IDENTIFIER, QueryMessage
+from entities.query_message import ANY_IDENTIFIER, QueryMessage
 from rabbitmq.queue import QueueMiddleware
-from utils.initialize import add_query_to_message, decode, encode, get_queue_names, initialize_config, initialize_log, initialize_workers_environment
+from utils.initialize import add_query_to_message, decode, encode, get_queue_names, init
 from utils.parser import parse_book, parse_query_msg
 
 
-def initialize():
-    all_params = ["logging_level",
-                  "input_queue", "output_queues", "query", "id", "previous_workers"]
-
-    params = list(map(lambda param: (param, False), all_params))
-
-    config_params = initialize_config(params)
-
-    initialize_workers_environment(config_params)
-
-    initialize_log(logging, config_params["logging_level"])
-
-    return config_params
-
-
-def process_eof(queue_middleware: QueueMiddleware, accum: Accumulator, query=None):
+def process_eof(queue_middleware: QueueMiddleware, accum: Accumulator):
     def callback():
         accum.clear()
 
@@ -64,7 +49,7 @@ def process_message(accum: Accumulator, queue_middleware: QueueMiddleware, query
 
 def main():
 
-    config_params = initialize()
+    config_params = init(logging)
 
     accum = Accumulator()
 

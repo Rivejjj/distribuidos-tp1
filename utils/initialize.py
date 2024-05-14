@@ -75,6 +75,20 @@ def get_queue_names(config_params):
         map(lambda x: get_queue_with_worker_count(x), queues_with_count))
 
 
+def init(logging):
+    params = ["logging_level", "id", "input_queue",
+              "output_queues", "query", "previous_workers"]
+
+    config_params = initialize_config(
+        map(lambda param: (param, False), params))
+
+    initialize_workers_environment(config_params)
+
+    initialize_log(logging, config_params["logging_level"])
+
+    return config_params
+
+
 def encode(message):
     return message.encode('utf-8')
 

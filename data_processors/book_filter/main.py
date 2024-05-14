@@ -3,31 +3,30 @@ import logging
 from entities.book import Book
 from entities.query_message import BOOK_IDENTIFIER, REVIEW_IDENTIFIER, QueryMessage
 from rabbitmq.queue import QueueMiddleware
-from utils.initialize import add_query_to_message, decode, encode, get_queue_names, initialize_config, initialize_log, initialize_workers_environment
+from utils.initialize import add_query_to_message, decode, encode, get_queue_names, init, initialize_config, initialize_log, initialize_workers_environment
 from book_filter import BookFilter
 from review_filter import ReviewFilter
 from utils.parser import parse_book, parse_query_msg, parse_review
 
 
 def initialize():
-    all_params = ["logging_level", "category",
-                  "published_year_range", "title_contains", "id", "input_queue", "output_queues", "save_books", "query", "previous_workers", "is_equal"]
+    all_params = ["category",
+                  "published_year_range", "title_contains", "save_books", "is_equal"]
 
     params = list(map(lambda param: (param, False), all_params))
 
-    config_params = initialize_config(params)
+    filter_config_params = initialize_config(params)
 
-    if config_params["published_year_range"]:
-        config_params["published_year_range"] = tuple(
-            map(int, config_params["published_year_range"].split("-")))
+    if filter_config_params["published_year_range"]:
+        filter_config_params["published_year_range"] = tuple(
+            map(int, filter_config_params["published_year_range"].split("-")))
 
-    if config_params["save_books"]:
-        config_params["save_books"] = True
+    if filter_config_params["save_books"]:
+        filter_config_params["save_books"] = True
 
-    initialize_workers_environment(config_params)
+    config_params = init(logging)
 
-    initialize_log(logging, config_params["logging_level"])
-
+    config_params.update(filter_config_params)
     return config_params
 
 
