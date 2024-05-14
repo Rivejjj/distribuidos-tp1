@@ -41,6 +41,8 @@ class Server:
                 self.client_sock = client_sock
                 self.handle_client_connection()
             except OSError:
+                # i do this so the error propagates
+                self.queue.handle_sigterm()
                 break
 
     def __accept_new_connection(self, socket):
@@ -59,17 +61,16 @@ class Server:
         return c
 
     def stop(self):
-        logging.info(
-            'action: receive_termination_signal | result: in_progress')
-
+        logging.info('action: receive_termination_signal | result: in_progress')
         logging.info('action: closing listening socket | result: in_progress')
         self._server_socket.close()
         logging.info('action: closing listening socket | result: success')
 
         self._close_client_socket()
 
-        logging.info(
-            f'action: receive_termination_signal | result: success')
+        logging.info(f'action: receive_termination_signal | result: success')
+        # signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
+
 
     def _close_client_socket(self):
         logging.info('action: closing client socket | result: in_progress')
