@@ -43,7 +43,7 @@ rmq-down:
 .PHONY: docker-compose-rmq-down
 
 down:
-	docker compose -f docker-compose-dev.yaml stop -t 6
+	docker compose -f docker-compose-dev.yaml stop -t 2
 	docker compose -f docker-compose-dev.yaml down
 .PHONY: docker-compose-down
 
