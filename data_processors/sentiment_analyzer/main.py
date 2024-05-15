@@ -1,5 +1,5 @@
 import logging
-from entities.query_message import ANY_IDENTIFIER, REVIEW_IDENTIFIER, QueryMessage
+from entities.query_message import REVIEW, TITLE_SCORE, QueryMessage
 from entities.review import Review
 from sentiment_analyzer import SentimentAnalizer
 from rabbitmq.queue import QueueMiddleware
@@ -19,7 +19,7 @@ def process_review(sentiment_analyzer: SentimentAnalizer, queue_middleware: Queu
 
     message = f"{review.title}\t{polarity_score}"
 
-    query_message = QueryMessage(ANY_IDENTIFIER, message)
+    query_message = QueryMessage(TITLE_SCORE, message)
 
     queue_middleware.send_to_all(encode(str(query_message)))
 
@@ -35,7 +35,7 @@ def process_message(sentiment_analyzer: SentimentAnalizer, queue_middleware: Que
 
         identifier, data = parse_query_msg(msg_received)
 
-        if identifier == REVIEW_IDENTIFIER:
+        if identifier == REVIEW:
             logging.info("Received review")
             process_review(sentiment_analyzer,
                            queue_middleware, parse_review(data))

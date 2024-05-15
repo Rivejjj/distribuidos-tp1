@@ -1,7 +1,7 @@
 
 import logging
 from top_rating_accumulator import TopRatingAccumulator
-from entities.query_message import ANY_IDENTIFIER, QueryMessage
+from entities.query_message import TITLE_SCORE, QueryMessage
 from rabbitmq.queue import QueueMiddleware
 from utils.initialize import add_query_to_message, decode, encode, get_queue_names, init
 from utils.parser import DATA_SEPARATOR, parse_query_msg, split_line
@@ -17,7 +17,7 @@ def process_eof(queue_middleware: QueueMiddleware, accum: TopRatingAccumulator, 
         logging.info(f"sending to result: {result}")
 
         msg = add_query_to_message(result, query)
-        query_msg = QueryMessage(ANY_IDENTIFIER, msg)
+        query_msg = QueryMessage(TITLE_SCORE, msg)
         queue_middleware.send_to_all(
             encode(str(query_msg)))
         accum.clear()
@@ -32,7 +32,10 @@ def process_message(accum: TopRatingAccumulator, queue_middleware: QueueMiddlewa
             process_eof(queue_middleware, accum, query)
             return
 
-        _, data = parse_query_msg(msg_received)
+        identifier, data = parse_query_msg(msg_received)
+
+        if identifier != TITLE_SCORE:
+            return
 
         data = split_line(data, DATA_SEPARATOR)
 

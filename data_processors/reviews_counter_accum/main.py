@@ -3,7 +3,7 @@ import logging
 import os
 from reviews_counter import ReviewsCounter
 from entities.book import Book
-from entities.query_message import ANY_IDENTIFIER, BOOK_IDENTIFIER, REVIEW_IDENTIFIER, QueryMessage
+from entities.query_message import BOOK, REVIEW, TITLE_AUTHORS, TITLE_SCORE, QueryMessage
 from rabbitmq.queue import QueueMiddleware
 from utils.initialize import add_query_to_message, decode, encode, get_queue_names, init
 from utils.parser import parse_book, parse_query_msg, parse_review
@@ -28,16 +28,16 @@ def process_message(counter: ReviewsCounter, queue_middleware: QueueMiddleware, 
 
         identifier, data = parse_query_msg(msg_received)
 
-        if identifier == BOOK_IDENTIFIER:
+        if identifier == BOOK:
             book = parse_book(data)
             process_book(counter, book)
             return
 
-        elif identifier == REVIEW_IDENTIFIER:
+        elif identifier == REVIEW:
             review = parse_review(data)
             author, title, avg = counter.add_review(review)
             if title:
-                query_msg = QueryMessage(ANY_IDENTIFIER, f"{title}\t{avg}")
+                query_msg = QueryMessage(TITLE_SCORE, f"{title}\t{avg}")
                 queue_middleware.send_to_all_except(
                     encode(str(query_msg)), "results_0")
 
@@ -49,7 +49,7 @@ def process_message(counter: ReviewsCounter, queue_middleware: QueueMiddleware, 
                             msg, query)
 
                     query_msg = QueryMessage(
-                        ANY_IDENTIFIER, msg)
+                        TITLE_AUTHORS, msg)
 
                     queue_middleware.send("results_0", encode(str(query_msg)))
                     more_than_n[title] = True

@@ -1,7 +1,7 @@
 import signal
 import logging
 from entities.book import Book
-from entities.query_message import BOOK_IDENTIFIER, REVIEW_IDENTIFIER, QueryMessage
+from entities.query_message import BOOK, REVIEW, QueryMessage
 from rabbitmq.queue import QueueMiddleware
 from utils.initialize import add_query_to_message, decode, encode, get_queue_names, init, initialize_config, initialize_log, initialize_workers_environment
 from book_filter import BookFilter
@@ -52,10 +52,7 @@ def process_book(book_filter: BookFilter, review_filter: ReviewFilter, queue_mid
     if review_filter:
         review_filter.add_title(book.title)
 
-    xd = len(message.split('\t'))
-    # logging.info(f"Sent book: {xd}")
-
-    query_message = QueryMessage(BOOK_IDENTIFIER, message)
+    query_message = QueryMessage(BOOK, message)
     queue_middleware.send_to_pool(encode(str(query_message)), book.title)
 
 
@@ -63,7 +60,7 @@ def process_review(review_filter: ReviewFilter, queue_middleware: QueueMiddlewar
     if not review_filter or (review_filter and not review_filter.filter(review)):
         return
     print("Review accepted: ", review.title)
-    query_message = QueryMessage(REVIEW_IDENTIFIER, review)
+    query_message = QueryMessage(REVIEW, review)
 
     queue_middleware.send_to_pool(encode(str(query_message)), review.title)
 
@@ -81,17 +78,18 @@ def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_
 
         identifier, data = parse_query_msg(msg_received)
 
-        # logging.info(f"Received message: {identifier} {data}")
-        if identifier == BOOK_IDENTIFIER:
+        logging.info(f"Received message: {identifier} {data}")
+        if identifier == BOOK:
             book = parse_book(data)
             if not book:
                 return
             process_book(book_filter, review_filter, queue_middleware,
                          book, query)
-        elif identifier == REVIEW_IDENTIFIER:
+        elif identifier == REVIEW:
             process_review(review_filter, queue_middleware, parse_review(data))
 
     return callback
+
 
 def main():
 
@@ -111,7 +109,7 @@ def main():
 
     queue_middleware = QueueMiddleware(get_queue_names(
         config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
-     
+
     queue_middleware.start_consuming(
         process_message(book_filter, review_filter, queue_middleware, config_params["query"]))
 
