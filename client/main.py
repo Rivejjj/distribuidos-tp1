@@ -65,10 +65,10 @@ def run(config_params):
     client = Client(config_params["address"], config_params["port"])
 
     logging.info("Sending books")
-    send_file(client, config_params["books_path"], BOOK, 30)
+    send_file(client, config_params["books_path"], BOOK, 30, 1000)
     logging.info("Sending reviews")
     send_file(
-        client, config_params["books_reviews_path"], REVIEW, 30)
+        client, config_params["books_reviews_path"], REVIEW, 30, 1000)
     logging.info("Sending EOF")
     client.send_message("EOF")
 

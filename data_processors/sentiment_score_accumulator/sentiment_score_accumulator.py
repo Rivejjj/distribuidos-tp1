@@ -9,7 +9,7 @@ class SentimentScoreAccumulator:
             count, total = self.title_sentiment_score[title]
 
             self.title_sentiment_score[title] = (
-                count + 1, sentiment_score + total)
+                count + 1, float(sentiment_score) + total)
 
     def calculate_90th_percentile(self):
         title_scores = [(title, score[1] / score[0])
