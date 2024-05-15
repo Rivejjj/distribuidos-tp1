@@ -3,22 +3,8 @@ from entities.query_message import ANY_IDENTIFIER, REVIEW_IDENTIFIER, QueryMessa
 from entities.review import Review
 from sentiment_analyzer import SentimentAnalizer
 from rabbitmq.queue import QueueMiddleware
-from utils.initialize import decode, encode, get_queue_names, initialize_config, initialize_log, initialize_workers_environment
+from utils.initialize import decode, encode, get_queue_names, init
 from utils.parser import parse_query_msg, parse_review
-
-
-def initialize():
-    params = ["logging_level", "id", "input_queue",
-              "output_queues", "query", "previous_workers"]
-
-    params = list(map(lambda param: (param, False), params))
-
-    config_params = initialize_config(params)
-
-    initialize_log(logging, config_params["logging_level"])
-    initialize_workers_environment(config_params)
-
-    return config_params
 
 
 def process_eof(queue_middleware: QueueMiddleware):
@@ -43,13 +29,14 @@ def process_message(sentiment_analyzer: SentimentAnalizer, queue_middleware: Que
         # logging.info("Received message", decode(body))
         msg_received = decode(body)
         if msg_received == "EOF":
-            print("Received EOF")
+            logging.info("Received EOF")
             process_eof(queue_middleware)
             return
 
         identifier, data = parse_query_msg(msg_received)
 
         if identifier == REVIEW_IDENTIFIER:
+            logging.info("Received review")
             process_review(sentiment_analyzer,
                            queue_middleware, parse_review(data))
     return callback
@@ -57,7 +44,7 @@ def process_message(sentiment_analyzer: SentimentAnalizer, queue_middleware: Que
 
 def main():
 
-    config_params = initialize()
+    config_params = init(logging)
 
     sentiment_analyzer = SentimentAnalizer()
 

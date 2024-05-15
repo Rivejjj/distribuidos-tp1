@@ -44,8 +44,9 @@ class DataCollector:
                 self.receiver_queue.start_consuming(self.handle_result())
             except OSError:
                 break
-
-        self.client_sock.close()
+    
+        if self.client_sock:
+            self.client_sock.close()
 
     def __accept_new_connection(self, socket):
         """

@@ -1,33 +1,32 @@
-
+import signal
 import logging
 from entities.book import Book
 from entities.query_message import BOOK_IDENTIFIER, REVIEW_IDENTIFIER, QueryMessage
 from rabbitmq.queue import QueueMiddleware
-from utils.initialize import add_query_to_message, decode, encode, get_queue_names, initialize_config, initialize_log, initialize_workers_environment
+from utils.initialize import add_query_to_message, decode, encode, get_queue_names, init, initialize_config, initialize_log, initialize_workers_environment
 from book_filter import BookFilter
 from review_filter import ReviewFilter
 from utils.parser import parse_book, parse_query_msg, parse_review
 
 
 def initialize():
-    all_params = ["logging_level", "category",
-                  "published_year_range", "title_contains", "id", "input_queue", "output_queues", "save_books", "query", "previous_workers", "is_equal"]
+    all_params = ["category",
+                  "published_year_range", "title_contains", "save_books", "is_equal"]
 
     params = list(map(lambda param: (param, False), all_params))
 
-    config_params = initialize_config(params)
+    filter_config_params = initialize_config(params)
 
-    if config_params["published_year_range"]:
-        config_params["published_year_range"] = tuple(
-            map(int, config_params["published_year_range"].split("-")))
+    if filter_config_params["published_year_range"]:
+        filter_config_params["published_year_range"] = tuple(
+            map(int, filter_config_params["published_year_range"].split("-")))
 
-    if config_params["save_books"]:
-        config_params["save_books"] = True
+    if filter_config_params["save_books"]:
+        filter_config_params["save_books"] = True
 
-    initialize_workers_environment(config_params)
+    config_params = init(logging)
 
-    initialize_log(logging, config_params["logging_level"])
-
+    config_params.update(filter_config_params)
     return config_params
 
 
@@ -46,6 +45,7 @@ def format_for_results(book: Book, query):
 def process_book(book_filter: BookFilter, review_filter: ReviewFilter, queue_middleware: QueueMiddleware, book: Book, query=None):
     if not book_filter.filter(book):
         return
+    logging.info(f"Book accepted: {book.title}")
     message = str(book)
     if query:
         message = format_for_results(book, query)
@@ -53,7 +53,7 @@ def process_book(book_filter: BookFilter, review_filter: ReviewFilter, queue_mid
         review_filter.add_title(book.title)
 
     xd = len(message.split('\t'))
-    logging.info(f"Sent book: {xd}")
+    # logging.info(f"Sent book: {xd}")
 
     query_message = QueryMessage(BOOK_IDENTIFIER, message)
     queue_middleware.send_to_pool(encode(str(query_message)), book.title)
@@ -71,7 +71,7 @@ def process_review(review_filter: ReviewFilter, queue_middleware: QueueMiddlewar
 def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_middleware: QueueMiddleware, query=None):
     def callback(ch, method, properties, body):
 
-        logging.info(f"Received new message {decode(body)}")
+        # logging.info(f"Received new message {decode(body)}")
         msg_received = decode(body)
 
         if msg_received == "EOF":
@@ -81,7 +81,7 @@ def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_
 
         identifier, data = parse_query_msg(msg_received)
 
-        logging.info(f"Received message: {identifier} {data}")
+        # logging.info(f"Received message: {identifier} {data}")
         if identifier == BOOK_IDENTIFIER:
             book = parse_book(data)
             if not book:
@@ -92,7 +92,6 @@ def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_
             process_review(review_filter, queue_middleware, parse_review(data))
 
     return callback
-
 
 def main():
 
@@ -112,7 +111,7 @@ def main():
 
     queue_middleware = QueueMiddleware(get_queue_names(
         config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
-
+     
     queue_middleware.start_consuming(
         process_message(book_filter, review_filter, queue_middleware, config_params["query"]))
 

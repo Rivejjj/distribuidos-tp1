@@ -18,3 +18,6 @@ class Review:
             # print("Missing fields",self.title, self.score, self.text)
             return False
         return True
+
+    def copy(self):
+        return Review(self.title, self.score, self.text)

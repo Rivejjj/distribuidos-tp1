@@ -26,6 +26,9 @@ def get_year_regex(text):
 def parse_book_from_client(data):
     line = split_line(data)
 
+    if len(line) != TOTAL_FIELDS_COUNT:
+        return None
+
     title, authors, publisher, published_year, categories = line[
         0], line[2], line[5], line[6], line[8]
 
@@ -44,6 +47,9 @@ def validate_review(title, score, text):
 
 def parse_review_from_client(data):
     line = split_line(data)
+
+    if len(line) != TOTAL_FIELDS_COUNT:
+        return None
 
     title, score, text = line[1], line[6], line[9]
 

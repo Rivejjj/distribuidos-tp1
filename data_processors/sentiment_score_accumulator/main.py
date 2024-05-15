@@ -2,22 +2,8 @@ import logging
 from entities.query_message import ANY_IDENTIFIER, QueryMessage
 from rabbitmq.queue import QueueMiddleware
 from sentiment_score_accumulator import SentimentScoreAccumulator
-from utils.initialize import add_query_to_message, encode, get_queue_names, initialize_config, initialize_log, decode, initialize_workers_environment
+from utils.initialize import add_query_to_message, encode, get_queue_names, decode, init
 from utils.parser import parse_query_msg, split_line
-
-
-def initialize():
-    params = ["logging_level", "id", "input_queue",
-              "output_queues", "query", "previous_workers"]
-
-    config_params = initialize_config(
-        map(lambda param: (param, False), params))
-
-    initialize_workers_environment(config_params)
-
-    initialize_log(logging, config_params["logging_level"])
-
-    return config_params
 
 
 def send_results(sentiment_acc: SentimentScoreAccumulator, queue_middleware: QueueMiddleware, query=None):
@@ -51,8 +37,8 @@ def process_message(sentiment_acc: SentimentScoreAccumulator, queue_middleware: 
         identifier, message = parse_query_msg(msg_received)
 
         if identifier == ANY_IDENTIFIER:
-            print(message)
             title, score = split_line(message, '\t')
+            logging.info(f"Received: {title}, {score}")
 
             sentiment_acc.add_sentiment_score(title, score)
 
@@ -61,7 +47,7 @@ def process_message(sentiment_acc: SentimentScoreAccumulator, queue_middleware: 
 
 def main():
 
-    config_params = initialize()
+    config_params = init(logging)
 
     accumulator = SentimentScoreAccumulator()
 

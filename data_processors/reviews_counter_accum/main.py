@@ -5,23 +5,8 @@ from reviews_counter import ReviewsCounter
 from entities.book import Book
 from entities.query_message import ANY_IDENTIFIER, BOOK_IDENTIFIER, REVIEW_IDENTIFIER, QueryMessage
 from rabbitmq.queue import QueueMiddleware
-from utils.initialize import add_query_to_message, decode, encode, get_queue_names, initialize_config, initialize_log, initialize_workers_environment
+from utils.initialize import add_query_to_message, decode, encode, get_queue_names, init
 from utils.parser import parse_book, parse_query_msg, parse_review
-
-
-def initialize():
-    params = ["logging_level", "id", "input_queue",
-              "output_queues", "query", "previous_workers"]
-
-    params = list(map(lambda param: (param, False), params))
-
-    config_params = initialize_config(params)
-
-    initialize_workers_environment(config_params)
-
-    initialize_log(logging, config_params["logging_level"])
-
-    return config_params
 
 
 def process_eof(queue_middleware: QueueMiddleware, counter: ReviewsCounter):
@@ -73,7 +58,8 @@ def process_message(counter: ReviewsCounter, queue_middleware: QueueMiddleware, 
 
 def main():
 
-    config_params = initialize()
+    config_params = init(logging)
+
     logging.debug("Config: %s", config_params)
 
     min_amount_of_reviews = 500

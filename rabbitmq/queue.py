@@ -64,8 +64,13 @@ class QueueMiddleware:
         self.channel.start_consuming()
 
     def end(self):
-        self.channel.close()
-        self.connection.close()
+        
+        if self.channel.is_open:
+            self.channel.stop_consuming()
+            self.channel.close()
+        if self.connection.is_open:
+            self.connection.close()
+        logging.info("Connection and channel closed gracefully")
 
     def send(self, name, message):
         # logging.info(f"Sending message to queue {name}: {message}")
@@ -126,3 +131,8 @@ class QueueMiddleware:
 
         # print(f"[QUEUE] Sending message to {queue_name}: {message}")
         self.send(queue_name, message)
+
+    def handle_sigterm(self, signal, frame):
+        print("Received SIGTERM - shutting gracefully")
+        self.end()
+        return

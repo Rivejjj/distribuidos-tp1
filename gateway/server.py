@@ -1,8 +1,10 @@
 import socket
 import logging
 import signal
+from entities.book import Book
 from entities.query_message import BOOK_IDENTIFIER, REVIEW_IDENTIFIER, QueryMessage
 from client_parser import parse_book_from_client, parse_review_from_client
+from entities.review import Review
 from utils.initialize import decode, encode
 from rabbitmq.queue import QueueMiddleware
 from utils.parser import parse_query_msg
@@ -40,6 +42,8 @@ class Server:
                 self.client_sock = client_sock
                 self.handle_client_connection()
             except OSError:
+                # i do this so the error propagates
+                self.queue.handle_sigterm()
                 break
 
     def __accept_new_connection(self, socket):
@@ -58,17 +62,16 @@ class Server:
         return c
 
     def stop(self):
-        logging.info(
-            'action: receive_termination_signal | result: in_progress')
-
+        logging.info('action: receive_termination_signal | result: in_progress')
         logging.info('action: closing listening socket | result: in_progress')
         self._server_socket.close()
         logging.info('action: closing listening socket | result: success')
 
         self._close_client_socket()
 
-        logging.info(
-            f'action: receive_termination_signal | result: success')
+        logging.info(f'action: receive_termination_signal | result: success')
+        # signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
+
 
     def _close_client_socket(self):
         logging.info('action: closing client socket | result: in_progress')
@@ -101,37 +104,37 @@ class Server:
         book = parse_book_from_client(msg)
         if not book:
             return
-        # logging.info(f"Received book: {book}")
-        query_message = QueryMessage(BOOK_IDENTIFIER, book)
-        # logging.info(f"Sending to workers {query_message}")
-        pool = [f"query{i}" for i in range(1, 5) if i != 2]
-        for name in pool:
+        logging.info(f"Received book: {book.title}")
+        pool = [(f"query{i}", i) for i in range(1, 5) if i != 2]
+        for (name, i) in pool:
+            q_msg = self.__create_q_msg_from_book_for_query(book.copy(), i)
             self.queue.send_to_pool(
-                encode(str(query_message)), book.title, next_pool_name=name)
+                encode(str(q_msg)), book.title, next_pool_name=name)
 
         query2 = "query2"
+        q_msg = self.__create_q_msg_from_book_for_query(book.copy(), 2)
         self.queue.send_to_pool(
-            encode(str(query_message)), book.authors, next_pool_name=query2)
-        # logging.info(f'sending to workers')
+            encode(str(q_msg)), book.authors, next_pool_name=query2)
+        logging.info(f'sending to workers')
 
     def __process_review(self, msg):
         review = parse_review_from_client(msg)
 
         if not review:
             return
-        # logging.info(f"Received review: {review.title}")
-        query_message = QueryMessage(REVIEW_IDENTIFIER, review)
-        pool = [f"query{i}" for i in range(3, 5)]
+        logging.info(f"Received review: {review.title}")
+        pool = [(f"query{i}", i)for i in range(3, 5)]
 
-        for name in pool:
+        for (name, i) in pool:
+            q_msg = self.__create_q_msg_from_review_for_query(review.copy(), i)
             self.queue.send_to_pool(
-                encode(str(query_message)), review.title, next_pool_name=name)
-        # logging.info(f'sending to workers')
+                encode(str(q_msg)), review.title, next_pool_name=name)
+        logging.info(f'sending to workers')
 
     def __process_batch(self, batch):
         if batch == "EOF":
             logging.info(
-                f"action: receive_message | result: success | msg: {batch}")
+                f"RECEIVED EOF, closing connection with client {self.client_sock}")
 
             self.queue.send_eof()
             return
@@ -151,3 +154,32 @@ class Server:
             self.__process_review(data)
         else:
             logging.info(f'invalid message: {identifier} {data}')
+
+    def __eliminate_unnecesary_book_fields(self, book: Book, query_num: int):
+        # Eliminate unnecesary fields from books
+        fields_to_eliminate_by_query = {
+            '2': ['publisher', 'categories'],
+            '3': ['publisher', 'categories'],
+            '4': ['publisher', 'published_year', 'authors'],
+        }
+
+        for field in fields_to_eliminate_by_query.get(str(query_num), []):
+            setattr(book, field, None)
+
+    def __eliminate_unnecesary_review_fields(self, review: Review, query_num: int):
+        # Eliminate unnecesary fields from reviews
+        fields_to_eliminate_by_query = {
+            '3': ['text'],
+            '4': ['score'],
+        }
+
+        for field in fields_to_eliminate_by_query.get(str(query_num), []):
+            setattr(review, field, None)
+
+    def __create_q_msg_from_book_for_query(self, book: Book, query_num: int):
+        self.__eliminate_unnecesary_book_fields(book, query_num)
+        return QueryMessage(BOOK_IDENTIFIER, book)
+
+    def __create_q_msg_from_review_for_query(self, review: Review, query_num: int):
+        self.__eliminate_unnecesary_review_fields(review, query_num)
+        return QueryMessage(REVIEW_IDENTIFIER, review)

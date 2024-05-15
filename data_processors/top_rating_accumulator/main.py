@@ -3,23 +3,8 @@ import logging
 from top_rating_accumulator import TopRatingAccumulator
 from entities.query_message import ANY_IDENTIFIER, QueryMessage
 from rabbitmq.queue import QueueMiddleware
-from utils.initialize import add_query_to_message, decode, encode, get_queue_names, initialize_config, initialize_log, initialize_workers_environment
+from utils.initialize import add_query_to_message, decode, encode, get_queue_names, init
 from utils.parser import DATA_SEPARATOR, parse_query_msg, split_line
-
-
-def initialize():
-    all_params = ["logging_level", "id",
-                  "input_queue", "output_queues", "query", "previous_workers"]
-
-    params = list(map(lambda param: (param, False), all_params))
-
-    config_params = initialize_config(params)
-
-    initialize_workers_environment(config_params)
-
-    initialize_log(logging, config_params["logging_level"])
-
-    return config_params
 
 
 def process_eof(queue_middleware: QueueMiddleware, accum: TopRatingAccumulator, query=None):
@@ -54,7 +39,6 @@ def process_message(accum: TopRatingAccumulator, queue_middleware: QueueMiddlewa
         if len(data) == 2:
             logging.info(f"Received: {data}")
             title, avg_rating = data
-            # print("Book accepted: ", book)
             accum.add_title(title, avg_rating)
 
     return callback
@@ -62,8 +46,7 @@ def process_message(accum: TopRatingAccumulator, queue_middleware: QueueMiddlewa
 
 def main():
 
-    config_params = initialize()
-    logging.debug("Config: %s", config_params)
+    config_params = init(logging)
 
     top = 10
     accum = TopRatingAccumulator(top)

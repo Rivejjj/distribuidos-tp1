@@ -14,3 +14,6 @@ class Book:
         fields = [self.title, self.authors, self.publisher,
                   self.published_year, self.categories]
         return to_str(fields)
+
+    def copy(self):
+        return Book(self.title, self.authors, self.publisher, self.published_year, self.categories)
