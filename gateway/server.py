@@ -13,7 +13,7 @@ from utils.sockets import receive
 class Server:
     def __init__(self, port, listen_backlog, output_queues=[]):
         # Initialize server socket
-        signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
+        signal.signal(signal.SIGTERM, self.stop)
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
@@ -41,7 +41,6 @@ class Server:
                 self.client_sock = client_sock
                 self.handle_client_connection()
             except OSError:
-                # i do this so the error propagates
                 self.queue.handle_sigterm()
                 break
 
@@ -69,7 +68,9 @@ class Server:
         self._close_client_socket()
 
         logging.info(f'action: receive_termination_signal | result: success')
-        # signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
+        self.queue.handle_sigterm()
+
+        return
 
 
     def _close_client_socket(self):
@@ -143,6 +144,7 @@ class Server:
         msgs = data.split("\n")
 
         for msg in msgs:
+            logging.info(f"Received message: {msg}")
             self.__process_message(identifier, msg)
 
     def __process_message(self, identifier, data):

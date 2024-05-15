@@ -8,14 +8,14 @@ from utils.initialize import add_query_to_message, encode
 
 class QueueMiddleware:
     def __init__(self, output_queues, input_queue=None, id=0, previous_workers=0):
-        # signal.signal(signal.SIGTERM, lambda signal, frame: self.end())
+        signal.signal(signal.SIGTERM, lambda signal, frame: self.end())
         # logging.info("Connecting to queue: queue_names=%s", queue_names)
+        self.connection = None
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(host='rabbitmq'))
         logging.info("Connected to queue")
         self.channel = self.connection.channel()
         self.channel.basic_qos(prefetch_count=1)
-
         self.input_queue = None
 
         self.queue_pools = {}
@@ -63,14 +63,15 @@ class QueueMiddleware:
                 queue=self.input_queue, on_message_callback=callback, auto_ack=True)
         self.channel.start_consuming()
 
+    def stop_consuming(self):
+        self.channel.stop_consuming()
+
     def end(self):
-        
-        if self.channel.is_open:
-            self.channel.stop_consuming()
-            self.channel.close()
-        if self.connection.is_open:
-            self.connection.close()
+        if self.connection:
+            if self.connection.is_open:
+                self.connection.close()
         logging.info("Connection and channel closed gracefully")
+        return
 
     def send(self, name, message):
         # logging.info(f"Sending message to queue {name}: {message}")
@@ -132,7 +133,9 @@ class QueueMiddleware:
         # print(f"[QUEUE] Sending message to {queue_name}: {message}")
         self.send(queue_name, message)
 
-    def handle_sigterm(self, signal, frame):
+    def handle_sigterm(self):
         print("Received SIGTERM - shutting gracefully")
-        self.end()
+        self.channel.stop_consuming()
+        #self.end()
+        
         return

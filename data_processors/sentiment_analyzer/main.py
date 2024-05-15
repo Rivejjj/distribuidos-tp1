@@ -1,4 +1,5 @@
 import logging
+import signal
 from entities.query_message import ANY_IDENTIFIER, REVIEW_IDENTIFIER, QueryMessage
 from entities.review import Review
 from sentiment_analyzer import SentimentAnalizer
@@ -63,6 +64,8 @@ def main():
 
     queue_middleware = QueueMiddleware(
         get_queue_names(config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
+
+    signal.signal(signal.SIGTERM, lambda signal, frame:  queue_middleware.handle_sigterm())
 
     queue_middleware.start_consuming(
         process_message(sentiment_analyzer, queue_middleware))

@@ -27,7 +27,7 @@ class SentimentScoreAccumulator:
         floor = int(index)  
         ceiling = floor + 1  
         if ceiling >= len(data):  
-            return data[index]
+            return data[floor]
         d0 = data[floor] * (ceiling - index)
         d1 = data[ceiling] * (index - floor)
         return d0 + d1

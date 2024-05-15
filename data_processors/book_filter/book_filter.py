@@ -1,5 +1,5 @@
 from entities.book import Book
-
+import logging
 
 class BookFilter:
     def __init__(self, category=None, published_year_range=None, title_contains=None, is_equal=None):
@@ -31,6 +31,7 @@ class BookFilter:
             result = self.category in book.categories
 
         if result:
+            logging.info(f"Book accepted: {book.title}, {book.categories}")
             book.categories = None
         return result
 
