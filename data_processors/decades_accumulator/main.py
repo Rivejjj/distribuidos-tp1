@@ -2,7 +2,7 @@
 import logging
 from accumulator import Accumulator
 from entities.book import Book
-from entities.query_message import ANY_IDENTIFIER, QueryMessage
+from entities.query_message import AUTHORS, BOOK, QueryMessage
 from rabbitmq.queue import QueueMiddleware
 from utils.initialize import add_query_to_message, decode, encode, get_queue_names, init
 from utils.parser import parse_book, parse_query_msg
@@ -22,7 +22,7 @@ def process_book(accum: Accumulator, queue_middleware: QueueMiddleware, book: Bo
         final_result = add_query_to_message(
             book.authors, query)
 
-        query_message = QueryMessage(ANY_IDENTIFIER, final_result)
+        query_message = QueryMessage(AUTHORS, final_result)
         queue_middleware.send_to_all(encode(str(query_message)))
 
 
@@ -31,11 +31,13 @@ def process_message(accum: Accumulator, queue_middleware: QueueMiddleware, query
         msg_received = decode(body)
 
         if msg_received == "EOF":
-            process_eof(queue_middleware, accum, query)
+            process_eof(queue_middleware, accum)
             return
 
-        _, data = parse_query_msg(msg_received)
+        identifier, data = parse_query_msg(msg_received)
 
+        if identifier != BOOK:
+            return
         logging.info(f"Received data: {data}")
         book = parse_book(data)
 

@@ -1,12 +1,8 @@
-import difflib
 import csv
-
-from utils.parser import split_line
-
 ROUNDING_PRECISION = 5
 
 
-def compare_files(file1, file2):
+def compare_files_with_rounding(file1, file2):
     with open(file1, 'r') as f1, open(file2, 'r') as f2:
         reader1 = csv.reader(f1)
         reader2 = csv.reader(f2)
@@ -29,28 +25,18 @@ def sort_file(path, write_path):
     with open(path, 'r') as f, open(write_path, 'w') as d:
         reader = csv.reader(f)
         rows = list(reader)
-        rows.sort(key=lambda x: split_line(x[0]))
+        rows.sort()
 
         writer = csv.writer(d)
         writer.writerows(rows)
 
 
 def main():
-    # sort_file('data/query/query1.csv', 'data/query_result/query1.csv')
-    # sort_file('data/query/query2.csv', 'data/query_result/query2.csv')
-    # sort_file('data/query/query3.csv', 'data/query_result/query3.csv')
-    # sort_file('data/query/query4.csv', 'data/query_result/query4.csv')
-    sort_file('data/query/query5.csv', 'data/query_result/query5.csv')
-    # compare_files('data/query_result/query1.csv',
-    #               'data/kaggle_results/query_1_kaggle.csv')
-    # compare_files('data/query_result/query2.csv',
-    #               'data/kaggle_results/query_2_kaggle.csv')
-    # compare_files('data/query_result/query3.csv',
-    #               'data/kaggle_results/query_3_kaggle.csv')
-    # compare_files('data/query_result/query4.csv',
-    #               'data/kaggle_results/query_4_kaggle.csv')
-    compare_files(
-        'data/query_result/query5.csv', 'data/kaggle_results/query_5_kaggle.csv')
+    for i in range(1, 6):
+        sort_file(f'data/query/query{i}.csv',
+                  f'data/query_result/query{i}.csv')
+        compare_files_with_rounding(f'data/query_result/query{i}.csv',
+                                    f'data/kaggle_results/query_{i}_kaggle.csv')
 
 
 if __name__ == '__main__':

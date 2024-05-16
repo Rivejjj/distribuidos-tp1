@@ -2,7 +2,7 @@ import socket
 import logging
 import signal
 from entities.book import Book
-from entities.query_message import BOOK_IDENTIFIER, REVIEW_IDENTIFIER, QueryMessage
+from entities.query_message import BOOK, REVIEW, QueryMessage
 from client_parser import parse_book_from_client, parse_review_from_client
 from entities.review import Review
 from utils.initialize import decode, encode
@@ -62,7 +62,6 @@ class Server:
         return c
 
     def stop(self):
-        logging.info('action: receive_termination_signal | result: in_progress')
         logging.info('action: closing listening socket | result: in_progress')
         self._server_socket.close()
         logging.info('action: closing listening socket | result: success')
@@ -70,8 +69,6 @@ class Server:
         self._close_client_socket()
 
         logging.info(f'action: receive_termination_signal | result: success')
-        # signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
-
 
     def _close_client_socket(self):
         logging.info('action: closing client socket | result: in_progress')
@@ -147,10 +144,10 @@ class Server:
             self.__process_message(identifier, msg)
 
     def __process_message(self, identifier, data):
-        if identifier == BOOK_IDENTIFIER:
+        if identifier == BOOK:
             self.__process_book(data)
 
-        elif identifier == REVIEW_IDENTIFIER:
+        elif identifier == REVIEW:
             self.__process_review(data)
         else:
             logging.info(f'invalid message: {identifier} {data}')
@@ -178,8 +175,8 @@ class Server:
 
     def __create_q_msg_from_book_for_query(self, book: Book, query_num: int):
         self.__eliminate_unnecesary_book_fields(book, query_num)
-        return QueryMessage(BOOK_IDENTIFIER, book)
+        return QueryMessage(BOOK, book)
 
     def __create_q_msg_from_review_for_query(self, review: Review, query_num: int):
         self.__eliminate_unnecesary_review_fields(review, query_num)
-        return QueryMessage(REVIEW_IDENTIFIER, review)
+        return QueryMessage(REVIEW, review)

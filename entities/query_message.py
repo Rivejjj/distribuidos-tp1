@@ -1,6 +1,8 @@
-ANY_IDENTIFIER = 0
-BOOK_IDENTIFIER = 1
-REVIEW_IDENTIFIER = 2
+BOOK = 1
+REVIEW = 2
+TITLE_AUTHORS = 3
+AUTHORS = 4
+TITLE_SCORE = 5
 QUERY_MSG_SEPARATOR = ";"
 
 
@@ -12,7 +14,7 @@ class QueryMessage:
     def get_data(self):
         return self.data
 
-    def get_identifier(self):
+    def get(self):
         return self.identifier
 
     def __str__(self):

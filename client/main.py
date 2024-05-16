@@ -1,7 +1,7 @@
 import logging
 from multiprocessing import Process
 from client import Client
-from entities.query_message import BOOK_IDENTIFIER, QUERY_MSG_SEPARATOR, REVIEW_IDENTIFIER
+from entities.query_message import BOOK, QUERY_MSG_SEPARATOR, REVIEW
 from utils.initialize import initialize_config, initialize_log
 
 
@@ -65,10 +65,10 @@ def run(config_params):
     client = Client(config_params["address"], config_params["port"])
 
     logging.info("Sending books")
-    send_file(client, config_params["books_path"], BOOK_IDENTIFIER, 30)
+    send_file(client, config_params["books_path"], BOOK, 30)
     logging.info("Sending reviews")
     send_file(
-        client, config_params["books_reviews_path"], REVIEW_IDENTIFIER, 30)
+        client, config_params["books_reviews_path"], REVIEW, 30)
     logging.info("Sending EOF")
     client.send_message("EOF")
 

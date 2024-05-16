@@ -1,5 +1,5 @@
 import logging
-from entities.query_message import ANY_IDENTIFIER, QueryMessage
+from entities.query_message import TITLE_SCORE, QueryMessage
 from rabbitmq.queue import QueueMiddleware
 from sentiment_score_accumulator import SentimentScoreAccumulator
 from utils.initialize import add_query_to_message, encode, get_queue_names, decode, init
@@ -14,7 +14,7 @@ def send_results(sentiment_acc: SentimentScoreAccumulator, queue_middleware: Que
         if query:
             message = add_query_to_message(message, query)
 
-        query_message = QueryMessage(ANY_IDENTIFIER, message)
+        query_message = QueryMessage(TITLE_SCORE, message)
         queue_middleware.send_to_all(encode(str(query_message)))
 
 
@@ -36,7 +36,7 @@ def process_message(sentiment_acc: SentimentScoreAccumulator, queue_middleware: 
 
         identifier, message = parse_query_msg(msg_received)
 
-        if identifier == ANY_IDENTIFIER:
+        if identifier == TITLE_SCORE:
             title, score = split_line(message, '\t')
             logging.info(f"Received: {title}, {score}")
 
