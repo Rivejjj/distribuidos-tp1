@@ -39,7 +39,7 @@ def process_eof(queue_middleware: QueueMiddleware, review_filter: ReviewFilter, 
 
 
 def format_for_results(book: Book, query):
-    return add_query_to_message(f"{book.title},{book.authors},{book.publisher}", query)
+    return add_query_to_message(f"{book.title}\t{book.authors}\t{book.publisher}", query)
 
 
 def process_book(book_filter: BookFilter, review_filter: ReviewFilter, queue_middleware: QueueMiddleware, book: Book, query=None):

@@ -43,7 +43,7 @@ def process_message(counter: ReviewsCounter, queue_middleware: QueueMiddleware, 
 
                 if title not in more_than_n:
                     # print("Review accepted: ", review.title," | Total reviews: ", avg)
-                    msg = f"{title},{author}"
+                    msg = f"{title}\t{author}"
                     if query:
                         msg = add_query_to_message(
                             msg, query)

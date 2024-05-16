@@ -44,7 +44,7 @@ class DataCollector:
                 self.receiver_queue.start_consuming(self.handle_result())
             except OSError:
                 break
-    
+
         if self.client_sock:
             self.client_sock.close()
 
@@ -104,5 +104,7 @@ class DataCollector:
 
             _, data = parse_query_msg(msg)
 
-            send_message(self.client_sock, data)
+            client_data = data.replace("\t", ",")
+
+            send_message(self.client_sock, client_data)
         return callback

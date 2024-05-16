@@ -13,7 +13,7 @@ def process_eof(queue_middleware: QueueMiddleware, accum: TopRatingAccumulator, 
         top = accum.get_top()
         result = ""
         for i in top:
-            result += f"{i[0]},{i[1]}\n"
+            result += f"{i[0]}\t{i[1]}\n"
         logging.info(f"sending to result: {result}")
 
         msg = add_query_to_message(result, query)

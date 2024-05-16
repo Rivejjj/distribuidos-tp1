@@ -9,7 +9,7 @@ from utils.parser import parse_query_msg, split_line
 def send_results(sentiment_acc: SentimentScoreAccumulator, queue_middleware: QueueMiddleware, query=None):
     for title, score in sentiment_acc.calculate_90th_percentile():
         print(f"[SENTIMENT RESULT]: {title}, {score}")
-        message = f"{title},{score}"
+        message = f"{title}\t{score}"
 
         if query:
             message = add_query_to_message(message, query)
