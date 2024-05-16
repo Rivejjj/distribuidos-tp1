@@ -14,9 +14,6 @@ def process_eof(queue_middleware: QueueMiddleware):
 def process_review(sentiment_analyzer: SentimentAnalizer, queue_middleware: QueueMiddleware, review: Review):
     polarity_score = sentiment_analyzer.analyze(review.text)
 
-    if not polarity_score:
-        return
-
     message = f"{review.title}\t{polarity_score}"
 
     query_message = QueryMessage(TITLE_SCORE, message)

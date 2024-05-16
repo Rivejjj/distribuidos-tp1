@@ -59,7 +59,7 @@ def process_book(book_filter: BookFilter, review_filter: ReviewFilter, queue_mid
 def process_review(review_filter: ReviewFilter, queue_middleware: QueueMiddleware, review):
     if not review_filter or (review_filter and not review_filter.filter(review)):
         return
-    print("Review accepted: ", review.title)
+    logging.info(f"Review accepted: {review.title}")
     query_message = QueryMessage(REVIEW, review)
 
     queue_middleware.send_to_pool(encode(str(query_message)), review.title)
