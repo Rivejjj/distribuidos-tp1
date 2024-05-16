@@ -1,5 +1,6 @@
 import signal
 import logging
+from functools import partial
 from accumulator import Accumulator
 from entities.book import Book
 from entities.query_message import ANY_IDENTIFIER, BOOK_IDENTIFIER, QueryMessage
@@ -62,6 +63,13 @@ def process_message(accum: Accumulator, queue_middleware: QueueMiddleware, query
     return callback
 
 
+def handle_sigterm(queue_middleware: QueueMiddleware):
+    #queue_middleware.handle_sigterm()
+    logging.info("Stopping consuming...")
+    queue_middleware.stop_consuming()
+    #queue_middleware.connection.close()
+
+
 def main():
 
     config_params = initialize()
@@ -71,8 +79,7 @@ def main():
     queue_middleware = QueueMiddleware(get_queue_names(
         config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
     
-    signal.signal(signal.SIGTERM, lambda signal, frame:  queue_middleware.handle_sigterm())
-
+    # signal.signal(signal.SIGTERM, lambda signal,frame:)
     
     queue_middleware.start_consuming(
         process_message(accum, queue_middleware, query=config_params["query"]))

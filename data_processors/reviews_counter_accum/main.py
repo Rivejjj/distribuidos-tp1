@@ -1,6 +1,7 @@
 import signal
 import logging
 import os
+from functools import partial
 from reviews_counter import ReviewsCounter
 from entities.book import Book
 from entities.query_message import ANY_IDENTIFIER, BOOK_IDENTIFIER, REVIEW_IDENTIFIER, QueryMessage
@@ -71,8 +72,15 @@ def process_message(counter: ReviewsCounter, queue_middleware: QueueMiddleware, 
     return callback
 
 
-def main():
+def handle_sigterm(queue_middleware: QueueMiddleware):
+    #queue_middleware.handle_sigterm()
+    logging.info("Handling sigterm...")
+    queue_middleware.stop_consuming()
+    #queue_middleware.connection.close()
 
+
+
+def main():
     config_params = initialize()
     logging.debug("Config: %s", config_params)
 
@@ -82,7 +90,7 @@ def main():
     queue_middleware = QueueMiddleware(get_queue_names(
         config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
 
-    signal.signal(signal.SIGTERM, lambda signal, frame:  queue_middleware.handle_sigterm())
+    # signal.signal(signal.SIGTERM, lambda signal,frame: handle_sigterm(queue_middleware))    
     more_than_n = {}
     queue_middleware.start_consuming(
         process_message(counter, queue_middleware, more_than_n, query=config_params["query"]))

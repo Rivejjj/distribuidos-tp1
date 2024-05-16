@@ -144,7 +144,7 @@ class Server:
         msgs = data.split("\n")
 
         for msg in msgs:
-            logging.info(f"Received message: {msg}")
+            # logging.info(f"Received message: {msg}")
             self.__process_message(identifier, msg)
 
     def __process_message(self, identifier, data):

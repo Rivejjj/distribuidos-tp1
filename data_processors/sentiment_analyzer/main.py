@@ -1,5 +1,6 @@
 import logging
 import signal
+from functools import partial
 from entities.query_message import ANY_IDENTIFIER, REVIEW_IDENTIFIER, QueryMessage
 from entities.review import Review
 from sentiment_analyzer import SentimentAnalizer
@@ -56,6 +57,13 @@ def process_message(sentiment_analyzer: SentimentAnalizer, queue_middleware: Que
     return callback
 
 
+def handle_sigterm(queue_middleware: QueueMiddleware):
+    #queue_middleware.handle_sigterm()
+    logging.info("Stopping consuming...")
+    queue_middleware.stop_consuming()
+    #queue_middleware.connection.close()
+
+
 def main():
 
     config_params = initialize()
@@ -65,7 +73,7 @@ def main():
     queue_middleware = QueueMiddleware(
         get_queue_names(config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
 
-    signal.signal(signal.SIGTERM, lambda signal, frame:  queue_middleware.handle_sigterm())
+    # signal.signal(signal.SIGTERM, lambda signal,frame: handle_sigterm(queue_middleware))
 
     queue_middleware.start_consuming(
         process_message(sentiment_analyzer, queue_middleware))

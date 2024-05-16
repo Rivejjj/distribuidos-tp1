@@ -1,10 +1,17 @@
 import logging
 import signal
+from functools import partial
 from entities.query_message import ANY_IDENTIFIER, QueryMessage
 from rabbitmq.queue import QueueMiddleware
 from sentiment_score_accumulator import SentimentScoreAccumulator
 from utils.initialize import add_query_to_message, encode, get_queue_names, initialize_config, initialize_log, decode, initialize_workers_environment
 from utils.parser import parse_query_msg, split_line
+
+
+def handle_sigterm(queue_middleware: QueueMiddleware):
+    logging.info("Stopping consuming...")
+    queue_middleware.stop_consuming()
+    #queue_middleware.connection.close()
 
 
 def initialize():
@@ -68,7 +75,10 @@ def main():
 
     queue_middleware = QueueMiddleware(get_queue_names(
         config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
-    signal.signal(signal.SIGTERM, lambda signal, frame:  queue_middleware.handle_sigterm())
+    
+
+    # signal.signal(signal.SIGTERM, lambda signal,frame: handle_sigterm(queue_middleware))    
+
     queue_middleware.start_consuming(
         process_message(accumulator, queue_middleware, config_params["query"]))
 

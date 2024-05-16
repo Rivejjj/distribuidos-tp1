@@ -43,6 +43,9 @@ def start_data_collector(config_params):
 
     data_collector.run()
 
+def handle_sigterm(server, data_collector_process):
+    server.stop()
+    data_collector_process.terminate()
 
 def main():
     config_params = initialize()
@@ -57,7 +60,8 @@ def main():
         target=start_data_collector, args=(config_params,))
 
     signal.signal(signal.SIGTERM, lambda signal,
-                  frame: data_collector_process.terminate())
+                  frame: handle_sigterm(server, data_collector_process))
+    
     data_collector_process.start()
 
     server.run()

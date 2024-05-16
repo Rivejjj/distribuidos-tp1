@@ -10,7 +10,7 @@ class QueueMiddleware:
     def __init__(self, output_queues, input_queue=None, id=0, previous_workers=0):
         signal.signal(signal.SIGTERM, lambda signal, frame: self.end())
         # logging.info("Connecting to queue: queue_names=%s", queue_names)
-        self.connection = None
+        self.running = True
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(host='rabbitmq'))
         logging.info("Connected to queue")
@@ -45,7 +45,7 @@ class QueueMiddleware:
             for i in range(worker_count):
                 queue_name = self.__get_worker_name(name, i)
                 logging.info(f"[QUEUE] DECLARING QUEUE {queue_name}")
-                self.channel.queue_declare(queue=queue_name, durable=True)
+                self.channel.queue_declare(queue=queue_name, durable = True)
                 self.output_queues.append(queue_name)
 
     def __declare_input_queue(self, input_queue, id):
@@ -55,30 +55,54 @@ class QueueMiddleware:
         logging.info(f"[QUEUE] DECLARING INPUT QUEUE {self.input_queue}")
 
         self.channel.queue_declare(
-            queue=self.input_queue, durable=True)
+            queue=self.input_queue, durable = True)
 
     def start_consuming(self, callback):
         if self.input_queue:
             self.channel.basic_consume(
-                queue=self.input_queue, on_message_callback=callback, auto_ack=True)
+                queue=self.input_queue, on_message_callback=callback, auto_ack=True) # hacer manualmente
         self.channel.start_consuming()
 
     def stop_consuming(self):
+        self.running = False
         self.channel.stop_consuming()
 
+        try:
+            self.connection.close()
+        except OSError:
+            logging.error(f"Error while closing connection OSEROR")
+        except AttributeError:
+            logging.error(f"Error while closing connection AttributeError")
+        except Exception:
+            logging.error(f"Error while closing connection")
+
     def end(self):
-        if self.connection:
-            if self.connection.is_open:
-                self.connection.close()
-        logging.info("Connection and channel closed gracefully")
+        self.running = False
+        # logging.info("ENDING...")
+
+        # self.channel.stop_consuming()
+        # if self.connection:
+        #     if self.connection.is_open:
+        #         self.connection.close()
+        # logging.info("Connection and channel closed gracefully")
         return
 
     def send(self, name, message):
         # logging.info(f"Sending message to queue {name}: {message}")
-        self.channel.basic_publish(
+        try:
+            if not self.running:
+                self.channel.stop_consuming()
+                if self.connection:
+                    if self.connection.is_open:
+                        self.connection.close()
+                logging.info("Connection and channel closed gracefully")
+                return
+            self.channel.basic_publish(
             exchange='', routing_key=name, body=message, properties=pika.BasicProperties(
-                delivery_mode=2,  # make message persistent
+                  # make message persistent
             ))
+        except Exception as e:
+            logging.error(f"Error while sending message: {e}")
 
     def send_to_all(self, message):
         # logging.info(f"[QUEUE] Sending message to all: {message}")
@@ -136,6 +160,5 @@ class QueueMiddleware:
     def handle_sigterm(self):
         print("Received SIGTERM - shutting gracefully")
         self.channel.stop_consuming()
-        #self.end()
         
         return
