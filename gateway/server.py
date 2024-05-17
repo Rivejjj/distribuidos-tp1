@@ -88,7 +88,6 @@ class Server:
             while True:
                 msg = decode(receive(self.client_sock)).rstrip()
                 self.__process_batch(msg)
-
         except OSError as e:
             logging.error(
                 f"action: receive_message | result: fail | error: {e}")

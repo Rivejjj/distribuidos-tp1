@@ -48,8 +48,11 @@ def send_file(client, filename, identifier, batch_size=10, max_batches=0):
                 batch += line
             client.send_message(batch)
             batch = f"{identifier}{QUERY_MSG_SEPARATOR}"
-        except Exception as e:
-            print(f"[CLIENT] Error sending batch: {e}")
+        except EOFError as e:
+            print(f"[CLIENT] Finished sending file: {e}")
+            break
+        except OSError as e:
+            print(f"[CLIENT] OSError sending file: {e}")
             break
 
         i += 1
