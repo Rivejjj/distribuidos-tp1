@@ -64,7 +64,6 @@ class QueueMiddleware:
         self.channel.start_consuming()
 
     def end(self):
-        
         if self.channel.is_open:
             self.channel.stop_consuming()
             self.channel.close()
@@ -74,10 +73,11 @@ class QueueMiddleware:
 
     def send(self, name, message):
         # logging.info(f"Sending message to queue {name}: {message}")
-        self.channel.basic_publish(
-            exchange='', routing_key=name, body=message, properties=pika.BasicProperties(
-                delivery_mode=2,  # make message persistent
-            ))
+        if self.channel.is_open:
+            self.channel.basic_publish(
+                exchange='', routing_key=name, body=message, properties=pika.BasicProperties(
+                    delivery_mode=2,  # make message persistent
+                ))
 
     def send_to_all(self, message):
         # logging.info(f"[QUEUE] Sending message to all: {message}")

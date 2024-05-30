@@ -69,9 +69,13 @@ def main():
         config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
 
     more_than_n = {}
-    queue_middleware.start_consuming(
-        process_message(counter, queue_middleware, more_than_n, query=config_params["query"]))
-
+    try:
+        queue_middleware.start_consuming(
+            process_message(counter, queue_middleware, more_than_n, query=config_params["query"]))
+    except OSError as e:
+        logging.error(f"Error while consuming from queue {e}")
+    except AttributeError as e :
+        logging.error(f"Error while consuming from queue: {e}")
 
 if __name__ == "__main__":
     main()
