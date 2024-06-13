@@ -1,6 +1,7 @@
 import socket
 import logging
 import signal
+import time
 from entities.book import Book
 from entities.query_message import BOOK, REVIEW, QueryMessage
 from client_parser import parse_book_from_client, parse_review_from_client
@@ -84,8 +85,10 @@ class Server:
         If a problem arises in the communication with the client, the
         client socket will also be closed
         """
+        
         try:
             while True:
+                time.sleep(2)
                 msg = decode(receive(self.client_sock)).rstrip()
                 self.__process_batch(msg)
         except OSError as e:

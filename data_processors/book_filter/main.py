@@ -1,4 +1,7 @@
+from multiprocessing import Process
+import time
 import signal
+import socket
 import logging
 from entities.book import Book
 from entities.query_message import BOOK, REVIEW, QueryMessage
@@ -7,6 +10,30 @@ from utils.initialize import add_query_to_message, decode, encode, get_queue_nam
 from book_filter import BookFilter
 from review_filter import ReviewFilter
 from utils.parser import parse_book, parse_query_msg, parse_review
+
+def send_heartbeat(address, port, name):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    connected = False
+    while not connected:
+        try:
+            sock.connect((address, port))
+            connected = True
+            logging.warning(f"Connected to monitor")
+        except ConnectionRefusedError:
+            connected = False
+            logging.warning(f"Connection refused. Retrying in 1 seconds")
+            time.sleep(1)
+        except socket.gaierror:
+            connected = False
+            logging.warning(f"Host name invalid. Monitor not alive. Retrying in 1 seconds")
+            time.sleep(1)
+
+    while True:
+        logging.warning(f"Sending heartbeat to monitor")
+        sock.send(bytes(name, 'utf-8'))
+        read = sock.recv(1024)
+        logging.warning(f"Answer from server: {read.decode()}")
+        time.sleep(3)
 
 
 def initialize():
@@ -92,9 +119,7 @@ def process_message(book_filter: BookFilter, review_filter: ReviewFilter, queue_
 
 
 def main():
-
     config_params = initialize()
-
     book_filter = BookFilter(
         category=config_params["category"],
         published_year_range=config_params["published_year_range"],
@@ -106,6 +131,12 @@ def main():
 
     if config_params["save_books"]:
         review_filter = ReviewFilter()
+
+    process = Process(target=send_heartbeat, args=(
+        "monitor", 22223, "computers_category_filter_0"))
+    process.start()
+
+    logging.warning("Starting book filter")
 
     queue_middleware = QueueMiddleware(get_queue_names(
         config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])

@@ -3,7 +3,7 @@ from multiprocessing import Process
 from client import Client
 from entities.query_message import BOOK, QUERY_MSG_SEPARATOR, REVIEW
 from utils.initialize import initialize_config, initialize_log
-
+import time
 
 def initialize():
 
@@ -36,6 +36,7 @@ def receive_results(address, port):
 
 
 def send_file(client, filename, identifier, batch_size=10, max_batches=0):
+    time.sleep(2)
     file = open(filename, "r")
     line = file.readline()
     batch = f"{identifier}{QUERY_MSG_SEPARATOR}"
