@@ -8,7 +8,6 @@ from utils.parser import parse_query_msg, split_line
 
 def send_results(sentiment_acc: SentimentScoreAccumulator, queue_middleware: QueueMiddleware, query=None):
     for title, score in sentiment_acc.calculate_90th_percentile():
-        print(f"[SENTIMENT RESULT]: {title}, {score}")
         message = f"{title}\t{score}"
 
         if query:
@@ -27,7 +26,6 @@ def process_eof(queue_middleware: QueueMiddleware, sentiment_acc: SentimentScore
 
 def process_message(sentiment_acc: SentimentScoreAccumulator, queue_middleware: QueueMiddleware, query=None):
     def callback(ch, method, properties, body):
-        # print("Received message", decode(body))
         msg_received = decode(body)
 
         if msg_received == "EOF":

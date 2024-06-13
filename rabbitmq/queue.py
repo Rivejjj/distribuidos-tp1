@@ -60,7 +60,7 @@ class QueueMiddleware:
     def start_consuming(self, callback):
         if self.input_queue:
             self.channel.basic_consume(
-                queue=self.input_queue, on_message_callback=callback, auto_ack=True)
+                queue=self.input_queue, on_message_callback=callback, auto_ack=False)
         self.channel.start_consuming()
 
     def end(self):
@@ -102,10 +102,10 @@ class QueueMiddleware:
             self.received_eofs = 0
 
             if callback:
-                print("[QUEUE] Executing callback")
+                logging.info("[QUEUE] Executing callback")
                 callback()
             self.send_to_all(encode(msg))
-            print(
+            logging.info(
                 f"[QUEUE] Sending EOF to next workers {self.output_queues}")
             return True
 
@@ -119,7 +119,6 @@ class QueueMiddleware:
             lambda output_queue: next_pool_name in output_queue, self.output_queues))
 
         hash_value = hash(hash_key)
-        # print(f"[QUEUE] Calculating worker for {next_pool_name} with hash {hash_value}")
         return hash_value % len(output_queues)
 
     def send_to_pool(self, message, hash_key, next_pool_name=None):
@@ -129,10 +128,9 @@ class QueueMiddleware:
 
         queue_name = self.__get_worker_name(next_pool_name, next)
 
-        # print(f"[QUEUE] Sending message to {queue_name}: {message}")
         self.send(queue_name, message)
 
     def handle_sigterm(self, signal, frame):
-        print("Received SIGTERM - shutting gracefully")
+        logging.info("Received SIGTERM - shutting gracefully")
         self.end()
         return

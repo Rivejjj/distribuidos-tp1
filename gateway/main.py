@@ -46,7 +46,6 @@ def start_data_collector(config_params):
 
 def main():
     config_params = initialize()
-    print("Config: ", config_params)
     server = Server(
         config_params["port"],
         config_params["listen_backlog"],

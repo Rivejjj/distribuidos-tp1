@@ -86,11 +86,14 @@ def init(logging):
 
     initialize_log(logging, config_params["logging_level"])
 
+    if config_params["query"]:
+        config_params["query"] = int(config_params["query"])
+
     return config_params
 
 
 def encode(message):
-    return message.encode('utf-8')
+    return str(message).encode('utf-8')
 
 
 def decode(message):

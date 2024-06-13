@@ -1,7 +1,10 @@
 import csv
+import json
 from entities.book import Book
-from entities.query_message import QUERY_MSG_SEPARATOR
+from entities.book_msg import BookMessage
+from entities.query_message import BOOK, QUERY_MSG_SEPARATOR, REVIEW
 from entities.review import Review
+from entities.review_msg import ReviewMessage
 
 DATA_SEPARATOR = "\t"
 
@@ -21,12 +24,26 @@ def parse_review(data):
     return Review(*line)
 
 
-def parse_query_msg(data):
-    identifier, rest = data.split(QUERY_MSG_SEPARATOR, 1)
-
-    return int(identifier), rest
-
-
 def split_line(line, delimiter=","):
     res = list(csv.reader([line], delimiter=delimiter))[0]
     return res
+
+
+def parse_client_msg(msg):
+    identifier, data = msg.split(QUERY_MSG_SEPARATOR, 1)
+    return int(identifier), data
+
+
+def parse_query_msg(msg):
+    header, data = msg.split(QUERY_MSG_SEPARATOR, 1)
+
+    header = json.loads(header)
+
+    identifier = int(header[0])
+
+    if identifier == BOOK:
+        return BookMessage(parse_book(data), *header)
+    elif identifier == REVIEW:
+        return ReviewMessage(parse_review(data), *header)
+    else:
+        raise Exception('Mensaje desconocido')

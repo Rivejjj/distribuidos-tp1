@@ -81,7 +81,6 @@ def run(config_params):
 
 def main():
     config_params = initialize()
-    print(config_params)
     run(config_params)
 
 
