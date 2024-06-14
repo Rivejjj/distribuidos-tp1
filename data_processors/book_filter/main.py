@@ -42,7 +42,7 @@ def send_heartbeat(address, port, name):
 
 def initialize():
     all_params = ["category",
-                  "published_year_range", "title_contains", "save_books", "is_equal"]
+                  "published_year_range", "title_contains", "save_books", "is_equal","name"]
 
     params = list(map(lambda param: (param, False), all_params))
 
@@ -137,7 +137,7 @@ def main():
         review_filter = ReviewFilter()
 
     process = Process(target=send_heartbeat, args=(
-        "monitor", 22223, "computers_category_filter_0"))
+        "monitor", 22223, config_params["name"]))
     process.start()
 
     logging.warning("Starting book filter")

@@ -88,7 +88,6 @@ class Server:
         
         try:
             while True:
-                time.sleep(2)
                 msg = decode(receive(self.client_sock)).rstrip()
                 self.__process_batch(msg)
         except OSError as e:
@@ -102,6 +101,7 @@ class Server:
     def __process_book(self, msg):
         book = parse_book_from_client(msg)
         if not book:
+            logging.warning(f"Invalid book: {msg}")
             return
         logging.info(f"Received book: {book.title}")
         pool = [(f"query{i}", i) for i in range(1, 5) if i != 2]

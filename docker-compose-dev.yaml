@@ -29,7 +29,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=INFO
-      - OUTPUT_QUEUES=query1:1;query2:1;query3:1;query4:1;query5:1
+      - OUTPUT_QUEUES=query1:2;query2:1;query3:1;query4:1;query5:1
       - INPUT_QUEUE=results
       - QUERY_COUNT=11
       - ID=0
@@ -47,20 +47,22 @@ services:
       - CATEGORY=Computers
       - ID=0
       - IS_EQUAL=True
-    # depends_on:
-    #   - gateway
-  # computers_category_filter_1:
-  #   container_name: computers_category_filter_1
-  #   image: book_filter:latest
-  #   entrypoint: python3 /main.py
-  #   environment:
-  #     - PYTHONUNBUFFERED=1
-  #     - LOGGING_LEVEL=INFO
-  #     - INPUT_QUEUE=query1
-  #     - OUTPUT_QUEUES=computers:3
-  #     - CATEGORY=Computers
-  #     - ID=1
-  #     - IS_EQUAL=True
+      - NAME=computers_category_filter_0
+    depends_on:
+      - gateway
+  computers_category_filter_1:
+    container_name: computers_category_filter_1
+    image: book_filter:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - INPUT_QUEUE=query1
+      - OUTPUT_QUEUES=computers:3
+      - CATEGORY=Computers
+      - ID=1
+      - IS_EQUAL=True
+      - NAME=computers_category_filter_1
   # computers_category_filter_2:
   #   container_name: computers_category_filter_2
   #   image: book_filter:latest

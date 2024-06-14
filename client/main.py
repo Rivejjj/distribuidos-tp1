@@ -36,7 +36,7 @@ def receive_results(address, port):
 
 
 def send_file(client, filename, identifier, batch_size=10, max_batches=0):
-    time.sleep(2)
+    
     file = open(filename, "r")
     line = file.readline()
     batch = f"{identifier}{QUERY_MSG_SEPARATOR}"
@@ -49,7 +49,7 @@ def send_file(client, filename, identifier, batch_size=10, max_batches=0):
                 batch += line
             client.send_message(batch)
             batch = f"{identifier}{QUERY_MSG_SEPARATOR}"
-            logging.warning(f"[CLIENT] Sent batch {batch}")
+            time.sleep(2)
         except EOFError as e:
             print(f"[CLIENT] Finished sending file: {e}")
             break
