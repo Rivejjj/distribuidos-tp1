@@ -6,7 +6,7 @@ import logging
 from entities.book import Book
 from entities.query_message import BOOK, REVIEW, QueryMessage
 from rabbitmq.queue import QueueMiddleware
-from utils.initialize import add_query_to_message, decode, encode, get_queue_names, init, initialize_config, initialize_log, initialize_workers_environment
+from utils.initialize import add_query_to_message, decode, encode, get_queue_names, init, initialize_config
 from book_filter import BookFilter
 from review_filter import ReviewFilter
 from utils.parser import parse_book, parse_query_msg, parse_review
@@ -29,11 +29,15 @@ def send_heartbeat(address, port, name):
             time.sleep(1)
 
     while True:
-        logging.warning(f"Sending heartbeat to monitor")
-        sock.send(bytes(name, 'utf-8'))
-        read = sock.recv(1024)
-        logging.warning(f"Answer from server: {read.decode()}")
-        time.sleep(3)
+        try:    
+            logging.warning(f"Sending heartbeat to monitor")
+            sock.send(bytes(name, 'utf-8'))
+            read = sock.recv(1024)
+            logging.warning(f"Answer from server: {read.decode()}")
+            time.sleep(3)
+        except:
+            logging.error("Error while sending heartbeat")
+            break
 
 
 def initialize():

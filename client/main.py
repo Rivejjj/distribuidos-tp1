@@ -49,6 +49,7 @@ def send_file(client, filename, identifier, batch_size=10, max_batches=0):
                 batch += line
             client.send_message(batch)
             batch = f"{identifier}{QUERY_MSG_SEPARATOR}"
+            logging.warning(f"[CLIENT] Sent batch {batch}")
         except EOFError as e:
             print(f"[CLIENT] Finished sending file: {e}")
             break
@@ -69,10 +70,10 @@ def run(config_params):
     client = Client(config_params["address"], config_params["port"])
 
     logging.info("Sending books")
-    send_file(client, config_params["books_path"], BOOK, 30)
+    send_file(client, config_params["books_path"], BOOK, 2)
     logging.info("Sending reviews")
     send_file(
-        client, config_params["books_reviews_path"], REVIEW, 30)
+        client, config_params["books_reviews_path"], REVIEW, 2)
     logging.info("Sending EOF")
     client.send_message("EOF")
 
