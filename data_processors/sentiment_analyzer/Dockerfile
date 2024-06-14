@@ -3,6 +3,7 @@ COPY data_processors/sentiment_analyzer /
 COPY entities /entities
 COPY rabbitmq/queue.py /rabbitmq/queue.py
 COPY utils /utils
+COPY monitor/monitor_client.py /monitor/monitor_client.py
 
 RUN pip3 install textblob
 ENTRYPOINT ["/bin/sh"]

@@ -1,10 +1,16 @@
 import logging
+from multiprocessing import Process
 from entities.query_message import TITLE_SCORE, QueryMessage
 from rabbitmq.queue import QueueMiddleware
 from sentiment_score_accumulator import SentimentScoreAccumulator
 from utils.initialize import add_query_to_message, encode, get_queue_names, decode, init
 from utils.parser import parse_query_msg, split_line
+from monitor.monitor_client import MonitorClient
 
+
+def send_heartbeat(address, port, name):
+    monitor_client = MonitorClient(address, port, name)
+    monitor_client.run()
 
 def send_results(sentiment_acc: SentimentScoreAccumulator, queue_middleware: QueueMiddleware, query=None):
     for title, score in sentiment_acc.calculate_90th_percentile():
@@ -50,6 +56,10 @@ def main():
     config_params = init(logging)
 
     accumulator = SentimentScoreAccumulator()
+
+    process = Process(target=send_heartbeat, args=(
+        "monitor", 22223, config_params["name"]))
+    process.start()
 
     queue_middleware = QueueMiddleware(get_queue_names(
         config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])

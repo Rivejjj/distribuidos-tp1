@@ -10,35 +10,11 @@ from utils.initialize import add_query_to_message, decode, encode, get_queue_nam
 from book_filter import BookFilter
 from review_filter import ReviewFilter
 from utils.parser import parse_book, parse_query_msg, parse_review
+from monitor.monitor_client import MonitorClient
 
 def send_heartbeat(address, port, name):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    connected = False
-    while not connected:
-        try:
-            sock.connect((address, port))
-            connected = True
-            logging.warning(f"Connected to monitor")
-        except ConnectionRefusedError:
-            connected = False
-            logging.warning(f"Connection refused. Retrying in 1 seconds")
-            time.sleep(1)
-        except socket.gaierror:
-            connected = False
-            logging.warning(f"Host name invalid. Monitor not alive. Retrying in 1 seconds")
-            time.sleep(1)
-
-    while True:
-        try:    
-            logging.warning(f"Sending heartbeat to monitor")
-            sock.send(bytes(name, 'utf-8'))
-            read = sock.recv(1024)
-            logging.warning(f"Answer from server: {read.decode()}")
-            time.sleep(3)
-        except:
-            logging.error("Error while sending heartbeat")
-            break
-
+    monitor_client = MonitorClient(address, port, name)
+    monitor_client.run()
 
 def initialize():
     all_params = ["category",

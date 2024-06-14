@@ -1,11 +1,16 @@
-
 import logging
+from multiprocessing import Process
 from top_rating_accumulator import TopRatingAccumulator
 from entities.query_message import TITLE_SCORE, QueryMessage
 from rabbitmq.queue import QueueMiddleware
 from utils.initialize import add_query_to_message, decode, encode, get_queue_names, init
 from utils.parser import DATA_SEPARATOR, parse_query_msg, split_line
+from monitor.monitor_client import MonitorClient
 
+
+def send_heartbeat(address, port, name):
+    monitor_client = MonitorClient(address, port, name)
+    monitor_client.run()
 
 def process_eof(queue_middleware: QueueMiddleware, accum: TopRatingAccumulator, query=None):
     def callback():
@@ -53,6 +58,10 @@ def main():
 
     top = 10
     accum = TopRatingAccumulator(top)
+
+    process = Process(target=send_heartbeat, args=(
+        "monitor", 22223, config_params["name"]))
+    process.start()
 
     queue_middleware = QueueMiddleware(get_queue_names(
         config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])

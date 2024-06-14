@@ -77,7 +77,7 @@ def get_queue_names(config_params):
 
 def init(logging):
     params = ["logging_level", "id", "input_queue",
-              "output_queues", "query", "previous_workers"]
+              "output_queues", "query", "previous_workers","name"]
 
     config_params = initialize_config(
         map(lambda param: (param, False), params))

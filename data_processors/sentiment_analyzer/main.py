@@ -1,10 +1,16 @@
 import logging
+from multiprocessing import Process
 from entities.query_message import REVIEW, TITLE_SCORE, QueryMessage
 from entities.review import Review
 from sentiment_analyzer import SentimentAnalizer
 from rabbitmq.queue import QueueMiddleware
 from utils.initialize import decode, encode, get_queue_names, init
 from utils.parser import parse_query_msg, parse_review
+from monitor.monitor_client import MonitorClient
+
+def send_heartbeat(address, port, name):
+    monitor_client = MonitorClient(address, port, name)
+    monitor_client.run()
 
 
 def process_eof(queue_middleware: QueueMiddleware):
@@ -44,6 +50,11 @@ def main():
     config_params = init(logging)
 
     sentiment_analyzer = SentimentAnalizer()
+
+
+    process = Process(target=send_heartbeat, args=(
+        "monitor", 22223, config_params["name"]))
+    process.start()
 
     queue_middleware = QueueMiddleware(
         get_queue_names(config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])

@@ -1,13 +1,18 @@
 
 import logging
 import os
+from multiprocessing import Process
 from reviews_counter import ReviewsCounter
 from entities.book import Book
 from entities.query_message import BOOK, REVIEW, TITLE_AUTHORS, TITLE_SCORE, QueryMessage
 from rabbitmq.queue import QueueMiddleware
 from utils.initialize import add_query_to_message, decode, encode, get_queue_names, init
 from utils.parser import parse_book, parse_query_msg, parse_review
+from monitor.monitor_client import MonitorClient
 
+def send_heartbeat(address, port, name):
+    monitor_client = MonitorClient(address, port, name)
+    monitor_client.run()
 
 def process_eof(queue_middleware: QueueMiddleware, counter: ReviewsCounter):
     def callback():
@@ -64,6 +69,10 @@ def main():
 
     min_amount_of_reviews = 500
     counter = ReviewsCounter(min_amount_of_reviews)
+
+    process = Process(target=send_heartbeat, args=(
+        "monitor", 22223, config_params["name"]))
+    process.start()
 
     queue_middleware = QueueMiddleware(get_queue_names(
         config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
