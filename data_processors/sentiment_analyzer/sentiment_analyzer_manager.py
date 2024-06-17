@@ -1,5 +1,5 @@
 from data_processors.data_manager.data_manager import DataManager
-from data_processors.sentiment_analyzer.sentiment_analyzer import SentimentAnalyzer
+from sentiment_analyzer import SentimentAnalyzer
 from entities.query_message import REVIEW
 from entities.title_score_msg import TitleScoreMessage
 from entities.review_msg import ReviewMessage

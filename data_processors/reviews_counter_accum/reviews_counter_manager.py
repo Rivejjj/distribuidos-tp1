@@ -1,5 +1,5 @@
 from data_processors.data_manager.data_manager import DataManager
-from books_author_cp import BookAuthorsCheckpoint
+from book_authors_cp import BookAuthorsCheckpoint
 from reviews_counter_cp import ReviewsCounterCheckpoint
 from reviews_counter import ReviewsCounter
 from entities.book_msg import BookMessage
