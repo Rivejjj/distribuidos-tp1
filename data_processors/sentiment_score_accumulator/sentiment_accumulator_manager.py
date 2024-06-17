@@ -1,4 +1,5 @@
 from data_processors.data_manager.data_manager import DataManager
+from sentiment_accumulator_cp import SentimentAccumulatorCheckpoint
 from entities.batch_title_score_msg import BatchTitleScoreMessage
 from sentiment_score_accumulator import SentimentScoreAccumulator
 from entities.query_message import REVIEW, TITLE_SCORE
@@ -11,6 +12,7 @@ class SentimentAccumulatorManager(DataManager):
     def __init__(self, config_params):
         super().__init__(config_params)
         self.acc = SentimentScoreAccumulator()
+        self.cp = SentimentAccumulatorCheckpoint(self.acc)
 
     def run(self):
         self.queue_middleware.start_consuming(
@@ -23,8 +25,10 @@ class SentimentAccumulatorManager(DataManager):
         self.acc.clear()
 
     def process_title_score(self, title_score_msg: TitleScoreMessage):
+        title, score = title_score_msg.get_title(), title_score_msg.get_score()
         self.acc.add_sentiment_score(
-            title_score_msg.get_title(), title_score_msg.get_score())
+            title, score)
+        self.cp(title, score)
 
     def send_to_next_worker(self, msg):
         self.queue_middleware.send_to_pool(
