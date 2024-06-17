@@ -30,14 +30,20 @@ class QueryMessage(ABC):
     def get_query(self):
         return self.query
 
+    def get_headers(self):
+        headers = [self.id, self.client_id]
+        if self.query:
+            headers.append(self.query)
+
+        return headers
+
     @abstractmethod
     def serialize_data(self) -> str:
         pass
 
     def __str__(self):
-        headers = [self.identifier, self.id, self.client_id]
-        if self.query:
-            headers.append(self.query)
+        headers = self.get_headers()
+        headers.insert(0, self.identifier)
         return f"{QUERY_MSG_SEPARATOR.join([json.dumps(headers), self.serialize_data()])}"
 
     def is_eof(self) -> bool:
