@@ -1,5 +1,6 @@
 import csv
 import json
+import logging
 from entities.authors_msg import AuthorsMessage
 from entities.book import Book
 from entities.book_msg import BookMessage
@@ -38,12 +39,15 @@ def parse_client_msg(msg):
 
 
 def parse_query_msg(msg: bytes):
-    print(decode(msg).split(QUERY_MSG_SEPARATOR, 1))
     header, data = decode(msg).split(QUERY_MSG_SEPARATOR, 1)
+
+    logging.info(f"{header} {data}")
 
     header = json.loads(header)
 
     identifier = int(header[0])
+
+    header.pop(0)
 
     if identifier == BOOK:
         return BookMessage(parse_book(data), *header)

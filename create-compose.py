@@ -30,7 +30,7 @@ def create_docker_compose():
         config['services']['gateway'] = build_gateway()
 
         build_query1(config['services'])
-        # build_query2(config['services'])
+        build_query2(config['services'])
         # build_query3(config['services'])
         # build_query4(config['services'])
         # build_query5(config['services'])
@@ -213,8 +213,9 @@ def build_title_contains_filter(i):
 
 
 def build_decades_accumulator(i):
+    container_name = f'decades_accumulator_{i}'
     return {
-        'container_name': f'decades_accumulator_{i}',
+        'container_name': container_name,
         'image': 'decades_accumulator:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
@@ -225,6 +226,9 @@ def build_decades_accumulator(i):
             'TOP=10',
             f'ID={i}',
             'QUERY=2',
+        ],
+        'volumes': [
+            f'./data/checkpoint/{container_name}:/.checkpoints'
         ],
 
     }

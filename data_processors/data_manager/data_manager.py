@@ -57,28 +57,26 @@ class DataManager(ABC):
             if msg.is_eof():
                 logging.info("Received EOF")
                 self.process_eof()
-                ch.basic_ack(method.delivery_tag)
+                ch.basic_ack(delivery_tag=method.delivery_tag)
                 return
 
             if self.messages_cp.is_sent_msg(msg.get_id()):
-                ch.basic_ack(method.delivery_tag)
+                logging.info(f"Already proccessed message {msg.get_id()}")
+                ch.basic_ack(delivery_tag=method.delivery_tag)
                 return
 
             logging.info(
-                f"Received message: {msg.get_query()}")
+                f"Received message: {msg}")
 
             result = self.process_query_message(msg)
 
-            if result is None:
-                ch.basic_ack(method.delivery_tag)
-                return
-
             self.messages_cp.save(msg.get_id())
 
-            self.send_to_next_worker(result)
+            if result:
+                self.send_to_next_worker(result)
 
             self.messages_cp.mark_msg_as_sent(msg.get_id())
 
-            ch.basic_ack(method.delivery_tag)
+            ch.basic_ack(delivery_tag=method.delivery_tag)
 
         return callback

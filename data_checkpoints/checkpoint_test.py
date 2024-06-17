@@ -202,6 +202,48 @@ class TestCheckpoints(unittest.TestCase):
         self.assertTrue(msg_cp2.is_processed_msg(
             str(msg_cp.checkpoint_interval - 1)))
 
+    def test_decades_recover_from_only_checkpoint(self):
+        r1, data_cp = new_filter()
+
+        for i in range(data_cp.checkpoint_interval):
+            filter_save_new_title(r1, data_cp, f"Title {i}")
+
+        r2, _ = new_filter()
+
+        self.assertEqual(r1.titles, r2.titles)
+
+    def test_decades_recover_from_only_wal(self):
+        r1, data_cp = new_filter()
+
+        for i in range(data_cp.checkpoint_interval // 2):
+            filter_save_new_title(r1, data_cp, f"Title {i}")
+
+        r2, _ = new_filter()
+
+        self.assertEqual(r1.titles, r2.titles)
+
+    def test_decades_recover_filter_from_correct_file(self):
+        review_filter, _ = create_filter_with_books()
+
+        review_filter2, _ = new_filter()
+
+        self.assertEqual(review_filter2.titles, review_filter.titles)
+
+    def test_decades_recover_filter_from_a_corrupted_file(self):
+        """
+        Checkpoint intenta levantarse de un archivo corrupto, donde la escritura del cambio fue interrumpida
+        Casos contemplados:
+            * Se escribe el contenido del cambio a la mitad
+            * Un cambio escrito correctamente
+            * Solo se escribe la cantidad de caracteres del cambio
+            * No se escribe la cantidad de caracteres por completo
+            * Linea vacia
+        """
+        review_filter, _ = new_filter(
+            'data_checkpoints/test-datasets/corrupted-wal')
+
+        self.assertEqual(len(review_filter.titles), 1)
+
     def tearDown(self) -> None:
         try:
             shutil.rmtree('data_checkpoints/.checkpoints/tests')

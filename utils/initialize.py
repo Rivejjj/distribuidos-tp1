@@ -96,7 +96,7 @@ def encode(message):
     return str(message).encode('utf-8')
 
 
-def decode(message):
+def decode(message: bytes):
     return message.decode('utf-8')
 
 

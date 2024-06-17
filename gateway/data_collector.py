@@ -87,10 +87,10 @@ class DataCollector:
 
     def handle_result(self):
         def callback(ch, method, properties, body):
-            logging.info(f"[QUERY RESULT]: {decode(body)}")
-            msg = decode(body)
+            logging.info(f"[QUERY RESULT]: {body}")
+            msg = parse_query_msg(body)
 
-            if msg == "EOF":
+            if msg.is_eof():
                 self.received_eofs += 1
                 logging.info(f"[FINAL] EOF received {self.received_eofs}")
 
@@ -98,14 +98,17 @@ class DataCollector:
                     logging.info("All queries finished")
                     send_message(self.client_sock, "EOF")
                     self.received_eofs = 0
+                ch.basic_ack(delivery_tag=method.delivery_tag)
+
                 return
 
-            msg = parse_query_msg(msg)
+            logging.info(f"Received result {msg}")
 
             query = msg.get_query()
 
             if not query:
                 logging.error("No query found in message")
+                ch.basic_ack(delivery_tag=method.delivery_tag)
                 return
 
             client_data = msg.serialize_data().replace(DATA_SEPARATOR, ',')

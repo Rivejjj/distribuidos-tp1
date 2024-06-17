@@ -179,9 +179,9 @@ class Server:
     def __create_q_msg_from_book_for_query(self, book: Book, query_num: int):
         self.__eliminate_unnecesary_book_fields(book, query_num)
         self.cur_id += 1
-        return BookMessage(book, BOOK, self.cur_id, self.client_id)
+        return BookMessage(book, self.cur_id, self.client_id)
 
     def __create_q_msg_from_review_for_query(self, review: Review, query_num: int):
         self.__eliminate_unnecesary_review_fields(review, query_num)
         self.cur_id += 1
-        return ReviewMessage(review, REVIEW, self.cur_id, self.client_id)
+        return ReviewMessage(review, self.cur_id, self.client_id)

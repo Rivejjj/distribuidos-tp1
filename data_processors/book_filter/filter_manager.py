@@ -35,10 +35,12 @@ class FilterManager(DataManager):
 
     def send_to_next_worker(self, result):
         msg, title = result
+        logging.info(f"Send to next queue: {msg} {title}")
         self.queue_middleware.send_to_pool(
             encode(msg), title)
 
     def process_book(self, book_msg: BookMessage):
+        logging.info(f"New book")
         book = book_msg.get_book()
         if not self.book_filter.filter(book):
             return
@@ -48,7 +50,7 @@ class FilterManager(DataManager):
             self.review_filter.add_title(book.title)
             self.review_filter_cp.save(book.title)
 
-        return BookMessage(book, BOOK, book_msg.get_id(), book_msg.get_client_id(), self.query), book.title
+        return BookMessage(book, book_msg.get_id(), book_msg.get_client_id(), self.query), book.title
 
     def process_review(self, review_msg: ReviewMessage):
         review = review_msg.get_review()
@@ -56,10 +58,12 @@ class FilterManager(DataManager):
             return
         logging.info(f"Review accepted: {review.title}")
 
-        return ReviewMessage(review, REVIEW, review_msg.get_id(), review_msg.get_client_id(), self.query), review.title
+        return ReviewMessage(review, review_msg.get_id(), review_msg.get_client_id(), self.query), review.title
 
     def process_query_message(self, msg):
         if msg.get_identifier() == BOOK and msg.get_book():
             return self.process_book(msg)
         elif msg.get_identifier() == REVIEW:
             return self.process_review(msg)
+
+        logging.info(f"Not detected {msg.get_book()}")

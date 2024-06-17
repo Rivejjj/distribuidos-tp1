@@ -46,11 +46,6 @@ def start_data_collector(config_params):
 
 def main():
     config_params = initialize()
-    server = Server(
-        config_params["port"],
-        config_params["listen_backlog"],
-        output_queues=get_queue_names(config_params)
-    )
 
     data_collector_process = Process(
         target=start_data_collector, args=(config_params,))
@@ -58,6 +53,12 @@ def main():
     signal.signal(signal.SIGTERM, lambda signal,
                   frame: data_collector_process.terminate())
     data_collector_process.start()
+
+    server = Server(
+        config_params["port"],
+        config_params["listen_backlog"],
+        output_queues=get_queue_names(config_params)
+    )
 
     server.run()
 

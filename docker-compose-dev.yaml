@@ -154,3 +154,45 @@ services:
       - PREVIOUS_WORKERS=3
     volumes:
       - ./data/checkpoint/title_contains_filter_2:/.checkpoints
+  decades_accumulator_0:
+    container_name: decades_accumulator_0
+    image: decades_accumulator:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - INPUT_QUEUE=query2
+      - OUTPUT_QUEUES=results:1
+      - TOP=10
+      - ID=0
+      - QUERY=2
+    volumes:
+      - ./data/checkpoint/decades_accumulator_0:/.checkpoints
+  decades_accumulator_1:
+    container_name: decades_accumulator_1
+    image: decades_accumulator:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - INPUT_QUEUE=query2
+      - OUTPUT_QUEUES=results:1
+      - TOP=10
+      - ID=1
+      - QUERY=2
+    volumes:
+      - ./data/checkpoint/decades_accumulator_1:/.checkpoints
+  decades_accumulator_2:
+    container_name: decades_accumulator_2
+    image: decades_accumulator:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - INPUT_QUEUE=query2
+      - OUTPUT_QUEUES=results:1
+      - TOP=10
+      - ID=2
+      - QUERY=2
+    volumes:
+      - ./data/checkpoint/decades_accumulator_2:/.checkpoints
