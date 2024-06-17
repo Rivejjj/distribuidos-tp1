@@ -1,6 +1,13 @@
 from configparser import ConfigParser
 import os
-import socket
+import random
+import string
+
+alphabet = string.ascii_lowercase + string.digits
+
+
+def uuid():
+    return ''.join(random.choices(alphabet, k=8))
 
 
 def initialize_config(params):

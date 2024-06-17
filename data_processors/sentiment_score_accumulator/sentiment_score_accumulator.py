@@ -1,15 +1,13 @@
 class SentimentScoreAccumulator:
     def __init__(self):
-        self.title_sentiment_score = {}  # title -> (count, average)
+        self.title_sentiment_score = {}  # title -> (count, total)
 
     def add_sentiment_score(self, title, sentiment_score):
-        if title not in self.title_sentiment_score:
-            self.title_sentiment_score[title] = (1, float(sentiment_score))
-        else:
-            count, total = self.title_sentiment_score[title]
+        count, total = self.title_sentiment_score.get(
+            title, (0, 0))
 
-            self.title_sentiment_score[title] = (
-                count + 1, float(sentiment_score) + total)
+        self.title_sentiment_score[title] = (
+            count + 1, total + float(sentiment_score))
 
     def calculate_90th_percentile(self):
         title_scores = [(title, score[1] / score[0])
