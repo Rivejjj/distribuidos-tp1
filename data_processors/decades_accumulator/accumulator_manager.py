@@ -15,10 +15,6 @@ class AccumulatorManager(DataManager):
         self.accum = Accumulator()
         self.accum_cp = AccumulatorCheckpoint(self.accum)
 
-    def run(self):
-        self.queue_middleware.start_consuming(
-            self.process_message())
-
     def eof_cb(self, msg):
         return self.accum.clear()
 

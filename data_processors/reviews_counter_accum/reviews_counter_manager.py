@@ -18,10 +18,6 @@ class ReviewsCounterManager(DataManager):
         self.book_authors_cp = BookAuthorsCheckpoint(self.counter)
         self.sent_titles = set()
 
-    def run(self):
-        self.queue_middleware.start_consuming(
-            self.process_message())
-
     def eof_cb(self, msg):
         return self.counter.clear()
 

@@ -3,7 +3,7 @@ TITLE_POSITON = 0
 
 
 class TopRatingAccumulator:
-    def __init__(self, top):
+    def __init__(self, top=10):
         self.top = top
         self.books = {}  # title -> avg_rating
 
