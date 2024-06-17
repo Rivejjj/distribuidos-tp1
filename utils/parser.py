@@ -12,8 +12,7 @@ from entities.review_msg import ReviewMessage
 from entities.title_authors_msg import TitleAuthorsMessage
 from entities.title_score_msg import TitleScoreMessage
 from utils.initialize import decode
-
-DATA_SEPARATOR = "\t"
+from utils.to_str import DATA_SEPARATOR
 
 
 def parse_book(data):

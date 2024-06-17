@@ -196,3 +196,196 @@ services:
       - QUERY=2
     volumes:
       - ./data/checkpoint/decades_accumulator_2:/.checkpoints
+  1990s_published_year_filter_0:
+    container_name: 1990s_published_year_filter_0
+    image: book_filter:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - INPUT_QUEUE=query3
+      - OUTPUT_QUEUES=90s_filtered:3
+      - PUBLISHED_YEAR_RANGE=1990-1999
+      - ID=0
+      - SAVE_BOOKS=True
+    volumes:
+      - ./data/checkpoint/1990s_published_year_filter_0:/.checkpoints
+  1990s_published_year_filter_1:
+    container_name: 1990s_published_year_filter_1
+    image: book_filter:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - INPUT_QUEUE=query3
+      - OUTPUT_QUEUES=90s_filtered:3
+      - PUBLISHED_YEAR_RANGE=1990-1999
+      - ID=1
+      - SAVE_BOOKS=True
+    volumes:
+      - ./data/checkpoint/1990s_published_year_filter_1:/.checkpoints
+  1990s_published_year_filter_2:
+    container_name: 1990s_published_year_filter_2
+    image: book_filter:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - INPUT_QUEUE=query3
+      - OUTPUT_QUEUES=90s_filtered:3
+      - PUBLISHED_YEAR_RANGE=1990-1999
+      - ID=2
+      - SAVE_BOOKS=True
+    volumes:
+      - ./data/checkpoint/1990s_published_year_filter_2:/.checkpoints
+  reviews_counter_0:
+    container_name: reviews_counter_0
+    image: reviews_counter_accum:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - INPUT_QUEUE=90s_filtered
+      - OUTPUT_QUEUES=500_reviews:1;results:1
+      - ID=0
+      - QUERY=3
+      - PREVIOUS_WORKERS=3
+    volumes:
+      - ./data/checkpoint/reviews_counter_0:/.checkpoints
+  reviews_counter_1:
+    container_name: reviews_counter_1
+    image: reviews_counter_accum:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - INPUT_QUEUE=90s_filtered
+      - OUTPUT_QUEUES=500_reviews:1;results:1
+      - ID=1
+      - QUERY=3
+      - PREVIOUS_WORKERS=3
+    volumes:
+      - ./data/checkpoint/reviews_counter_1:/.checkpoints
+  reviews_counter_2:
+    container_name: reviews_counter_2
+    image: reviews_counter_accum:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - INPUT_QUEUE=90s_filtered
+      - OUTPUT_QUEUES=500_reviews:1;results:1
+      - ID=2
+      - QUERY=3
+      - PREVIOUS_WORKERS=3
+    volumes:
+      - ./data/checkpoint/reviews_counter_2:/.checkpoints
+  avg_rating_accumulator:
+    container_name: avg_rating_accumulator
+    image: top_rating_accumulator:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - INPUT_QUEUE=500_reviews
+      - OUTPUT_QUEUES=results:1
+      - ID=0
+      - QUERY=4
+      - PREVIOUS_WORKERS=3
+    volumes:
+      - ./data/checkpoint/avg_rating_accumulator:/.checkpoints
+  fiction_category_filter_0:
+    container_name: fiction_category_filter_0
+    image: book_filter:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - INPUT_QUEUE=query4
+      - OUTPUT_QUEUES=fiction:3
+      - CATEGORY=fiction
+      - ID=0
+      - SAVE_BOOKS=True
+    volumes:
+      - ./data/checkpoint/fiction_category_filter_0:/.checkpoints
+  fiction_category_filter_1:
+    container_name: fiction_category_filter_1
+    image: book_filter:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - INPUT_QUEUE=query4
+      - OUTPUT_QUEUES=fiction:3
+      - CATEGORY=fiction
+      - ID=1
+      - SAVE_BOOKS=True
+    volumes:
+      - ./data/checkpoint/fiction_category_filter_1:/.checkpoints
+  fiction_category_filter_2:
+    container_name: fiction_category_filter_2
+    image: book_filter:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - INPUT_QUEUE=query4
+      - OUTPUT_QUEUES=fiction:3
+      - CATEGORY=fiction
+      - ID=2
+      - SAVE_BOOKS=True
+    volumes:
+      - ./data/checkpoint/fiction_category_filter_2:/.checkpoints
+  sentiment_analyzer_0:
+    container_name: sentiment_analyzer_0
+    image: sentiment_analyzer:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - INPUT_QUEUE=fiction
+      - OUTPUT_QUEUES=sentiment_score:1
+      - ID=0
+      - PREVIOUS_WORKERS=3
+    volumes:
+      - ./data/checkpoint/sentiment_analyzer_0:/.checkpoints
+  sentiment_analyzer_1:
+    container_name: sentiment_analyzer_1
+    image: sentiment_analyzer:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - INPUT_QUEUE=fiction
+      - OUTPUT_QUEUES=sentiment_score:1
+      - ID=1
+      - PREVIOUS_WORKERS=3
+    volumes:
+      - ./data/checkpoint/sentiment_analyzer_1:/.checkpoints
+  sentiment_analyzer_2:
+    container_name: sentiment_analyzer_2
+    image: sentiment_analyzer:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - INPUT_QUEUE=fiction
+      - OUTPUT_QUEUES=sentiment_score:1
+      - ID=2
+      - PREVIOUS_WORKERS=3
+    volumes:
+      - ./data/checkpoint/sentiment_analyzer_2:/.checkpoints
+  sentiment_score_accumulator:
+    container_name: sentiment_score_accumulator
+    image: sentiment_score_accumulator:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - INPUT_QUEUE=sentiment_score
+      - OUTPUT_QUEUES=results:1
+      - ID=0
+      - QUERY=5
+      - PREVIOUS_WORKERS=3
+    volumes:
+      - ./data/checkpoint/sentiment_score_accumulator:/.checkpoints

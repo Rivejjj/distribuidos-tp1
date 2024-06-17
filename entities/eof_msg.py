@@ -6,4 +6,4 @@ class EOFMessage(QueryMessage):
         super().__init__(EOF, id, client_id)
 
     def serialize_data(self) -> str:
-        return None
+        return ""

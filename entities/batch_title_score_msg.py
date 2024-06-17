@@ -1,6 +1,7 @@
 from entities.query_message import BATCH_TITLE_SCORE, QueryMessage
-from utils.parser import DATA_SEPARATOR
 from typing import List, Tuple
+
+from utils.to_str import to_str
 
 TitleScore = Tuple[str, float]
 
@@ -12,5 +13,5 @@ class BatchTitleScoreMessage(QueryMessage):
 
     def serialize_data(self) -> str:
         title_score_str = map(
-            lambda title, score: f"{title}{DATA_SEPARATOR}{score}", self.content)
+            lambda title, score: to_str([title, score]), self.content)
         return "\n".join(title_score_str)

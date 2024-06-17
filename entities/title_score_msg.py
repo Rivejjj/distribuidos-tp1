@@ -1,5 +1,5 @@
 from entities.query_message import TITLE_SCORE, QueryMessage
-from utils.parser import DATA_SEPARATOR
+from utils.to_str import to_str
 
 
 class TitleScoreMessage(QueryMessage):
@@ -15,4 +15,4 @@ class TitleScoreMessage(QueryMessage):
         return self.score
 
     def serialize_data(self) -> str:
-        return DATA_SEPARATOR.join([self.title, str(self.score)])
+        return to_str([self.title, self.score])

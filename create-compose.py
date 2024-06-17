@@ -31,9 +31,9 @@ def create_docker_compose():
 
         build_query1(config['services'])
         build_query2(config['services'])
-        # build_query3(config['services'])
-        # build_query4(config['services'])
-        # build_query5(config['services'])
+        build_query3(config['services'])
+        build_query4(config['services'])
+        build_query5(config['services'])
 
         # config['networks'] = build_network()
 
@@ -235,8 +235,9 @@ def build_decades_accumulator(i):
 
 
 def build_1990s_published_year_filter(i):
+    container_name = f'1990s_published_year_filter_{i}'
     return {
-        'container_name': f'1990s_published_year_filter_{i}',
+        'container_name': container_name,
         'image': 'book_filter:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
@@ -248,14 +249,16 @@ def build_1990s_published_year_filter(i):
             f'ID={i}',
             'SAVE_BOOKS=True',
         ],
-
+        'volumes': [
+            f'./data/checkpoint/{container_name}:/.checkpoints'
+        ],
     }
 
 
 def build_reviews_counter(i):
-
+    container_name = f'reviews_counter_{i}'
     return {
-        'container_name': f'reviews_counter_{i}',
+        'container_name': container_name,
         'image': 'reviews_counter_accum:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
@@ -267,14 +270,16 @@ def build_reviews_counter(i):
             'QUERY=3',
             f'PREVIOUS_WORKERS={WORKERS}'
         ],
-
-
+        'volumes': [
+            f'./data/checkpoint/{container_name}:/.checkpoints'
+        ],
     }
 
 
 def build_avg_rating_accumulator():
+    container_name = 'avg_rating_accumulator'
     return {
-        'container_name': 'avg_rating_accumulator',
+        'container_name': container_name,
         'image': 'top_rating_accumulator:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
@@ -286,13 +291,17 @@ def build_avg_rating_accumulator():
             'QUERY=4',
             f'PREVIOUS_WORKERS={WORKERS}'
         ],
+        'volumes': [
+            f'./data/checkpoint/{container_name}:/.checkpoints'
+        ],
 
     }
 
 
 def build_fiction_category_filter(i):
+    container_name = f'fiction_category_filter_{i}'
     return {
-        'container_name': f'fiction_category_filter_{i}',
+        'container_name': container_name,
         'image': 'book_filter:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
@@ -304,13 +313,17 @@ def build_fiction_category_filter(i):
             f'ID={i}',
             'SAVE_BOOKS=True'
         ],
+        'volumes': [
+            f'./data/checkpoint/{container_name}:/.checkpoints'
+        ],
 
     }
 
 
 def build_sentiment_analyzer(i):
+    container_name = f'sentiment_analyzer_{i}'
     return {
-        'container_name': f'sentiment_analyzer_{i}',
+        'container_name': container_name,
         'image': 'sentiment_analyzer:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
@@ -321,13 +334,17 @@ def build_sentiment_analyzer(i):
             f'ID={i}',
             f'PREVIOUS_WORKERS={WORKERS}'
         ],
+        'volumes': [
+            f'./data/checkpoint/{container_name}:/.checkpoints'
+        ],
 
     }
 
 
 def build_sentiment_score_accumulator():
+    container_name = 'sentiment_score_accumulator'
     return {
-        'container_name': 'sentiment_score_accumulator',
+        'container_name': container_name,
         'image': 'sentiment_score_accumulator:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
@@ -338,6 +355,9 @@ def build_sentiment_score_accumulator():
             'ID=0',
             'QUERY=5',
             f'PREVIOUS_WORKERS={WORKERS}'
+        ],
+        'volumes': [
+            f'./data/checkpoint/{container_name}:/.checkpoints'
         ],
 
     }

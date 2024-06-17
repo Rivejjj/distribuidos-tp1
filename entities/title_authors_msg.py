@@ -1,5 +1,5 @@
 from entities.query_message import TITLE_AUTHORS, QueryMessage
-from utils.parser import DATA_SEPARATOR
+from utils.to_str import to_str
 
 
 class TitleAuthorsMessage(QueryMessage):
@@ -15,4 +15,4 @@ class TitleAuthorsMessage(QueryMessage):
         return self.authors
 
     def serialize_data(self) -> str:
-        return DATA_SEPARATOR.join([self.title, self.authors])
+        return to_str([self.title, self.authors])
