@@ -2,12 +2,15 @@ import csv
 import json
 import logging
 from entities.authors_msg import AuthorsMessage
+from entities.batch_title_score_msg import BatchTitleScoreMessage
 from entities.book import Book
 from entities.book_msg import BookMessage
 from entities.eof_msg import EOFMessage
-from entities.query_message import AUTHORS, BOOK, EOF, QUERY_MSG_SEPARATOR, REVIEW
+from entities.query_message import AUTHORS, BATCH_TITLE_SCORE, BOOK, EOF, QUERY_MSG_SEPARATOR, REVIEW, TITLE_AUTHORS, TITLE_SCORE
 from entities.review import Review
 from entities.review_msg import ReviewMessage
+from entities.title_authors_msg import TitleAuthorsMessage
+from entities.title_score_msg import TitleScoreMessage
 from utils.initialize import decode
 
 DATA_SEPARATOR = "\t"
@@ -53,9 +56,15 @@ def parse_query_msg(msg: bytes):
         return BookMessage(parse_book(data), *header)
     elif identifier == REVIEW:
         return ReviewMessage(parse_review(data), *header)
+    elif identifier == TITLE_AUTHORS:
+        return TitleAuthorsMessage(*data.split(DATA_SEPARATOR), *header)
     elif identifier == AUTHORS:
         return AuthorsMessage(*data.split(DATA_SEPARATOR), *header)
+    elif identifier == TITLE_SCORE:
+        return TitleScoreMessage(*data.split(DATA_SEPARATOR), *header)
     elif identifier == EOF:
         return EOFMessage(*header)
+    elif identifier == BATCH_TITLE_SCORE:
+        return BatchTitleScoreMessage(*data.split(DATA_SEPARATOR), *header)
     else:
         raise Exception('Mensaje desconocido')
