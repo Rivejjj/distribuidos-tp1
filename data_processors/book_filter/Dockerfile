@@ -1,5 +1,6 @@
 FROM rabbitmq-python-base:0.0.1
 COPY data_processors/book_filter /
+COPY data_processors/data_manager /data_processors/data_manager
 COPY entities /entities
 COPY rabbitmq/queue.py /rabbitmq/queue.py
 COPY utils /utils

@@ -1,0 +1,84 @@
+from abc import ABC, abstractmethod
+from functools import partial
+import logging
+
+from data_checkpoints.messages_checkpoint import MessagesCheckpoint
+from rabbitmq.queue import QueueMiddleware
+from utils.initialize import get_queue_names
+from utils.parser import parse_query_msg
+
+
+class DataManager(ABC):
+    def __init__(self, config_params):
+        self.messages_cp = MessagesCheckpoint('.checkpoints/msgs')
+
+        if 'no-queue' not in config_params:
+            self.queue_middleware = QueueMiddleware(get_queue_names(
+                config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
+
+        self.query = config_params["query"]
+
+    def run(self):
+        self.queue_middleware.start_consuming(
+            self.process_message())
+
+    @abstractmethod
+    def eof_cb(self, eof_msg):
+        """
+        Metodo que se llama al cumplir los requerimientos del eof
+        """
+        pass
+
+    @abstractmethod
+    def send_to_next_worker(self, result):
+        """
+        Envia el resultado del procesamiento al siguiente pool de workers
+        """
+        pass
+
+    @abstractmethod
+    def process_query_message(self, msg):
+        """
+        Procesa la query message despues de haberse validado
+        Tiene que tener en cuenta que el mensaje pueda ya estar procesado, simplemente tiene que enviarlo al siguiente worker
+        """
+        pass
+
+    def process_eof(self, eof_msg):
+        self.queue_middleware.send_eof(partial(self.eof_cb, eof_msg))
+
+    def process_message(self):
+        """
+        Metodo que se llama al recibir un mensaje
+        """
+        def callback(ch, method, properties, body):
+            msg = parse_query_msg(body)
+
+            if msg.is_eof():
+                logging.info("Received EOF")
+                self.process_eof()
+                ch.basic_ack(method.delivery_tag)
+                return
+
+            if self.messages_cp.is_sent_msg(msg.get_id()):
+                ch.basic_ack(method.delivery_tag)
+                return
+
+            logging.info(
+                f"Received message: {msg.get_query()}")
+
+            result = self.process_query_message(msg)
+
+            if result is None:
+                ch.basic_ack(method.delivery_tag)
+                return
+
+            self.messages_cp.save(msg.get_id())
+
+            self.send_to_next_worker(result)
+
+            self.messages_cp.mark_msg_as_sent(msg.get_id())
+
+            ch.basic_ack(method.delivery_tag)
+
+        return callback

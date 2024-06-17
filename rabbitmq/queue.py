@@ -3,6 +3,7 @@ import signal
 import time
 import pika
 
+from entities.eof_msg import EOFMessage
 from utils.initialize import add_query_to_message, encode
 
 
@@ -92,7 +93,6 @@ class QueueMiddleware:
                 self.send(name, message)
 
     def send_eof(self, callback=None):
-        msg = "EOF"
 
         self.received_eofs += 1
         logging.info(f"[QUEUE] Received EOFs {self.received_eofs}")
@@ -104,7 +104,8 @@ class QueueMiddleware:
             if callback:
                 logging.info("[QUEUE] Executing callback")
                 callback()
-            self.send_to_all(encode(msg))
+            # Cambiar urgente despues de pensarlo
+            self.send_to_all(encode(EOFMessage(0, 0)))
             logging.info(
                 f"[QUEUE] Sending EOF to next workers {self.output_queues}")
             return True

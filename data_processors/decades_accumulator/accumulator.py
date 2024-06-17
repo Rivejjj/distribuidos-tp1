@@ -21,6 +21,7 @@ class Accumulator:
         result = len(self.authors[author]) >= 10
         if result:
             self.completed_authors.add(author)
+            self.authors.pop(author)
         return result
 
     def __add_author(self, author, decade):

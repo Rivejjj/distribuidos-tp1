@@ -7,6 +7,7 @@ REVIEW = 2
 TITLE_AUTHORS = 3
 AUTHORS = 4
 TITLE_SCORE = 5
+EOF = 6
 QUERY_MSG_SEPARATOR = ";"
 
 
@@ -38,3 +39,6 @@ class QueryMessage(ABC):
         if self.query:
             headers.append(self.query)
         return f"{QUERY_MSG_SEPARATOR.join([json.dumps(headers), self.serialize_data()])}"
+
+    def is_eof(self) -> bool:
+        return self.identifier == EOF
