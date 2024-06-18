@@ -58,7 +58,6 @@ class EOFQueue:
         ids = split_msg[1].split(IDS_SEPARATOR)
 
         if len(ids) == self.total_workers or (self.id not in ids and len(ids) + 1 == self.total_workers):
-            print("EOF reached")
             self.all_received_callback()
             return
 

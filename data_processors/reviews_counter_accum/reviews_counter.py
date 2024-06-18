@@ -1,29 +1,39 @@
 
+from entities.book import Book
+from entities.review import Review
+
+
 class ReviewsCounter:
-    def __init__(self, min_reviews):
+    def __init__(self, min_reviews=500):
         self.min_reviews = min_reviews
         self.books = {}  # title -> author
         self.reviews = {}  # title -> (review_count,average_rating)
 
-    def add_book(self, book):
+    def add_book(self, book: Book):
         self.books[book.title] = book.authors
 
-    def add_review(self, review):
-        if review.title in self.reviews:
-            count, average = self.reviews[review.title]
-            review_score = review.score
-            new_avg = float(average) + (float(review_score) -
-                                        float(average)) / (count + 1)
-            self.reviews[review.title] = (count + 1, new_avg)
-        else:
-            score = review.score
-            self.reviews[review.title] = (1, score)
+    def add_review(self, review: Review):
+        title = review.title
+        score = float(review.score)
 
-        if int(self.reviews[review.title][0]) >= self.min_reviews:
-            average = self.reviews[review.title][1]
-            author = self.books[review.title]
-            return author, review.title, average
-        return None, None, None
+        count, total = self.reviews.get(title, (0, 0))
+        count += 1
+        total += score
+        self.reviews[title] = (count, total)
+
+        return self.review_more_than_min(review)
+
+    def review_more_than_min(self, review: Review):
+        title = review.title
+
+        count, total = self.reviews.get(title, (0, 0))
+
+        if count < self.min_reviews:
+            return None, None, None
+
+        average = total / count
+        author = self.books[title]
+        return author, title, average
 
     def clear(self):
         self.books = {}

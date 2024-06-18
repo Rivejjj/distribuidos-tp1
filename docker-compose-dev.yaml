@@ -1,7 +1,7 @@
 name: tp1
 services:
-  sender_client:
-    container_name: sender_client
+  sender_client_0:
+    container_name: sender_client_0
     image: client:latest
     entrypoint: python3 /main.py
     depends_on:
@@ -37,6 +37,8 @@ services:
       - CATEGORY=Computers
       - ID=0
       - IS_EQUAL=True
+    volumes:
+      - ./data/checkpoint/computers_category_filter_0:/.checkpoints
   computers_category_filter_1:
     container_name: computers_category_filter_1
     image: book_filter:latest
@@ -49,6 +51,8 @@ services:
       - CATEGORY=Computers
       - ID=1
       - IS_EQUAL=True
+    volumes:
+      - ./data/checkpoint/computers_category_filter_1:/.checkpoints
   computers_category_filter_2:
     container_name: computers_category_filter_2
     image: book_filter:latest
@@ -61,6 +65,8 @@ services:
       - CATEGORY=Computers
       - ID=2
       - IS_EQUAL=True
+    volumes:
+      - ./data/checkpoint/computers_category_filter_2:/.checkpoints
   2000s_published_year_filter_0:
     container_name: 2000s_published_year_filter_0
     image: book_filter:latest
@@ -73,6 +79,8 @@ services:
       - PUBLISHED_YEAR_RANGE=2000-2023
       - ID=0
       - PREVIOUS_WORKERS=3
+    volumes:
+      - ./data/checkpoint/2000s_published_year_filter_0:/.checkpoints
   2000s_published_year_filter_1:
     container_name: 2000s_published_year_filter_1
     image: book_filter:latest
@@ -85,6 +93,8 @@ services:
       - PUBLISHED_YEAR_RANGE=2000-2023
       - ID=1
       - PREVIOUS_WORKERS=3
+    volumes:
+      - ./data/checkpoint/2000s_published_year_filter_1:/.checkpoints
   2000s_published_year_filter_2:
     container_name: 2000s_published_year_filter_2
     image: book_filter:latest
@@ -97,6 +107,8 @@ services:
       - PUBLISHED_YEAR_RANGE=2000-2023
       - ID=2
       - PREVIOUS_WORKERS=3
+    volumes:
+      - ./data/checkpoint/2000s_published_year_filter_2:/.checkpoints
   title_contains_filter_0:
     container_name: title_contains_filter_0
     image: book_filter:latest
@@ -110,6 +122,8 @@ services:
       - ID=0
       - QUERY=1
       - PREVIOUS_WORKERS=3
+    volumes:
+      - ./data/checkpoint/title_contains_filter_0:/.checkpoints
   title_contains_filter_1:
     container_name: title_contains_filter_1
     image: book_filter:latest
@@ -123,6 +137,8 @@ services:
       - ID=1
       - QUERY=1
       - PREVIOUS_WORKERS=3
+    volumes:
+      - ./data/checkpoint/title_contains_filter_1:/.checkpoints
   title_contains_filter_2:
     container_name: title_contains_filter_2
     image: book_filter:latest
@@ -136,6 +152,8 @@ services:
       - ID=2
       - QUERY=1
       - PREVIOUS_WORKERS=3
+    volumes:
+      - ./data/checkpoint/title_contains_filter_2:/.checkpoints
   decades_accumulator_0:
     container_name: decades_accumulator_0
     image: decades_accumulator:latest
@@ -148,6 +166,8 @@ services:
       - TOP=10
       - ID=0
       - QUERY=2
+    volumes:
+      - ./data/checkpoint/decades_accumulator_0:/.checkpoints
   decades_accumulator_1:
     container_name: decades_accumulator_1
     image: decades_accumulator:latest
@@ -160,6 +180,8 @@ services:
       - TOP=10
       - ID=1
       - QUERY=2
+    volumes:
+      - ./data/checkpoint/decades_accumulator_1:/.checkpoints
   decades_accumulator_2:
     container_name: decades_accumulator_2
     image: decades_accumulator:latest
@@ -172,6 +194,8 @@ services:
       - TOP=10
       - ID=2
       - QUERY=2
+    volumes:
+      - ./data/checkpoint/decades_accumulator_2:/.checkpoints
   1990s_published_year_filter_0:
     container_name: 1990s_published_year_filter_0
     image: book_filter:latest
@@ -184,6 +208,8 @@ services:
       - PUBLISHED_YEAR_RANGE=1990-1999
       - ID=0
       - SAVE_BOOKS=True
+    volumes:
+      - ./data/checkpoint/1990s_published_year_filter_0:/.checkpoints
   1990s_published_year_filter_1:
     container_name: 1990s_published_year_filter_1
     image: book_filter:latest
@@ -196,6 +222,8 @@ services:
       - PUBLISHED_YEAR_RANGE=1990-1999
       - ID=1
       - SAVE_BOOKS=True
+    volumes:
+      - ./data/checkpoint/1990s_published_year_filter_1:/.checkpoints
   1990s_published_year_filter_2:
     container_name: 1990s_published_year_filter_2
     image: book_filter:latest
@@ -208,6 +236,8 @@ services:
       - PUBLISHED_YEAR_RANGE=1990-1999
       - ID=2
       - SAVE_BOOKS=True
+    volumes:
+      - ./data/checkpoint/1990s_published_year_filter_2:/.checkpoints
   reviews_counter_0:
     container_name: reviews_counter_0
     image: reviews_counter_accum:latest
@@ -220,6 +250,8 @@ services:
       - ID=0
       - QUERY=3
       - PREVIOUS_WORKERS=3
+    volumes:
+      - ./data/checkpoint/reviews_counter_0:/.checkpoints
   reviews_counter_1:
     container_name: reviews_counter_1
     image: reviews_counter_accum:latest
@@ -232,6 +264,8 @@ services:
       - ID=1
       - QUERY=3
       - PREVIOUS_WORKERS=3
+    volumes:
+      - ./data/checkpoint/reviews_counter_1:/.checkpoints
   reviews_counter_2:
     container_name: reviews_counter_2
     image: reviews_counter_accum:latest
@@ -244,6 +278,8 @@ services:
       - ID=2
       - QUERY=3
       - PREVIOUS_WORKERS=3
+    volumes:
+      - ./data/checkpoint/reviews_counter_2:/.checkpoints
   avg_rating_accumulator:
     container_name: avg_rating_accumulator
     image: top_rating_accumulator:latest
@@ -256,6 +292,8 @@ services:
       - ID=0
       - QUERY=4
       - PREVIOUS_WORKERS=3
+    volumes:
+      - ./data/checkpoint/avg_rating_accumulator:/.checkpoints
   fiction_category_filter_0:
     container_name: fiction_category_filter_0
     image: book_filter:latest
@@ -268,6 +306,8 @@ services:
       - CATEGORY=fiction
       - ID=0
       - SAVE_BOOKS=True
+    volumes:
+      - ./data/checkpoint/fiction_category_filter_0:/.checkpoints
   fiction_category_filter_1:
     container_name: fiction_category_filter_1
     image: book_filter:latest
@@ -280,6 +320,8 @@ services:
       - CATEGORY=fiction
       - ID=1
       - SAVE_BOOKS=True
+    volumes:
+      - ./data/checkpoint/fiction_category_filter_1:/.checkpoints
   fiction_category_filter_2:
     container_name: fiction_category_filter_2
     image: book_filter:latest
@@ -292,6 +334,8 @@ services:
       - CATEGORY=fiction
       - ID=2
       - SAVE_BOOKS=True
+    volumes:
+      - ./data/checkpoint/fiction_category_filter_2:/.checkpoints
   sentiment_analyzer_0:
     container_name: sentiment_analyzer_0
     image: sentiment_analyzer:latest
@@ -303,6 +347,8 @@ services:
       - OUTPUT_QUEUES=sentiment_score:1
       - ID=0
       - PREVIOUS_WORKERS=3
+    volumes:
+      - ./data/checkpoint/sentiment_analyzer_0:/.checkpoints
   sentiment_analyzer_1:
     container_name: sentiment_analyzer_1
     image: sentiment_analyzer:latest
@@ -314,6 +360,8 @@ services:
       - OUTPUT_QUEUES=sentiment_score:1
       - ID=1
       - PREVIOUS_WORKERS=3
+    volumes:
+      - ./data/checkpoint/sentiment_analyzer_1:/.checkpoints
   sentiment_analyzer_2:
     container_name: sentiment_analyzer_2
     image: sentiment_analyzer:latest
@@ -325,6 +373,8 @@ services:
       - OUTPUT_QUEUES=sentiment_score:1
       - ID=2
       - PREVIOUS_WORKERS=3
+    volumes:
+      - ./data/checkpoint/sentiment_analyzer_2:/.checkpoints
   sentiment_score_accumulator:
     container_name: sentiment_score_accumulator
     image: sentiment_score_accumulator:latest
@@ -337,3 +387,5 @@ services:
       - ID=0
       - QUERY=5
       - PREVIOUS_WORKERS=3
+    volumes:
+      - ./data/checkpoint/sentiment_score_accumulator:/.checkpoints

@@ -1,6 +1,13 @@
 from configparser import ConfigParser
 import os
-import socket
+import random
+import string
+
+alphabet = string.ascii_lowercase + string.digits
+
+
+def uuid():
+    return ''.join(random.choices(alphabet, k=8))
 
 
 def initialize_config(params):
@@ -86,14 +93,17 @@ def init(logging):
 
     initialize_log(logging, config_params["logging_level"])
 
+    if config_params["query"]:
+        config_params["query"] = int(config_params["query"])
+
     return config_params
 
 
 def encode(message):
-    return message.encode('utf-8')
+    return str(message).encode('utf-8')
 
 
-def decode(message):
+def decode(message: bytes):
     return message.decode('utf-8')
 
 

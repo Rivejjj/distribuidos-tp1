@@ -25,6 +25,7 @@ docker-image:
 
 up: docker-image
 	sudo rm -rf data/query
+	sudo rm -rf data/checkpoint
 	docker compose -f docker-compose-dev.yaml up -d --build
 .PHONY: docker-compose-up
 

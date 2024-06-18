@@ -70,8 +70,8 @@ def run(config_params):
     logging.info("Sending books")
     send_file(client, config_params["books_path"], BOOK, 30)
     logging.info("Sending reviews")
-    send_file(
-        client, config_params["books_reviews_path"], REVIEW, 30)
+    # send_file(
+    #     client, config_params["books_reviews_path"], REVIEW, 30)
     logging.info("Sending EOF")
     client.send_message("EOF")
 
@@ -81,7 +81,6 @@ def run(config_params):
 
 def main():
     config_params = initialize()
-    print(config_params)
     run(config_params)
 
 

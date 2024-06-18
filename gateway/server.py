@@ -2,12 +2,14 @@ import socket
 import logging
 import signal
 from entities.book import Book
-from entities.query_message import BOOK, REVIEW, QueryMessage
+from entities.book_msg import BookMessage
+from entities.query_message import BOOK, REVIEW
 from client_parser import parse_book_from_client, parse_review_from_client
 from entities.review import Review
+from entities.review_msg import ReviewMessage
 from utils.initialize import decode, encode
 from rabbitmq.queue import QueueMiddleware
-from utils.parser import parse_query_msg
+from utils.parser import parse_client_msg, parse_query_msg
 from utils.sockets import receive
 
 
@@ -23,6 +25,9 @@ class Server:
 
         self.queue = QueueMiddleware(
             output_queues)
+
+        self.cur_id = 0
+        self.client_id = 0
 
     def run(self):
         """
@@ -135,8 +140,7 @@ class Server:
             self.queue.send_eof()
             return
 
-        identifier, data = parse_query_msg(batch.strip())
-
+        identifier, data = parse_client_msg(batch.strip())
         msgs = data.split("\n")
 
         for msg in msgs:
@@ -174,8 +178,10 @@ class Server:
 
     def __create_q_msg_from_book_for_query(self, book: Book, query_num: int):
         self.__eliminate_unnecesary_book_fields(book, query_num)
-        return QueryMessage(BOOK, book)
+        self.cur_id += 1
+        return BookMessage(book, self.cur_id, self.client_id)
 
     def __create_q_msg_from_review_for_query(self, review: Review, query_num: int):
         self.__eliminate_unnecesary_review_fields(review, query_num)
-        return QueryMessage(REVIEW, review)
+        self.cur_id += 1
+        return ReviewMessage(review, self.cur_id, self.client_id)
