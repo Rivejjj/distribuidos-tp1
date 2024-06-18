@@ -25,7 +25,7 @@ class TopRatingManager(DataManager):
         title, score = title_score_msg.get_title(), title_score_msg.get_score()
         self.acc.add_title(
             title, score)
-        # self.cp.save(title, score)
+        self.cp.save(title, score)
 
     def send_to_next_worker(self, msg):
         return

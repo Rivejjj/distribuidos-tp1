@@ -10,9 +10,6 @@ class SentimentAccumulatorCheckpoint(DataCheckpoint):
         self.load()
 
     def save(self, title, score):
-        """
-        Guarda un autor en el archivo de checkpoint
-        """
         self.checkpoint(json.dumps([title, score]),
                         json.dumps(self.acc.title_sentiment_score))
 

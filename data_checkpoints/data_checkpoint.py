@@ -7,7 +7,7 @@ MAX_LENGTH_BYTES = 8
 
 
 class DataCheckpoint(ABC):
-    def __init__(self, path, checkpoint_interval=100):
+    def __init__(self, path, checkpoint_interval=100000):
         os.makedirs(path, exist_ok=True)
         self.wal_path = f"{path}/wal.txt"
         self.cp_path = f"{path}/checkpoint"

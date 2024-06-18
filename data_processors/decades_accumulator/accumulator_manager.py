@@ -28,8 +28,9 @@ class AccumulatorManager(DataManager):
             logging.info(f"Already processed")
             return msg
 
-        # self.accum_cp.save(book)
-        if not self.accum.add_book(book):
+        send_author = self.accum.add_book(book)
+        self.accum_cp.save(book)
+        if not send_author:
             logging.info(f"Not yet")
             return
         logging.info(

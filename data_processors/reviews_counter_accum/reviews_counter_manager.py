@@ -1,5 +1,6 @@
 from data_processors.data_manager.data_manager import DataManager
 from book_authors_cp import BookAuthorsCheckpoint
+from sent_titles_cp import SentTitlesCheckpoint
 from reviews_counter_cp import ReviewsCounterCheckpoint
 from reviews_counter import ReviewsCounter
 from entities.book_msg import BookMessage
@@ -16,7 +17,8 @@ class ReviewsCounterManager(DataManager):
         self.counter = ReviewsCounter()
         self.reviews_counter_cp = ReviewsCounterCheckpoint(self.counter)
         self.book_authors_cp = BookAuthorsCheckpoint(self.counter)
-        self.sent_titles = set()
+
+        self.sent_titles_cp = SentTitlesCheckpoint()
 
     def eof_cb(self, msg):
         return self.counter.clear()
@@ -35,8 +37,8 @@ class ReviewsCounterManager(DataManager):
         if not title:
             return
 
-        if title not in self.sent_titles:
-            self.sent_titles.add(title)
+        if self.sent_titles_cp.not_sent(title):
+            self.sent_titles_cp.save(title)
             authors_msg = TitleAuthorsMessage(
                 title, author, *review_msg.get_headers())
             result.append(authors_msg)
@@ -45,6 +47,8 @@ class ReviewsCounterManager(DataManager):
             title, avg, *review_msg.get_headers())
 
         result.append(title_score_msg)
+
+        return result
 
     def send_to_next_worker(self, result):
         for msg in result:
