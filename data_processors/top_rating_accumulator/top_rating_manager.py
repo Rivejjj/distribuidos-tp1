@@ -23,6 +23,8 @@ class TopRatingManager(DataManager):
 
     def process_title_score(self, title_score_msg: TitleScoreMessage):
         title, score = title_score_msg.get_title(), title_score_msg.get_score()
+        if self.messages_cp.is_processed_msg(title_score_msg.get_id()):
+            return
         self.acc.add_title(
             title, score)
         self.cp.save(title, score)

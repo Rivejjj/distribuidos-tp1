@@ -21,6 +21,8 @@ class SentimentAccumulatorManager(DataManager):
         self.acc.clear()
 
     def process_title_score(self, title_score_msg: TitleScoreMessage):
+        if self.messages_cp.is_processed_msg(title_score_msg.get_id()):
+            return
         title, score = title_score_msg.get_title(), title_score_msg.get_score()
         self.acc.add_sentiment_score(
             title, score)

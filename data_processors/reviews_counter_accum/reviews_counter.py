@@ -21,15 +21,19 @@ class ReviewsCounter:
         total += score
         self.reviews[title] = (count, total)
 
-        return self.review_more_than_min(review)
+        return self.get_review(review)
 
     def review_more_than_min(self, review: Review):
         title = review.title
 
-        count, total = self.reviews.get(title, (0, 0))
+        count, _ = self.reviews.get(title, (0, 0))
 
-        if count < self.min_reviews:
-            return None, None, None
+        return count >= self.min_reviews
+
+    def get_review(self, review: Review):
+        title = review.title
+
+        count, total = self.reviews.get(title, (0, 0))
 
         average = total / count
         author = self.books[title]

@@ -1,5 +1,6 @@
 from data_processors.data_manager.data_manager import DataManager
 from book_authors_cp import BookAuthorsCheckpoint
+from entities.book import Book
 from sent_titles_cp import SentTitlesCheckpoint
 from reviews_counter_cp import ReviewsCounterCheckpoint
 from reviews_counter import ReviewsCounter
@@ -27,18 +28,31 @@ class ReviewsCounterManager(DataManager):
         if self.messages_cp.is_processed_msg(book_msg.get_id()):
             return
 
-        self.counter.add_book(book_msg.get_book())
+        book = book_msg.get_book()
+        self.counter.add_book(book)
+        self.book_authors_cp.save(book)
 
     def process_review(self, review_msg: ReviewMessage):
         review = review_msg.get_review()
-        author, title, avg = self.counter.add_review(review)
+
+        author, title, avg = None, None, None
+
+        msg_already_processed = self.messages_cp.is_processed_msg(
+            review_msg.get_id())
+
+        if msg_already_processed:
+            author, title, avg = self.counter.get_review(review)
+        else:
+            author, title, avg = self.counter.add_review(review)
+            self.reviews_counter_cp.save(review)
 
         result = []
-        if not title:
+        if not self.counter.review_more_than_min(review):
             return
 
         if self.sent_titles_cp.not_sent(title):
-            self.sent_titles_cp.save(title)
+            if not msg_already_processed:
+                self.sent_titles_cp.save(title)
             authors_msg = TitleAuthorsMessage(
                 title, author, *review_msg.get_headers())
             result.append(authors_msg)
