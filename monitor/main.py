@@ -25,7 +25,6 @@ def main():
 
     # handle sigterm
 
-
     while True:
         conn, addr = listen_for_connections(sock)
         if conn:

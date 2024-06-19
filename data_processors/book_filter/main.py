@@ -12,8 +12,9 @@ from review_filter import ReviewFilter
 from utils.parser import parse_book, parse_query_msg, parse_review
 from monitor.monitor_client import MonitorClient
 
-def send_heartbeat(address, port, name):
-    monitor_client = MonitorClient(address, port, name)
+def send_heartbeat(name):
+    logging.warning(f"Starting monitor client with name {name}")
+    monitor_client = MonitorClient(name)
     monitor_client.run()
 
 def initialize():
@@ -112,8 +113,9 @@ def main():
     if config_params["save_books"]:
         review_filter = ReviewFilter()
 
+    name = config_params["name"]
     process = Process(target=send_heartbeat, args=(
-        "monitor", 22223, config_params["name"]))
+        name,))
     process.start()
 
     logging.warning("Starting book filter")

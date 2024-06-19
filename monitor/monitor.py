@@ -1,7 +1,8 @@
 import logging 
+from os import getenv
 import subprocess
 import time 
-
+import socket
 
 class Monitor:
     def __init__(self,conn,addr):
@@ -10,6 +11,7 @@ class Monitor:
         self.name = None
         self.last_heartbeat = None
         self.running = True
+        self.active_monitors = []
 
 
     def add_node(self):
@@ -51,7 +53,12 @@ class Monitor:
             format(result.returncode, result.stdout, result.stderr))
 
     def run(self):
+        id = getenv("ID")
+        monitors = ["monitor1", "monitor2", "monitor3"]
+        monitors.pop(id)
+        self.leader_election(monitors)
         self.add_node()
+
         while self.running:
             self.check_health()
             time.sleep(3)
@@ -60,3 +67,7 @@ class Monitor:
         self.running = False
         self.conn.close()
         logging.warning(f"Connection closed with {self.addr}")
+
+    def leader_election(self, monitors):
+        pass
+
