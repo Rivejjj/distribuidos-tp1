@@ -14,6 +14,8 @@ class ReviewFilterCheckpoint(DataCheckpoint):
         Guarda el titulo del libro en el archivo de checkpoint
         Asume que el titulo del libro ya fue guardado en el filtro
         """
+        # TODO: Cambiar a que convierta a un diccionario donde los valores son listas
+
         self.checkpoint(json.dumps([new_book_title, client_id]),
                         json.dumps(list(self.review_filter.titles)))
 
@@ -21,6 +23,8 @@ class ReviewFilterCheckpoint(DataCheckpoint):
         """
         Restaura el estado del filtro de reviews a partir del archivo de checkpoint
         """
+        # TODO: Que funcione teniendo en cuenta client id
+
         try:
             state = self.load_state()
             if state:

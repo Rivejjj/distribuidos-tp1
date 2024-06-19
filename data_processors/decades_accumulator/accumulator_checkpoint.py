@@ -14,6 +14,8 @@ class AccumulatorCheckpoint(DataCheckpoint):
         """
         Guarda un autor en el archivo de checkpoint
         """
+        # TODO: Cambiar a que convierta a un diccionario donde los valores son listas
+
         authors = {authors: list(decade) for authors,
                    decade in self.accumulator.authors.items()}
         self.checkpoint(json.dumps([book.authors, book.published_year, client_id]),
@@ -23,6 +25,8 @@ class AccumulatorCheckpoint(DataCheckpoint):
         """
         Restaura el estado del filtro de reviews a partir del archivo de checkpoint
         """
+        # TODO: Que funcione teniendo en cuenta client id
+
         try:
             state = self.load_state()
             if state:
