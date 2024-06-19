@@ -22,14 +22,16 @@ class AccumulatorManager(DataManager):
         book = book_msg.get_book()
 
         msg = AuthorsMessage(
-            book.authors, book_msg.get_id(), book_msg.get_client_id(), self.query)
+            book.authors, *book_msg.get_headers())
 
-        if self.messages_cp.is_processed_msg(book_msg.get_id()) and self.accum.check_valid_author(book.authors):
+        client_id = msg.get_client_id()
+
+        if self.messages_cp.is_processed_msg(book_msg) and self.accum.check_valid_author(book.authors, client_id):
             logging.info(f"Already processed")
             return msg
 
-        send_author = self.accum.add_book(book)
-        self.accum_cp.save(book)
+        send_author = self.accum.add_book(book, client_id)
+        self.accum_cp.save(book, client_id)
         if not send_author:
             logging.info(f"Not yet")
             return

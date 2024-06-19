@@ -19,16 +19,16 @@ class QueryMessage(ABC):
         self.client_id = client_id
         self.query = query
 
-    def get_client_id(self):
+    def get_client_id(self) -> int:
         return self.client_id
 
-    def get_id(self):
+    def get_id(self) -> int:
         return self.id
 
-    def get_identifier(self):
+    def get_identifier(self) -> int:
         return self.identifier
 
-    def get_query(self):
+    def get_query(self) -> int | None:
         return self.query
 
     def get_headers(self):
