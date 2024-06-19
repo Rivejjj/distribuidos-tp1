@@ -23,11 +23,13 @@ class TopRatingManager(DataManager):
 
     def process_title_score(self, title_score_msg: TitleScoreMessage):
         title, score = title_score_msg.get_title(), title_score_msg.get_score()
-        if self.messages_cp.is_processed_msg(title_score_msg.get_id()):
+        if self.messages_cp.is_processed_msg(title_score_msg):
             return
+
+        client_id = title_score_msg.get_client_id()
         self.acc.add_title(
-            title, score)
-        self.cp.save(title, score)
+            title, score, client_id)
+        self.cp.save(title, score, client_id)
 
     def send_to_next_worker(self, msg):
         return
