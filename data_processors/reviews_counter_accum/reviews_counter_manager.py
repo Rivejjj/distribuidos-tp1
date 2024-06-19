@@ -25,12 +25,12 @@ class ReviewsCounterManager(DataManager):
         return self.counter.clear()
 
     def process_book(self, book_msg: BookMessage):
-        if self.messages_cp.is_processed_msg(book_msg.get_id()):
+        if self.messages_cp.is_processed_msg(book_msg):
             return
 
         book = book_msg.get_book()
-        self.counter.add_book(book)
-        self.book_authors_cp.save(book)
+        self.counter.add_book(book, book_msg.get_client_id())
+        self.book_authors_cp.save(book, book_msg.get_client_id())
 
     def process_review(self, review_msg: ReviewMessage):
         review = review_msg.get_review()
@@ -38,21 +38,23 @@ class ReviewsCounterManager(DataManager):
         author, title, avg = None, None, None
 
         msg_already_processed = self.messages_cp.is_processed_msg(
-            review_msg.get_id())
+            review_msg)
+
+        client_id = review_msg.get_client_id()
 
         if msg_already_processed:
-            author, title, avg = self.counter.get_review(review)
+            author, title, avg = self.counter.get_review(review, client_id)
         else:
-            author, title, avg = self.counter.add_review(review)
-            self.reviews_counter_cp.save(review)
+            author, title, avg = self.counter.add_review(review, client_id)
+            self.reviews_counter_cp.save(review, client_id)
 
         result = []
-        if not self.counter.review_more_than_min(review):
+        if not self.counter.review_more_than_min(review, client_id):
             return
 
-        if self.sent_titles_cp.not_sent(title):
+        if self.sent_titles_cp.not_sent(title, client_id):
             if not msg_already_processed:
-                self.sent_titles_cp.save(title)
+                self.sent_titles_cp.save(title, client_id)
             authors_msg = TitleAuthorsMessage(
                 title, author, *review_msg.get_headers())
             result.append(authors_msg)

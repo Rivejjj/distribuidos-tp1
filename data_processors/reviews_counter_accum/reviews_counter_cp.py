@@ -11,17 +11,21 @@ class ReviewsCounterCheckpoint(DataCheckpoint):
         self.counter = counter
         self.load()
 
-    def save(self, review: Review):
+    def save(self, review: Review, client_id: int):
         """
         Guarda un autor en el archivo de checkpoint
         """
-        self.checkpoint(json.dumps([review.title, review.score]),
+        # TODO: Cambiar a que convierta self.titles a un diccionario donde los valores son listas
+
+        self.checkpoint(json.dumps([review.title, review.score, client_id]),
                         json.dumps(self.counter.reviews))
 
     def load(self):
         """
         Restaura el estado del filtro de reviews a partir del archivo de checkpoint
         """
+        # TODO: Que funcione teniendo en cuenta client id
+
         try:
             state = self.load_state()
             if state:
