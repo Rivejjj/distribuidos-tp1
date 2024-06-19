@@ -57,7 +57,7 @@ class MessagesCheckpoint(DataCheckpoint):
         if id not in self.processed_messages:
             raise Exception("Mensaje no fue guardado")
         self.processed_messages[id] = True
-        self.pending_message = True
+        self.pending_message = False
 
         self.checkpoint(MSG_SENT_MARK, json.dumps(
             self.get_messages()), add_length=False)

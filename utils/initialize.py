@@ -109,3 +109,28 @@ def decode(message: bytes):
 
 def add_query_to_message(message, query):
     return f"{query}:{message}"
+
+
+def serialize_dict(dic: dict):
+    result = {}
+    for key, value in dic.items():
+        if type(value) == set:
+            result[key] = list(value)
+        elif type(value) == dict:
+            result[key] = serialize_dict(value)
+        else:
+            result[key] = value
+    return result
+
+
+def convert_field_to_set(dic: dict, keys_to_convert=[], convert_if_int=False):
+    result = {}
+    for key, value in dic.items():
+        if key.isdigit():
+            key = int(key)
+        if type(value) == list and (key in keys_to_convert or convert_if_int):
+            result[key] = set(value)
+        else:
+            result[key] = value
+
+    return result

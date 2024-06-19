@@ -1,6 +1,7 @@
 import json
 from data_checkpoints.data_checkpoint import DataCheckpoint
-from review_filter import ReviewFilter
+from data_processors.book_filter.review_filter import ReviewFilter
+from utils.initialize import convert_field_to_set, serialize_dict
 
 
 class ReviewFilterCheckpoint(DataCheckpoint):
@@ -14,21 +15,18 @@ class ReviewFilterCheckpoint(DataCheckpoint):
         Guarda el titulo del libro en el archivo de checkpoint
         Asume que el titulo del libro ya fue guardado en el filtro
         """
-        # TODO: Cambiar a que convierta a un diccionario donde los valores son listas
-
         self.checkpoint(json.dumps([new_book_title, client_id]),
-                        json.dumps(list(self.review_filter.titles)))
+                        json.dumps(serialize_dict(self.review_filter.titles)))
 
     def load(self):
         """
         Restaura el estado del filtro de reviews a partir del archivo de checkpoint
         """
-        # TODO: Que funcione teniendo en cuenta client id
-
         try:
             state = self.load_state()
             if state:
-                self.review_filter.titles = set(state)
+                self.review_filter.titles = convert_field_to_set(
+                    state, convert_if_int=True)
             for change, client_id in self.load_changes():
                 self.review_filter.add_title(change, client_id)
         except FileNotFoundError:
