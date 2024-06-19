@@ -1,5 +1,6 @@
 
 
+from entities.eof_msg import EOFMessage
 from entities.review import Review
 
 
@@ -15,5 +16,5 @@ class ReviewFilter:
     def filter(self, review: Review, client_id: int) -> bool:
         return review.title in self.titles.get(client_id, set())
 
-    def clear(self):
-        self.titles = {}
+    def clear(self, eof_msg: EOFMessage):
+        self.titles.pop(eof_msg.get_client_id())

@@ -4,6 +4,7 @@ import time
 import pika
 
 from entities.eof_msg import EOFMessage
+from rabbitmq.eofs_cp import EOFCheckpoint, ReceivedEOF
 from utils.initialize import add_query_to_message, encode, uuid
 
 
@@ -31,8 +32,7 @@ class QueueMiddleware:
 
         self.channel.start_consuming()
 
-        self.previous_workers = previous_workers
-        self.received_eofs = 0
+        self.received_eofs_cp = ReceivedEOF(previous_workers)
 
     def __calculate_queue_pools(self, output_queues):
         for name, worker_count in output_queues:
@@ -93,19 +93,21 @@ class QueueMiddleware:
                 self.send(name, message)
 
     def send_eof(self, msg: EOFMessage, callback=None):
+        client_id = msg.get_client_id()
 
-        self.received_eofs += 1
-        logging.info(f"[QUEUE] Received EOFs {self.received_eofs}")
+        self.received_eofs_cp.add_eof(msg.get_client_id())
 
-        if self.received_eofs >= self.previous_workers:
+        logging.info(
+            f"[QUEUE] Received EOFs {self.received_eofs_cp.eofs[client_id]}")
+
+        if self.received_eofs_cp.eof_reached(client_id):
             logging.info("[QUEUE] Received EOFs of all workers")
-            self.received_eofs = 0
+            self.received_eofs_cp.reset_eof(client_id)
 
             if callback:
                 logging.info("[QUEUE] Executing callback")
                 callback()
-            # Cambiar urgente despues de pensarlo
-            self.send_to_all(encode(EOFMessage(uuid(), msg.get_client_id())))
+            self.send_to_all(encode(EOFMessage(uuid(), client_id)))
             logging.info(
                 f"[QUEUE] Sending EOF to next workers {self.output_queues}")
             return True

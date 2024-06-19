@@ -3,6 +3,8 @@ from functools import partial
 import logging
 
 from data_checkpoints.messages_checkpoint import MessagesCheckpoint
+from entities.eof_msg import EOFMessage
+from entities.query_message import QueryMessage
 from rabbitmq.queue import QueueMiddleware
 from utils.initialize import get_queue_names
 from utils.parser import parse_query_msg
@@ -23,7 +25,7 @@ class DataManager(ABC):
             self.process_message())
 
     @abstractmethod
-    def eof_cb(self, eof_msg):
+    def eof_cb(self, eof_msg: EOFMessage):
         """
         Metodo que se llama al cumplir los requerimientos del eof
         """
@@ -37,15 +39,15 @@ class DataManager(ABC):
         pass
 
     @abstractmethod
-    def process_query_message(self, msg):
+    def process_query_message(self, msg: QueryMessage):
         """
         Procesa la query message despues de haberse validado
         Tiene que tener en cuenta que el mensaje pueda ya estar procesado, simplemente tiene que enviarlo al siguiente worker
         """
         pass
 
-    def process_eof(self, eof_msg):
-        self.queue_middleware.send_eof(partial(self.eof_cb, eof_msg))
+    def process_eof(self, eof_msg: EOFMessage):
+        self.queue_middleware.send_eof(eof_msg, partial(self.eof_cb, eof_msg))
 
     def process_message(self):
         """

@@ -1,6 +1,7 @@
 import logging
 from book_filter import BookFilter
 from data_processors.data_manager.data_manager import DataManager
+from entities.eof_msg import EOFMessage
 from review_filter_checkpoint import ReviewFilterCheckpoint
 from entities.book_msg import BookMessage
 from entities.review_msg import ReviewMessage
@@ -29,9 +30,9 @@ class FilterManager(DataManager):
                 self.review_filter,
                 '.checkpoints/review_filter')
 
-    def eof_cb(self, eof_msg):
+    def eof_cb(self, eof_msg: EOFMessage):
         if self.review_filter:
-            self.review_filter.clear()
+            self.review_filter.clear(eof_msg)
 
     def send_to_next_worker(self, result):
         msg, title = result
