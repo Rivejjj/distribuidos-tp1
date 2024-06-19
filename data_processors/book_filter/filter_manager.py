@@ -46,19 +46,19 @@ class FilterManager(DataManager):
             return
         logging.info(f"Book accepted: {book.title}")
 
-        if self.review_filter and not self.messages_cp.is_processed_msg(book_msg.get_id()):
-            self.review_filter.add_title(book.title)
+        if self.review_filter and not self.messages_cp.is_processed_msg(book_msg):
+            self.review_filter.add_title(book.title, book_msg.get_client_id())
             self.review_filter_cp.save(book.title)
 
-        return BookMessage(book, book_msg.get_id(), book_msg.get_client_id(), self.query), book.title
+        return BookMessage(book, *book_msg.get_headers()), book.title
 
     def process_review(self, review_msg: ReviewMessage):
         review = review_msg.get_review()
-        if not self.review_filter or (self.review_filter and not self.review_filter.filter(review)):
+        if not self.review_filter or (self.review_filter and not self.review_filter.filter(review, review_msg.get_client_id())):
             return
         logging.info(f"Review accepted: {review.title}")
 
-        return ReviewMessage(review, review_msg.get_id(), review_msg.get_client_id(), self.query), review.title
+        return ReviewMessage(review, *review_msg.get_headers()), review.title
 
     def process_query_message(self, msg):
         if msg.get_identifier() == BOOK and msg.get_book():

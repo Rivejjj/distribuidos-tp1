@@ -12,7 +12,7 @@ class DataCheckpoint(ABC):
         self.wal_path = f"{path}/wal.txt"
         self.cp_path = f"{path}/checkpoint"
         self.checkpoint_interval = checkpoint_interval
-        self.counter = 0
+        self.change_counter = 0
 
     def checkpoint(self, change_data, cur_state, add_length=True, add_new_line=True):
         """
@@ -21,11 +21,11 @@ class DataCheckpoint(ABC):
         La primera linea del archivo es el estado actual
         Las siguientes lineas son los cambios de estado
         """
-        self.counter += 1
+        self.change_counter += 1
         self.save_change(change_data, add_length, add_new_line)
-        if self.counter % self.checkpoint_interval == 0:
+        if self.change_counter % self.checkpoint_interval == 0:
             self.save_state(cur_state)
-            self.counter = 0
+            self.change_counter = 0
 
     def save_change(self, change_data, add_length=True, add_newline=True):
         with open(self.wal_path, 'a') as f:

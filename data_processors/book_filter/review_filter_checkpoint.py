@@ -9,12 +9,12 @@ class ReviewFilterCheckpoint(DataCheckpoint):
         self.review_filter = review_filter
         self.load()
 
-    def save(self, new_book_title: str):
+    def save(self, new_book_title: str, client_id: int):
         """
         Guarda el titulo del libro en el archivo de checkpoint
         Asume que el titulo del libro ya fue guardado en el filtro
         """
-        self.checkpoint(json.dumps(new_book_title),
+        self.checkpoint(json.dumps([new_book_title, client_id]),
                         json.dumps(list(self.review_filter.titles)))
 
     def load(self):
@@ -25,7 +25,7 @@ class ReviewFilterCheckpoint(DataCheckpoint):
             state = self.load_state()
             if state:
                 self.review_filter.titles = set(state)
-            for change in self.load_changes():
-                self.review_filter.add_title(change)
+            for change, client_id in self.load_changes():
+                self.review_filter.add_title(change, client_id)
         except FileNotFoundError:
             return

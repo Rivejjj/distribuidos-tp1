@@ -32,6 +32,9 @@ class QueryMessage(ABC):
         return self.query
 
     def get_headers(self):
+        """
+        Devuelve el id, id del cliente y la query que contiene el mensaje
+        """
         headers = [self.id, self.client_id]
         if self.query:
             headers.append(self.query)
@@ -40,6 +43,9 @@ class QueryMessage(ABC):
 
     @abstractmethod
     def serialize_data(self) -> str:
+        """
+        Representacion de string de la data que contiene el mensaje
+        """
         pass
 
     def __str__(self):

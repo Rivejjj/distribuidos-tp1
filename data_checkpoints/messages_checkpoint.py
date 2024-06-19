@@ -1,5 +1,6 @@
 import json
 from data_checkpoints.data_checkpoint import DataCheckpoint
+from entities.query_message import QueryMessage
 
 MSG_SENT_MARK = '+'
 
@@ -9,16 +10,19 @@ class MessagesCheckpoint(DataCheckpoint):
         super().__init__(save_path)
         # ID del mensaje como clave. El valor es un booleano que indica si el mensaje fue enviado
         self.processed_messages = {}
+        self.pending_message = False
         self.load()
 
-    def save(self, new_msg: str):
-        if any(not is_sent for is_sent in self.processed_messages.values()):
+    def save(self, msg: QueryMessage):
+        id = msg.get_id()
+        if self.pending_message:
             raise Exception('Hay un mensaje sin enviar')
-        self.processed_messages[new_msg] = False
-        self.checkpoint(json.dumps(new_msg), json.dumps(
+        self.processed_messages[id] = False
+        self.pending_message = True
+        self.checkpoint(json.dumps(id), json.dumps(
             self.get_messages()), add_new_line=False)
 
-        self.counter -= 1
+        self.change_counter -= 1
 
     def get_messages(self):
         unsent = []
@@ -48,10 +52,12 @@ class MessagesCheckpoint(DataCheckpoint):
         except FileNotFoundError:
             return
 
-    def mark_msg_as_sent(self, msg):
-        if msg not in self.processed_messages:
+    def mark_msg_as_sent(self, msg: QueryMessage):
+        id = msg.get_id()
+        if id not in self.processed_messages:
             raise Exception("Mensaje no fue guardado")
-        self.processed_messages[msg] = True
+        self.processed_messages[id] = True
+        self.pending_message = True
 
         self.checkpoint(MSG_SENT_MARK, json.dumps(
             self.get_messages()), add_length=False)
@@ -79,8 +85,8 @@ class MessagesCheckpoint(DataCheckpoint):
                 if int(length) == len(data):
                     yield json.loads(data), correct_last_char
 
-    def is_sent_msg(self, msg):
-        return msg in self.processed_messages and self.processed_messages[msg]
+    def is_sent_msg(self, msg: QueryMessage):
+        return msg.get_id() in self.processed_messages and self.processed_messages[msg.get_id()]
 
-    def is_processed_msg(self, msg):
-        return msg in self.processed_messages and not self.processed_messages[msg]
+    def is_processed_msg(self, msg: QueryMessage):
+        return msg.get_id() in self.processed_messages and not self.processed_messages[msg.get_id()]

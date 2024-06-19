@@ -14,8 +14,10 @@ class AccumulatorCheckpoint(DataCheckpoint):
         """
         Guarda un autor en el archivo de checkpoint
         """
+        authors = {authors: list(decade) for authors,
+                   decade in self.accumulator.authors.items()}
         self.checkpoint(json.dumps([book.authors, book.published_year]),
-                        json.dumps([self.accumulator.authors, list(self.accumulator.completed_authors)]))
+                        json.dumps([authors, list(self.accumulator.completed_authors)]))
 
     def load(self):
         """
@@ -25,7 +27,8 @@ class AccumulatorCheckpoint(DataCheckpoint):
             state = self.load_state()
             if state:
                 authors, completed_authors = state
-                self.accumulator.authors = authors
+                self.accumulator.authors = {author: set(decade) for author,
+                                            decade in authors}
                 self.accumulator.completed_authors = set(completed_authors)
 
             for change in self.load_changes():
