@@ -1,7 +1,8 @@
-import json
+import ujson as json
 from data_checkpoints.data_checkpoint import DataCheckpoint
+# from review_filter import ReviewFilter
 from data_processors.book_filter.review_filter import ReviewFilter
-from utils.initialize import convert_field_to_set, serialize_dict
+from utils.initialize import deserialize_dict, serialize_dict
 
 
 class ReviewFilterCheckpoint(DataCheckpoint):
@@ -25,8 +26,8 @@ class ReviewFilterCheckpoint(DataCheckpoint):
         try:
             state = self.load_state()
             if state:
-                self.review_filter.titles = convert_field_to_set(
-                    state, convert_if_int=True)
+                self.review_filter.titles = deserialize_dict(
+                    state)
             for change, client_id in self.load_changes():
                 self.review_filter.add_title(change, client_id)
         except FileNotFoundError:

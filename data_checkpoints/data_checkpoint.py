@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-import json
+import ujson as json
 import os
 DIRECTORY = 'data_checkpoints/.checkpoints'
 

@@ -1,8 +1,10 @@
-import json
+import ujson as json
 from data_checkpoints.data_checkpoint import DataCheckpoint
+from data_processors.reviews_counter_accum.reviews_counter import ReviewsCounter
 from entities.review import Review
-from reviews_counter import ReviewsCounter
+# from reviews_counter import ReviewsCounter
 from entities.book import Book
+from utils.initialize import deserialize_dict, serialize_dict
 
 
 class ReviewsCounterCheckpoint(DataCheckpoint):
@@ -15,26 +17,23 @@ class ReviewsCounterCheckpoint(DataCheckpoint):
         """
         Guarda un autor en el archivo de checkpoint
         """
-        # TODO: Cambiar a que convierta self.titles a un diccionario donde los valores son listas
-
         self.checkpoint(json.dumps([review.title, review.score, client_id]),
-                        json.dumps(self.counter.reviews))
+                        json.dumps(serialize_dict(self.counter.reviews)))
 
     def load(self):
         """
         Restaura el estado del filtro de reviews a partir del archivo de checkpoint
         """
-        # TODO: Que funcione teniendo en cuenta client id
-
         try:
             state = self.load_state()
             if state:
-                self.counter.reviews = state
+                self.counter.reviews = deserialize_dict(
+                    state, convert_to_set=False, convert_to_tuple=True)
 
             for change in self.load_changes():
-                title, score = change
+                title, score, client_id = change
 
-                review = Review(title, score, None)
-                self.counter.add_review(review)
+                review = Review(title, score)
+                self.counter.add_review(review, client_id)
         except FileNotFoundError:
             return

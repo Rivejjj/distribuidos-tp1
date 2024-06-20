@@ -1,4 +1,4 @@
-import json
+import ujson as json
 from data_checkpoints.data_checkpoint import DataCheckpoint
 from entities.query_message import QueryMessage
 

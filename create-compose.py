@@ -1,8 +1,8 @@
 import yaml
 
-WORKERS = 3
+WORKERS = 4
 CLIENTS = 1
-LOGGING_LEVEL = 'INFO'
+LOGGING_LEVEL = 'CRITICAL'
 
 pools = [('computers_category_filter', WORKERS),
          ('2000s_published_year_filter', WORKERS),

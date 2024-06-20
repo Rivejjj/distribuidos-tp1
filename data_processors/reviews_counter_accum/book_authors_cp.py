@@ -1,7 +1,9 @@
-import json
+import ujson as json
 from data_checkpoints.data_checkpoint import DataCheckpoint
-from reviews_counter import ReviewsCounter
+# from reviews_counter import ReviewsCounter
+from data_processors.reviews_counter_accum.reviews_counter import ReviewsCounter
 from entities.book import Book
+from utils.initialize import deserialize_dict
 
 
 class BookAuthorsCheckpoint(DataCheckpoint):
@@ -26,12 +28,12 @@ class BookAuthorsCheckpoint(DataCheckpoint):
         try:
             state = self.load_state()
             if state:
-                self.counter.books = state
+                self.counter.books = deserialize_dict(state)
 
             for change in self.load_changes():
                 title, authors, client_id = change
 
-                book = Book(title, authors, None, None, None)
+                book = Book(title, authors)
                 self.counter.add_book(book, client_id)
         except FileNotFoundError:
             return

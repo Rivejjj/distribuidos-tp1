@@ -1,6 +1,8 @@
-import json
+import ujson as json
 from data_checkpoints.data_checkpoint import DataCheckpoint
-from sentiment_score_accumulator import SentimentScoreAccumulator
+from data_processors.sentiment_score_accumulator.sentiment_score_accumulator import SentimentScoreAccumulator
+from utils.initialize import deserialize_dict, serialize_dict
+# from sentiment_score_accumulator import SentimentScoreAccumulator
 
 
 class SentimentAccumulatorCheckpoint(DataCheckpoint):
@@ -10,21 +12,19 @@ class SentimentAccumulatorCheckpoint(DataCheckpoint):
         self.load()
 
     def save(self, title: str, score: float, client_id: int):
-        # TODO: Cambiar a que convierta self.titles a un diccionario donde los valores son listas
-
         self.checkpoint(json.dumps([title, score, client_id]),
-                        json.dumps(self.acc.title_sentiment_score))
+                        json.dumps(serialize_dict(self.acc.title_sentiment_score)))
 
     def load(self):
         """
         Restaura el estado del filtro de reviews a partir del archivo de checkpoint
         """
-        # TODO: Que funcione teniendo en cuenta client id
 
         try:
             state = self.load_state()
             if state:
-                self.acc.title_sentiment_score = state
+                self.acc.title_sentiment_score = deserialize_dict(
+                    state, convert_to_set=False, convert_to_tuple=True)
 
             for change in self.load_changes():
                 self.acc.add_sentiment_score(*change)

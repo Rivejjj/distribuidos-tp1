@@ -5,7 +5,19 @@ import shutil
 from data_checkpoints.messages_checkpoint import MessagesCheckpoint
 from data_processors.book_filter.review_filter_checkpoint import ReviewFilterCheckpoint
 from data_processors.book_filter.review_filter import ReviewFilter
+from data_processors.decades_accumulator.accumulator import Accumulator
+from data_processors.decades_accumulator.accumulator_checkpoint import AccumulatorCheckpoint
+from data_processors.reviews_counter_accum.book_authors_cp import BookAuthorsCheckpoint
+from data_processors.reviews_counter_accum.reviews_counter import ReviewsCounter
+from data_processors.reviews_counter_accum.reviews_counter_cp import ReviewsCounterCheckpoint
+from data_processors.reviews_counter_accum.sent_titles_cp import SentTitlesCheckpoint
+from data_processors.sentiment_score_accumulator.sentiment_accumulator_cp import SentimentAccumulatorCheckpoint
+from data_processors.sentiment_score_accumulator.sentiment_score_accumulator import SentimentScoreAccumulator
+from data_processors.top_rating_accumulator.top_rating_accumulator import TopRatingAccumulator
+from data_processors.top_rating_accumulator.top_rating_cp import TopRatingCheckpoint
+from entities.book import Book
 from entities.book_msg import BookMessage
+from entities.review import Review
 from gateway.client_parser import parse_book_from_client
 
 CLIENTS = 3
@@ -19,6 +31,43 @@ def new_filter(path='data_checkpoints/.checkpoints/tests'):
 
     cp.checkpoint_interval = INTERVAL
     return review_filter, cp
+
+
+def new_acc(path='data_checkpoints/.checkpoints/tests'):
+    acc = Accumulator()
+    cp = AccumulatorCheckpoint(acc, path)
+
+    cp.checkpoint_interval = INTERVAL
+    return acc, cp
+
+
+def new_reviews_counter(path='data_checkpoints/.checkpoints/tests'):
+    counter = ReviewsCounter()
+    b_cp = BookAuthorsCheckpoint(counter, f"{path}/b_authors")
+    r_cp = ReviewsCounterCheckpoint(counter, f"{path}/f_authors")
+    sent_titles_cp = SentTitlesCheckpoint(f"{path}/sent_titles_authors")
+
+    r_cp.checkpoint_interval = INTERVAL
+    b_cp.checkpoint_interval = INTERVAL
+    sent_titles_cp.checkpoint_interval = INTERVAL
+
+    return counter, r_cp, b_cp, sent_titles_cp
+
+
+def new_sentiment_score_acc(path='data_checkpoints/.checkpoints/tests'):
+    acc = SentimentScoreAccumulator()
+    cp = SentimentAccumulatorCheckpoint(acc, path)
+
+    cp.checkpoint_interval = INTERVAL
+    return acc, cp
+
+
+def new_top_rating(path='data_checkpoints/.checkpoints/tests'):
+    acc = TopRatingAccumulator()
+    cp = TopRatingCheckpoint(acc, path)
+
+    cp.checkpoint_interval = INTERVAL
+    return acc, cp
 
 
 def new_message_interval():
@@ -55,6 +104,17 @@ def gen_q_msg(i: int, client_id: int = 1):
 
 
 class TestCheckpoints(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.books = []
+        with open('data_checkpoints/test-datasets/reduced_books.csv') as f:
+            for line in f:
+                book = parse_book_from_client(line.strip())
+
+                if not book:
+                    continue
+
+                cls.books.append(book)
 
     def test_wal_file_does_not_exist_after_state_checkpoint(self):
         r1, data_cp = new_filter()
@@ -222,47 +282,65 @@ class TestCheckpoints(unittest.TestCase):
         self.assertTrue(msg_cp2.is_processed_msg(
             gen_q_msg(msg_cp.checkpoint_interval - 1, 1)))
 
-    # def test_decades_recover_from_only_checkpoint(self):
-    #     r1, data_cp = new_filter()
+    def test_load_accumulator_cp(self):
+        acc, data_cp = new_acc()
+        for client_id in range(CLIENTS):
+            for i in range(int(data_cp.checkpoint_interval * 1.5) // CLIENTS):
+                digit = i % 10
+                book = Book(
+                    authors=f"{i}", published_year=f"1{digit}{digit}{digit}")
+                acc.add_book(book, client_id)
+                data_cp.save(book, client_id)
 
-    #     for i in range(data_cp.checkpoint_interval):
-    #         filter_save_new_title(r1, data_cp, f"Title {i}")
+        acc_2, data_cp_2 = new_acc()
+        for client_id in range(CLIENTS):
+            self.assertEqual(
+                acc.authors[client_id], acc_2.authors[client_id])
+            self.assertEqual(
+                acc.completed_authors[client_id], acc_2.completed_authors[client_id])
 
-    #     r2, _ = new_filter()
+    # def test_load_reviews_counter_cp(self):
+    #     # Tarda mucho
+    #     counter, r_cp, b_cp, sent_titles_cp = new_reviews_counter()
+    #     for client_id in range(CLIENTS):
+    #         for i in range(int(r_cp.checkpoint_interval * 1.5) // CLIENTS):
+    #             book = Book(title=f"T{i}",
+    #                         authors=f"A{i}")
 
-    #     self.assertEqual(r1.titles, r2.titles)
+    #             review = Review(book.title, i)
+    #             counter.add_book(book, client_id)
+    #             counter.add_review(review, client_id)
+    #             b_cp.save(book, client_id)
+    #             r_cp.save(review, client_id)
+    #             sent_titles_cp.save(book.title, client_id)
 
-    # def test_decades_recover_from_only_wal(self):
-    #     r1, data_cp = new_filter()
+    #     counter2, r_cp, b_cp, sent_titles_cp2 = new_reviews_counter()
 
-    #     for i in range(data_cp.checkpoint_interval // 2):
-    #         filter_save_new_title(r1, data_cp, f"Title {i}")
+    #     self.assertEqual(counter.books, counter2.books)
+    #     self.assertEqual(counter.reviews, counter2.reviews)
+    #     self.assertEqual(sent_titles_cp.titles, sent_titles_cp2.titles)
 
-    #     r2, _ = new_filter()
+    def test_load_accumulator_cp(self):
+        acc, data_cp = new_sentiment_score_acc()
+        for client_id in range(CLIENTS):
+            for i in range(int(data_cp.checkpoint_interval * 1.5) // CLIENTS):
+                acc.add_sentiment_score(f"T{i}", i, client_id)
+                data_cp.save(f"T{i}", i, client_id)
 
-    #     self.assertEqual(r1.titles, r2.titles)
+        acc_2, data_cp_2 = new_sentiment_score_acc()
+        self.assertEqual(acc.title_sentiment_score,
+                         acc_2.title_sentiment_score)
 
-    # def test_decades_recover_filter_from_correct_file(self):
-    #     review_filter, _ = create_filter_with_books()
+    def test_load_top_rating_cp(self):
+        acc, data_cp = new_top_rating()
+        for client_id in range(CLIENTS):
+            for i in range(int(data_cp.checkpoint_interval * 1.5) // CLIENTS):
+                acc.add_title(f"T{i}", i, client_id)
+                data_cp.save(f"T{i}", i, client_id)
 
-    #     review_filter2, _ = new_filter()
-
-    #     self.assertEqual(review_filter2.titles, review_filter.titles)
-
-    # def test_decades_recover_filter_from_a_corrupted_file(self):
-    #     """
-    #     Checkpoint intenta levantarse de un archivo corrupto, donde la escritura del cambio fue interrumpida
-    #     Casos contemplados:
-    #         * Se escribe el contenido del cambio a la mitad
-    #         * Un cambio escrito correctamente
-    #         * Solo se escribe la cantidad de caracteres del cambio
-    #         * No se escribe la cantidad de caracteres por completo
-    #         * Linea vacia
-    #     """
-    #     review_filter, _ = new_filter(
-    #         'data_checkpoints/test-datasets/corrupted-wal')
-
-    #     self.assertEqual(len(review_filter.titles), 1)
+        acc_2, data_cp_2 = new_top_rating()
+        self.assertEqual(acc.books,
+                         acc_2.books)
 
     def tearDown(self) -> None:
         try:

@@ -123,13 +123,19 @@ def serialize_dict(dic: dict):
     return result
 
 
-def convert_field_to_set(dic: dict, keys_to_convert=[], convert_if_int=False):
+def deserialize_dict(dic: dict, top_level=True, convert_to_set=True, convert_to_tuple=False):
     result = {}
     for key, value in dic.items():
-        if key.isdigit():
+
+        if key.isdigit() and top_level:
             key = int(key)
-        if type(value) == list and (key in keys_to_convert or convert_if_int):
+        if type(value) == list and convert_to_set:
             result[key] = set(value)
+        elif type(value) == list and convert_to_tuple:
+            result[key] = tuple(value)
+        elif type(value) == dict:
+            result[key] = deserialize_dict(
+                value, False, convert_to_set, convert_to_tuple)
         else:
             result[key] = value
 

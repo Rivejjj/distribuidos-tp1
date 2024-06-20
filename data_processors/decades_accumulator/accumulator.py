@@ -18,6 +18,7 @@ class Accumulator:
         return self.check_valid_author(book.authors, client_id)
 
     def check_valid_author(self, author: str, client_id: int):
+        client_id = int(client_id)
         self.completed_authors[client_id] = self.completed_authors.get(
             client_id, set())
 

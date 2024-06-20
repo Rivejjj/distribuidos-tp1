@@ -1,6 +1,8 @@
-import json
+import ujson as json
 from data_checkpoints.data_checkpoint import DataCheckpoint
-from top_rating_accumulator import TopRatingAccumulator
+from data_processors.top_rating_accumulator.top_rating_accumulator import TopRatingAccumulator
+from utils.initialize import deserialize_dict, serialize_dict
+# from top_rating_accumulator import TopRatingAccumulator
 
 
 class TopRatingCheckpoint(DataCheckpoint):
@@ -13,21 +15,17 @@ class TopRatingCheckpoint(DataCheckpoint):
         """
         Guarda un autor en el archivo de checkpoint
         """
-        # TODO: Cambiar a que convierta self.titles a un diccionario donde los valores son listas
-
         self.checkpoint(json.dumps([title, score, client_id]),
-                        json.dumps(self.acc.books))
+                        json.dumps(serialize_dict(self.acc.books)))
 
     def load(self):
         """
         Restaura el estado del filtro de reviews a partir del archivo de checkpoint
         """
-        # TODO: Que funcione teniendo en cuenta client id
-
         try:
             state = self.load_state()
             if state:
-                self.acc.books = state
+                self.acc.books = deserialize_dict(state)
 
             for change in self.load_changes():
                 self.acc.add_title(*change)
