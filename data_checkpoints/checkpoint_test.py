@@ -299,26 +299,26 @@ class TestCheckpoints(unittest.TestCase):
             self.assertEqual(
                 acc.completed_authors[client_id], acc_2.completed_authors[client_id])
 
-    # def test_load_reviews_counter_cp(self):
-    #     # Tarda mucho
-    #     counter, r_cp, b_cp, sent_titles_cp = new_reviews_counter()
-    #     for client_id in range(CLIENTS):
-    #         for i in range(int(r_cp.checkpoint_interval * 1.5) // CLIENTS):
-    #             book = Book(title=f"T{i}",
-    #                         authors=f"A{i}")
+    def test_load_reviews_counter_cp(self):
+        # Tarda mucho
+        counter, r_cp, b_cp, sent_titles_cp = new_reviews_counter()
+        for client_id in range(CLIENTS):
+            for i in range(int(r_cp.checkpoint_interval * 1.5) // CLIENTS):
+                book = Book(title=f"T{i}",
+                            authors=f"A{i}")
 
-    #             review = Review(book.title, i)
-    #             counter.add_book(book, client_id)
-    #             counter.add_review(review, client_id)
-    #             b_cp.save(book, client_id)
-    #             r_cp.save(review, client_id)
-    #             sent_titles_cp.save(book.title, client_id)
+                review = Review(book.title, i)
+                counter.add_book(book, client_id)
+                counter.add_review(review, client_id)
+                b_cp.save(book, client_id)
+                r_cp.save(review, client_id)
+                sent_titles_cp.save(book.title, client_id)
 
-    #     counter2, r_cp, b_cp, sent_titles_cp2 = new_reviews_counter()
+        counter2, r_cp, b_cp, sent_titles_cp2 = new_reviews_counter()
 
-    #     self.assertEqual(counter.books, counter2.books)
-    #     self.assertEqual(counter.reviews, counter2.reviews)
-    #     self.assertEqual(sent_titles_cp.titles, sent_titles_cp2.titles)
+        self.assertEqual(counter.books, counter2.books)
+        self.assertEqual(counter.reviews, counter2.reviews)
+        self.assertEqual(sent_titles_cp.titles, sent_titles_cp2.titles)
 
     def test_load_accumulator_cp(self):
         acc, data_cp = new_sentiment_score_acc()
