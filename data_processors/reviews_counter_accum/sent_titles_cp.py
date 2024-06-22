@@ -1,4 +1,4 @@
-import ujson as json
+import json
 from data_checkpoints.data_checkpoint import DataCheckpoint
 from utils.initialize import deserialize_dict, serialize_dict
 
@@ -13,8 +13,8 @@ class SentTitlesCheckpoint(DataCheckpoint):
         self.titles[client_id] = self.titles.get(client_id, set())
         self.titles[client_id].add(title)
 
-        self.checkpoint(json.dumps([title, client_id]),
-                        json.dumps(serialize_dict(self.titles)))
+        self.checkpoint([title, client_id],
+                        lambda: serialize_dict(self.titles))
 
     def load(self):
         """

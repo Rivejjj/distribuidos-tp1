@@ -1,4 +1,4 @@
-import ujson as json
+import json
 from data_checkpoints.data_checkpoint import DataCheckpoint
 # from accumulator import Accumulator
 from data_processors.decades_accumulator.accumulator import Accumulator
@@ -16,8 +16,8 @@ class AccumulatorCheckpoint(DataCheckpoint):
         """
         Guarda un autor en el archivo de checkpoint
         """
-        self.checkpoint(json.dumps([book.authors, book.published_year, client_id]),
-                        json.dumps([serialize_dict(self.accumulator.authors), serialize_dict(self.accumulator.completed_authors)]))
+        self.checkpoint([book.authors, book.published_year, client_id],
+                        lambda: [serialize_dict(self.accumulator.authors), serialize_dict(self.accumulator.completed_authors)])
 
     def load(self):
         """

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-import ujson as json
+import json
 
 
 BOOK = 1

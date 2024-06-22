@@ -1,4 +1,4 @@
-import ujson as json
+import json
 from data_checkpoints.data_checkpoint import DataCheckpoint
 from data_processors.sentiment_score_accumulator.sentiment_score_accumulator import SentimentScoreAccumulator
 from utils.initialize import deserialize_dict, serialize_dict
@@ -12,8 +12,8 @@ class SentimentAccumulatorCheckpoint(DataCheckpoint):
         self.load()
 
     def save(self, title: str, score: float, client_id: int):
-        self.checkpoint(json.dumps([title, score, client_id]),
-                        json.dumps(serialize_dict(self.acc.title_sentiment_score)))
+        self.checkpoint([title, score, client_id],
+                        lambda: serialize_dict(self.acc.title_sentiment_score))
 
     def load(self):
         """

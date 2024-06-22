@@ -1,5 +1,5 @@
 import csv
-import ujson as json
+import json
 import logging
 from entities.authors_msg import AuthorsMessage
 from entities.batch_title_score_msg import BatchTitleScoreMessage

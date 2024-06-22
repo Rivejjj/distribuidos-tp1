@@ -1,4 +1,4 @@
-import ujson as json
+import json
 from data_checkpoints.data_checkpoint import DataCheckpoint
 from data_processors.top_rating_accumulator.top_rating_accumulator import TopRatingAccumulator
 from utils.initialize import deserialize_dict, serialize_dict
@@ -15,8 +15,8 @@ class TopRatingCheckpoint(DataCheckpoint):
         """
         Guarda un autor en el archivo de checkpoint
         """
-        self.checkpoint(json.dumps([title, score, client_id]),
-                        json.dumps(serialize_dict(self.acc.books)))
+        self.checkpoint([title, score, client_id],
+                        lambda: serialize_dict(self.acc.books))
 
     def load(self):
         """

@@ -1,4 +1,4 @@
-import ujson as json
+import json
 from data_checkpoints.data_checkpoint import DataCheckpoint
 # from review_filter import ReviewFilter
 from data_processors.book_filter.review_filter import ReviewFilter
@@ -16,8 +16,8 @@ class ReviewFilterCheckpoint(DataCheckpoint):
         Guarda el titulo del libro en el archivo de checkpoint
         Asume que el titulo del libro ya fue guardado en el filtro
         """
-        self.checkpoint(json.dumps([new_book_title, client_id]),
-                        json.dumps(serialize_dict(self.review_filter.titles)))
+        self.checkpoint([new_book_title, client_id],
+                        lambda: serialize_dict(self.review_filter.titles))
 
     def load(self):
         """

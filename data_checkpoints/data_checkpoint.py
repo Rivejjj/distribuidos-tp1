@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-import ujson as json
+import json
 import os
 DIRECTORY = 'data_checkpoints/.checkpoints'
 
@@ -7,14 +7,14 @@ MAX_LENGTH_BYTES = 8
 
 
 class DataCheckpoint(ABC):
-    def __init__(self, path, checkpoint_interval=100000):
+    def __init__(self, path, checkpoint_interval=10000):
         os.makedirs(path, exist_ok=True)
         self.wal_path = f"{path}/wal.txt"
         self.cp_path = f"{path}/checkpoint"
         self.checkpoint_interval = checkpoint_interval
         self.change_counter = 0
 
-    def checkpoint(self, change_data, cur_state, add_length=True, add_new_line=True):
+    def checkpoint(self, change_data, state_cb, add_length=True, add_new_line=True):
         """
         Almacena la informacion del cambio de estado en archivo
         Dependiendo de la configuracion de checkpoint, se guarda el estado entero cada n cambios
@@ -24,11 +24,13 @@ class DataCheckpoint(ABC):
         self.change_counter += 1
         self.save_change(change_data, add_length, add_new_line)
         if self.change_counter % self.checkpoint_interval == 0:
-            self.save_state(cur_state)
+            self.save_state(state_cb)
             self.change_counter = 0
 
     def save_change(self, change_data, add_length=True, add_newline=True):
         with open(self.wal_path, 'a') as f:
+            if type(change_data) != str:
+                change_data = json.dumps(change_data)
             line = []
             if add_length:
                 line.append(str(len(change_data)))
@@ -37,12 +39,14 @@ class DataCheckpoint(ABC):
             new_line = '\n'
             f.write(
                 f"{','.join(line)}{new_line if add_newline else ''}")
+            f.flush()
 
-    def save_state(self, state):
+    def save_state(self, state_cb):
         temp_path = f"{self.cp_path}.tmp"
 
         with open(temp_path, 'w') as f:
-            f.write(f"{state}")
+            f.write(f"{json.dumps(state_cb())}")
+            f.flush()
 
         os.replace(temp_path, f"{self.cp_path}.txt")
         os.remove(self.wal_path)
@@ -69,6 +73,8 @@ class DataCheckpoint(ABC):
                     continue
 
                 length, data = line
+
+                # Truncar lineas corruptas
 
                 if int(length) == len(data):
                     yield json.loads(data)

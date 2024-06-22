@@ -1,4 +1,4 @@
-import ujson as json
+import json
 from data_checkpoints.data_checkpoint import DataCheckpoint
 from entities.query_message import QueryMessage
 
@@ -16,11 +16,11 @@ class MessagesCheckpoint(DataCheckpoint):
     def save(self, msg: QueryMessage):
         id = msg.get_id()
         if self.pending_message:
-            raise Exception('Hay un mensaje sin enviar')
+            self.save_change('\n', False, True)
         self.processed_messages[id] = False
         self.pending_message = True
-        self.checkpoint(json.dumps(id), json.dumps(
-            self.get_messages()), add_new_line=False)
+        self.checkpoint(id,
+                        lambda: self.get_messages(), add_new_line=False)
 
         self.change_counter -= 1
 
@@ -54,13 +54,11 @@ class MessagesCheckpoint(DataCheckpoint):
 
     def mark_msg_as_sent(self, msg: QueryMessage):
         id = msg.get_id()
-        if id not in self.processed_messages:
-            raise Exception("Mensaje no fue guardado")
         self.processed_messages[id] = True
         self.pending_message = False
 
-        self.checkpoint(MSG_SENT_MARK, json.dumps(
-            self.get_messages()), add_length=False)
+        self.checkpoint(MSG_SENT_MARK,
+                        lambda: self.get_messages(), add_length=False)
 
     def load_changes(self):
         """

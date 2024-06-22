@@ -1,4 +1,4 @@
-import ujson as json
+import json
 from data_checkpoints.data_checkpoint import DataCheckpoint
 from data_processors.reviews_counter_accum.reviews_counter import ReviewsCounter
 from entities.review import Review
@@ -17,8 +17,8 @@ class ReviewsCounterCheckpoint(DataCheckpoint):
         """
         Guarda un autor en el archivo de checkpoint
         """
-        self.checkpoint(json.dumps([review.title, review.score, client_id]),
-                        json.dumps(serialize_dict(self.counter.reviews)))
+        self.checkpoint([review.title, review.score, client_id],
+                        lambda: serialize_dict(self.counter.reviews))
 
     def load(self):
         """

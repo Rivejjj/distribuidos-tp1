@@ -192,7 +192,16 @@ class TestCheckpoints(unittest.TestCase):
         msg2 = gen_q_msg(2, 1)
         msg_checkpoint.save(msg1)
 
-        self.assertRaises(Exception, lambda: msg_checkpoint.save(msg2))
+        msg_checkpoint.save(msg2)
+        msg_checkpoint.mark_msg_as_sent(msg2)
+
+        self.assertFalse(msg_checkpoint.is_sent_msg(msg1))
+        self.assertTrue(msg_checkpoint.is_sent_msg(msg2))
+
+        msg_cp2 = new_message_interval()
+
+        self.assertFalse(msg_cp2.is_sent_msg(msg1))
+        self.assertTrue(msg_cp2.is_sent_msg(msg2))
 
     def test_messages_checkpoint_save_and_mark_msg_as_sent(self):
         msg_checkpoint = new_message_interval()
