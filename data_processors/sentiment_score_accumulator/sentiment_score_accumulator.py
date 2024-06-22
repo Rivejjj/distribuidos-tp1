@@ -2,7 +2,7 @@ class SentimentScoreAccumulator:
     def __init__(self):
         self.title_sentiment_score = {}  # client -> title -> (count, total)
 
-    def add_sentiment_score(self, title: str, sentiment_score: str | float, client_id: int):
+    def add_sentiment_score(self, title: str, sentiment_score: str, client_id: int):
         self.title_sentiment_score[client_id] = self.title_sentiment_score.get(
             client_id, {})
         count, total = self.title_sentiment_score[client_id].get(

@@ -28,7 +28,7 @@ class QueryMessage(ABC):
     def get_identifier(self) -> int:
         return self.identifier
 
-    def get_query(self) -> int | None:
+    def get_query(self):
         return self.query
 
     def get_headers(self):

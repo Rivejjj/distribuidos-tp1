@@ -49,7 +49,7 @@ class FilterManager(DataManager):
 
         if self.review_filter and not self.messages_cp.is_processed_msg(book_msg):
             self.review_filter.add_title(book.title, book_msg.get_client_id())
-            self.review_filter_cp.save(book.title)
+            self.review_filter_cp.save(book.title, book_msg.get_client_id())
 
         return BookMessage(book, *book_msg.get_headers()), book.title
 

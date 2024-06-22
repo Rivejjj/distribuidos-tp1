@@ -1,11 +1,13 @@
+
+
 import logging
 import signal
-import time
+
 import pika
 
 from entities.eof_msg import EOFMessage
-from rabbitmq.eofs_cp import EOFCheckpoint, ReceivedEOF
-from utils.initialize import add_query_to_message, encode, uuid
+from rabbitmq.eofs_cp import ReceivedEOF
+from utils.initialize import encode, uuid
 
 
 class QueueMiddleware:
