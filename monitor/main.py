@@ -13,7 +13,7 @@ def main():
     
     # handle sigterm
 
-    workers = ["computers_category_filter_0", "computers_category_filter_1"]
+    workers = ['computers_category_filter_0', 'computers_category_filter_1']
     monitor = Monitor(workers)
     monitor.run()
     

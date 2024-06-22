@@ -1,9 +1,11 @@
 import socket
 import logging
 import time
+import signal
 
 class MonitorClient():
     def __init__(self, name):
+        signal.signal(signal.SIGTERM, lambda signal, frame: self.close())
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind(('', 22225))
         self.sock.listen()
@@ -21,28 +23,6 @@ class MonitorClient():
             logging.warning(f"CONNECTED TO MONITOR!")
 
 
-    # def connect(self, monitors):
-    #     attempts = 5
-    #     index = 0
-    #     self.address, self.port = monitors[index]
-
-    #     while not self.connected and attempts >= 0:
-    #         attempts = self.check_attempts(attempts, index, monitors)
-    #         try:
-    #             self.sock.connect((self.address, self.port))
-    #             self.connected = True
-    #             logging.warning(f"Connected to monitor: {self.address} {self.port}")
-    #         except ConnectionRefusedError:
-    #             logging.warning(f"Connection refused with {self.address}. Retrying in 1 seconds")
-    #             self.connected = False
-    #             time.sleep(1)
-    #         except socket.gaierror:
-    #             logging.warning(f"Host name invalid: {self.address}. Monitor not alive. Retrying in 1 seconds")
-    #             self.connected = False
-    #             time.sleep(1)
-    #         finally:
-    #             tries_remaining -= 1
-
     def run(self):
         while self.running:
             self.listen_for_connections()
@@ -54,30 +34,17 @@ class MonitorClient():
                     # if read == b'':
                     #     self.listen_for_connections()
                     logging.warning(f"Answer from server: {read.decode()}")
-                    time.sleep(3)
+                    if self.name == "computers_category_filter_1":
+                        logging.warning(f"Sleeping for 9 seconds")
+                        time.sleep(9)
+                    else:
+                        time.sleep(1)
+                        logging.warning(f"Sleeping for 1 second")
                 except (socket.timeout, OSError) as e:
                     logging.error(f"Error in client: {e}")
                     self.conn.close()
                     self.connected = False
                     break
-
-        
-
-        # monitors = [("monitor2", 22223), ("monitor1", 22223), ("monitor0", 22223)]
-        # self.connect(monitors)
-        # while self.connected:
-        #     try:    
-        #         logging.warning(f"Sending heartbeat to monitor")
-        #         self.sock.send(bytes(self.name, 'utf-8'))
-        #         read = self.sock.recv(1024)
-        #         if read == b'':
-        #             self.restart_connection()
-        #         logging.warning(f"Answer from server: {read.decode()}")
-        #         time.sleep(3)
-        #     except (socket.timeout, OSError) as e:
-        #             logging.error(f"Error in client: {e}")
-        #             self.restart_connection()
-    
 
 
     def restart_connection(self):
@@ -89,14 +56,8 @@ class MonitorClient():
         self.port = None
         self.connect()
         time.sleep(1)
-
-    def check_attempts(self, attempts, index, monitors):
-        if attempts == 0:
-            index = (index + 1) % 3
-            self.address, self.port = monitors[index]
-            attempts = 5
-        return attempts
     
     def close(self):
-        self.connected = False
         self.sock.close()
+        self.connected = False
+        self.running = False

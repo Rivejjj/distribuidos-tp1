@@ -116,6 +116,7 @@ def main():
     name = config_params["name"]
     process = Process(target=send_heartbeat, args=(
         name,))
+    process.daemon = True
     process.start()
 
     logging.warning("Starting book filter")

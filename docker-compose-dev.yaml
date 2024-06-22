@@ -53,7 +53,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=INFO 
+      - LOGGING_LEVEL=WARNING 
       - INPUT_QUEUE=query1
       - OUTPUT_QUEUES=computers:3
       - CATEGORY=Computers
@@ -68,7 +68,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=INFO
+      - LOGGING_LEVEL=WARNING
       - INPUT_QUEUE=query1
       - OUTPUT_QUEUES=computers:3
       - CATEGORY=Computers
