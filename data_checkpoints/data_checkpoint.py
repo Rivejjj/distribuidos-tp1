@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 import json
 import shutil
 import os
+
+from entities.query_message import QueryMessage
 DIRECTORY = 'data_checkpoints/.checkpoints'
 
 MAX_LENGTH_BYTES = 8
@@ -98,7 +100,8 @@ class DataCheckpoint(ABC):
             except FileNotFoundError:
                 pass
 
-    def delete_client(self, client_id):
+    def delete_client(self, msg: QueryMessage):
+        client_id = msg.get_client_id()
         shutil.rmtree(f"{self.path}/{client_id}")
         self.change_counter.pop(client_id)
 

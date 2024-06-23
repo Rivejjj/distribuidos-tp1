@@ -1,6 +1,7 @@
 
 
 from entities.book import Book
+from entities.query_message import QueryMessage
 
 
 class Accumulator:
@@ -42,6 +43,7 @@ class Accumulator:
     def __get_decade(self, year):
         return year // 10 * 10
 
-    def clear(self):
-        self.authors = {}
-        self.completed_authors = {}
+    def clear(self, msg: QueryMessage):
+        client_id = msg.get_client_id()
+        self.authors.pop(client_id)
+        self.completed_authors.pop(client_id)

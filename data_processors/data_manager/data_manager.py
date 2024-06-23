@@ -3,6 +3,7 @@ from functools import partial
 import logging
 
 from data_checkpoints.messages_checkpoint import MessagesCheckpoint
+from entities.client_dc import ClientDCMessage
 from entities.eof_msg import EOFMessage
 from entities.query_message import QueryMessage
 from rabbitmq.queue import QueueMiddleware
@@ -46,6 +47,12 @@ class DataManager(ABC):
         """
         pass
 
+    def delete_client(self, msg: QueryMessage):
+        """
+        Borra el cliente
+        """
+        self.messages_cp.delete_client(msg.get_client_id())
+
     def process_eof(self, eof_msg: EOFMessage):
         self.queue_middleware.send_eof(eof_msg, partial(self.eof_cb, eof_msg))
 
@@ -59,6 +66,13 @@ class DataManager(ABC):
             if msg.is_eof():
                 logging.info("Received EOF")
                 self.process_eof()
+                ch.basic_ack(delivery_tag=method.delivery_tag)
+                return
+
+            if msg.is_dc():
+                logging.info(
+                    f"Received Client disconnect {msg.get_client_id()}")
+                self.delete_client(msg)
                 ch.basic_ack(delivery_tag=method.delivery_tag)
                 return
 

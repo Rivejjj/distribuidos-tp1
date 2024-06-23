@@ -1,11 +1,12 @@
 from data_processors.data_manager.data_manager import DataManager
 from book_authors_cp import BookAuthorsCheckpoint
 from entities.book import Book
+from entities.client_dc import ClientDCMessage
 from sent_titles_cp import SentTitlesCheckpoint
 from reviews_counter_cp import ReviewsCounterCheckpoint
 from reviews_counter import ReviewsCounter
 from entities.book_msg import BookMessage
-from entities.query_message import BOOK, REVIEW, TITLE_AUTHORS, TITLE_SCORE
+from entities.query_message import BOOK, REVIEW, TITLE_AUTHORS, TITLE_SCORE, QueryMessage
 from entities.review_msg import ReviewMessage
 from entities.title_authors_msg import TitleAuthorsMessage
 from entities.title_score_msg import TitleScoreMessage
@@ -21,8 +22,8 @@ class ReviewsCounterManager(DataManager):
 
         self.sent_titles_cp = SentTitlesCheckpoint()
 
-    def eof_cb(self, msg):
-        return self.counter.clear()
+    def eof_cb(self, msg: QueryMessage):
+        return self.delete_client(msg)
 
     def process_book(self, book_msg: BookMessage):
         if self.messages_cp.is_processed_msg(book_msg):
@@ -82,3 +83,10 @@ class ReviewsCounterManager(DataManager):
             return self.process_book(msg)
         elif msg.get_identifier() == REVIEW:
             return self.process_review(msg)
+
+    def delete_client(self, msg: ClientDCMessage):
+        self.book_authors_cp.delete_client(msg)
+        self.counter.clear(msg)
+        self.book_authors_cp.delete_client(msg)
+        self.sent_titles_cp.delete_client(msg)
+        return super().delete_client(msg)

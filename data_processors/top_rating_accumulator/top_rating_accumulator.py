@@ -1,3 +1,6 @@
+from entities.query_message import QueryMessage
+
+
 AVG_RATING_POSITION = 1
 TITLE_POSITON = 0
 
@@ -20,5 +23,5 @@ class TopRatingAccumulator:
 
         return top_books
 
-    def clear(self):
-        self.books = {}
+    def clear(self, msg: QueryMessage):
+        self.books.pop(msg.get_client_id())

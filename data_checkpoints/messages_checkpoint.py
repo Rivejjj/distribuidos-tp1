@@ -118,7 +118,8 @@ class MessagesCheckpoint(DataCheckpoint):
         messages = self.processed_messages.get(client_id, {})
         return id in messages and not messages[id]
 
-    def delete_client(self, client_id: int):
-        super().delete_client(client_id)
+    def delete_client(self, msg: QueryMessage):
+        client_id = msg.get_client_id()
+        super().delete_client(msg)
         self.processed_messages.pop(client_id)
         self.pending_message.pop(client_id)

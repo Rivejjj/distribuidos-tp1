@@ -9,6 +9,7 @@ AUTHORS = 4
 TITLE_SCORE = 5
 EOF = 6
 BATCH_TITLE_SCORE = 7
+CLIENT_DC = 8
 QUERY_MSG_SEPARATOR = ";"
 
 
@@ -55,3 +56,6 @@ class QueryMessage(ABC):
 
     def is_eof(self) -> bool:
         return self.identifier == EOF
+
+    def is_dc(self) -> bool:
+        return self.identifier == CLIENT_DC

@@ -1,12 +1,13 @@
 import logging
 from book_filter import BookFilter
 from data_processors.data_manager.data_manager import DataManager
+from entities.client_dc import ClientDCMessage
 from entities.eof_msg import EOFMessage
 from review_filter_checkpoint import ReviewFilterCheckpoint
 from entities.book_msg import BookMessage
 from entities.review_msg import ReviewMessage
 from review_filter import ReviewFilter
-from entities.query_message import BOOK, REVIEW
+from entities.query_message import BOOK, REVIEW, QueryMessage
 from utils.initialize import encode
 
 
@@ -30,9 +31,8 @@ class FilterManager(DataManager):
                 self.review_filter,
                 '.checkpoints/review_filter')
 
-    def eof_cb(self, eof_msg: EOFMessage):
-        if self.review_filter:
-            self.review_filter.clear(eof_msg)
+    def eof_cb(self, eof_msg: QueryMessage):
+        self.delete_client(eof_msg)
 
     def send_to_next_worker(self, result):
         msg, title = result
@@ -68,3 +68,9 @@ class FilterManager(DataManager):
             return self.process_review(msg)
 
         logging.info(f"Not detected {msg.get_book()}")
+
+    def delete_client(self, msg: QueryMessage):
+        if self.review_filter:
+            self.review_filter.clear(msg)
+            self.review_filter_cp.delete_client(msg)
+        return super().delete_client(msg)

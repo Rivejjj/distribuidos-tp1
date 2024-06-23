@@ -4,7 +4,9 @@ from accumulator import Accumulator
 from accumulator_checkpoint import AccumulatorCheckpoint
 from entities.authors_msg import AuthorsMessage
 from entities.book_msg import BookMessage
-from entities.query_message import AUTHORS, BOOK
+from entities.client_dc import ClientDCMessage
+from entities.eof_msg import EOFMessage
+from entities.query_message import AUTHORS, BOOK, QueryMessage
 from utils.initialize import decode, encode, get_queue_names
 from utils.parser import parse_query_msg
 
@@ -15,8 +17,8 @@ class AccumulatorManager(DataManager):
         self.accum = Accumulator()
         self.accum_cp = AccumulatorCheckpoint(self.accum)
 
-    def eof_cb(self, msg):
-        return self.accum.clear()
+    def eof_cb(self, msg: EOFMessage):
+        return self.delete_client(msg)
 
     def process_book(self, book_msg: BookMessage):
         book = book_msg.get_book()
@@ -48,3 +50,8 @@ class AccumulatorManager(DataManager):
     def process_query_message(self, msg):
         if msg.get_identifier() == BOOK and msg.get_book():
             return self.process_book(msg)
+
+    def delete_client(self, msg: QueryMessage):
+        self.accum.clear(msg)
+        self.accum_cp.delete_client(msg)
+        return super().delete_client(msg)

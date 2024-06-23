@@ -1,5 +1,6 @@
 
 from entities.book import Book
+from entities.query_message import QueryMessage
 from entities.review import Review
 
 
@@ -43,6 +44,7 @@ class ReviewsCounter:
         author = self.books[client_id][title]
         return author, title, average
 
-    def clear(self):
-        self.books = {}
-        self.reviews = {}
+    def clear(self, msg: QueryMessage):
+        client_id = msg.get_client_id()
+        self.books.pop(client_id)
+        self.reviews.pop(client_id)
