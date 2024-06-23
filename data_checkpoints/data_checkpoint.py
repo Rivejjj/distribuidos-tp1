@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import json
+import shutil
 import os
 DIRECTORY = 'data_checkpoints/.checkpoints'
 
@@ -96,6 +97,10 @@ class DataCheckpoint(ABC):
                             yield int(client), json.loads(data)
             except FileNotFoundError:
                 pass
+
+    def delete_client(self, client_id):
+        shutil.rmtree(f"{self.path}/{client_id}")
+        self.change_counter.pop(client_id)
 
     @ abstractmethod
     def load(self):

@@ -328,7 +328,6 @@ class TestCheckpoints(unittest.TestCase):
                 acc.completed_authors[client_id], acc_2.completed_authors[client_id])
 
     def test_load_reviews_counter_cp(self):
-        # Tarda mucho
         counter, r_cp, b_cp, sent_titles_cp = new_reviews_counter()
         for client_id in range(CLIENTS):
             for i in range(int(r_cp.checkpoint_interval * 1.5)):
@@ -369,6 +368,45 @@ class TestCheckpoints(unittest.TestCase):
         acc_2, data_cp_2 = new_top_rating()
         self.assertEqual(acc.books,
                          acc_2.books)
+
+    def test_delete_client(self):
+        acc, data_cp = new_top_rating()
+        for client_id in range(CLIENTS):
+            for i in range(int(data_cp.checkpoint_interval * 1.5)):
+                acc.add_title(f"T{i}", i, client_id)
+                data_cp.save(f"T{i}", i, client_id)
+
+        data_cp.delete_client(1)
+
+        self.assertFalse(os.path.exists(f"{data_cp.path}/1"))
+        self.assertTrue(os.path.exists(f"{data_cp.path}/0"))
+        self.assertTrue(os.path.exists(f"{data_cp.path}/2"))
+
+    def test_no_client_messages_after_delete(self):
+        msg_cp = new_message_interval()
+        for client_id in range(CLIENTS):
+            for i in range(int(msg_cp.checkpoint_interval * 1.5)):
+                msg = gen_q_msg(i, client_id)
+                msg_cp.save(msg)
+                msg_cp.mark_msg_as_sent(msg)
+
+        msg_cp.delete_client(1)
+        self.assertTrue(1 not in msg_cp.processed_messages)
+        self.assertTrue(0 in msg_cp.processed_messages)
+        self.assertTrue(2 in msg_cp.processed_messages)
+
+    def test_no_titles_after_delete(self):
+        counter, r_cp, b_cp, sent_titles_cp = new_reviews_counter()
+        for client_id in range(CLIENTS):
+            for i in range(int(sent_titles_cp.checkpoint_interval * 1.5)):
+                book = Book(title=f"T{i}",
+                            authors=f"A{i}")
+                sent_titles_cp.save(book.title, client_id)
+
+        sent_titles_cp.delete_client(1)
+        self.assertTrue(1 not in sent_titles_cp.titles)
+        self.assertTrue(0 in sent_titles_cp.titles)
+        self.assertTrue(2 in sent_titles_cp.titles)
 
     def tearDown(self) -> None:
         try:

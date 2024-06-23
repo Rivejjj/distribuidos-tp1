@@ -33,3 +33,7 @@ class SentTitlesCheckpoint(DataCheckpoint):
     def not_sent(self, title: str, client_id: int):
         self.titles[client_id] = self.titles.get(client_id, set())
         return title not in self.titles[client_id]
+
+    def delete_client(self, client_id):
+        self.titles.pop(client_id)
+        return super().delete_client(client_id)
