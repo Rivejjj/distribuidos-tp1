@@ -1,7 +1,7 @@
 import json
 from data_checkpoints.data_checkpoint import DataCheckpoint
-# from accumulator import Accumulator
-from data_processors.decades_accumulator.accumulator import Accumulator
+from accumulator import Accumulator
+# from data_processors.decades_accumulator.accumulator import Accumulator
 from entities.book import Book
 from utils.initialize import deserialize_dict, serialize_dict
 

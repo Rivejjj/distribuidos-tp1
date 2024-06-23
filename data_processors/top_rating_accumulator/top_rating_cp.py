@@ -1,8 +1,8 @@
 import json
 from data_checkpoints.data_checkpoint import DataCheckpoint
-from data_processors.top_rating_accumulator.top_rating_accumulator import TopRatingAccumulator
+# from data_processors.top_rating_accumulator.top_rating_accumulator import TopRatingAccumulator
 from utils.initialize import deserialize_dict, serialize_dict
-# from top_rating_accumulator import TopRatingAccumulator
+from top_rating_accumulator import TopRatingAccumulator
 
 
 class TopRatingCheckpoint(DataCheckpoint):

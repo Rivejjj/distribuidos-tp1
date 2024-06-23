@@ -19,6 +19,7 @@ from entities.book import Book
 from entities.book_msg import BookMessage
 from entities.review import Review
 from gateway.client_parser import parse_book_from_client
+from rabbitmq.eofs_cp import ReceivedEOF
 
 CLIENTS = 3
 INTERVAL = 100
@@ -76,6 +77,13 @@ def new_message_interval():
 
     cp.checkpoint_interval = INTERVAL
 
+    return cp
+
+
+def new_eofs_cp(path='data_checkpoints/.checkpoints/tests'):
+    cp = ReceivedEOF(10, path)
+
+    cp.checkpoint_interval = INTERVAL
     return cp
 
 
@@ -376,7 +384,7 @@ class TestCheckpoints(unittest.TestCase):
                 acc.add_title(f"T{i}", i, client_id)
                 data_cp.save(f"T{i}", i, client_id)
 
-        data_cp.delete_client(1)
+        data_cp.delete_client(gen_q_msg(1, 1))
 
         self.assertFalse(os.path.exists(f"{data_cp.path}/1"))
         self.assertTrue(os.path.exists(f"{data_cp.path}/0"))
@@ -390,7 +398,7 @@ class TestCheckpoints(unittest.TestCase):
                 msg_cp.save(msg)
                 msg_cp.mark_msg_as_sent(msg)
 
-        msg_cp.delete_client(1)
+        msg_cp.delete_client(gen_q_msg(1, 1))
         self.assertTrue(1 not in msg_cp.processed_messages)
         self.assertTrue(0 in msg_cp.processed_messages)
         self.assertTrue(2 in msg_cp.processed_messages)
@@ -403,10 +411,21 @@ class TestCheckpoints(unittest.TestCase):
                             authors=f"A{i}")
                 sent_titles_cp.save(book.title, client_id)
 
-        sent_titles_cp.delete_client(1)
+        sent_titles_cp.delete_client(gen_q_msg(1, 1))
         self.assertTrue(1 not in sent_titles_cp.titles)
         self.assertTrue(0 in sent_titles_cp.titles)
         self.assertTrue(2 in sent_titles_cp.titles)
+
+    def test_eofs_cp(self):
+        cp = new_eofs_cp()
+
+        for client_id in range(CLIENTS):
+            for _ in range(int(cp.checkpoint_interval * 1.5)):
+                cp.save(client_id)
+
+        cp2 = new_eofs_cp()
+
+        self.assertTrue(cp2.eofs, cp.eofs)
 
     def tearDown(self) -> None:
         try:

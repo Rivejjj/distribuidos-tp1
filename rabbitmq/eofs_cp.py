@@ -11,8 +11,8 @@ class ReceivedEOF(DataCheckpoint):
 
     def save(self, client_id: int):
         self.add_eof(client_id)
-        self.checkpoint(json.dumps([client_id]),
-                        json.dumps(self.eofs))
+        self.checkpoint([self.eofs[client_id]],
+                        lambda: self.eofs[client_id], client_id)
 
     def add_eof(self, client_id: int):
         self.eofs[client_id] = self.eofs.get(client_id, 0) + 1
@@ -20,7 +20,7 @@ class ReceivedEOF(DataCheckpoint):
     def eof_reached(self, client_id: int) -> bool:
         return self.eofs[client_id] >= self.eof_count
 
-    def reset_eof(self, client_id: int):
+    def clear(self, client_id: int):
         self.eofs.pop(client_id)
 
     def load(self):
@@ -29,11 +29,9 @@ class ReceivedEOF(DataCheckpoint):
         """
 
         try:
-            state = self.load_state()
-            if state:
-                self.eofs = state
-
-            for change in self.load_changes():
-                self.add_eof(change)
+            for client_id, state in self.load_state():
+                self.eofs[client_id] = state
+            for client_id, change in self.load_changes():
+                self.eofs[client_id] = change[0]
         except FileNotFoundError:
             return

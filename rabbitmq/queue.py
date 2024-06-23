@@ -96,15 +96,14 @@ class QueueMiddleware:
 
     def send_eof(self, msg: EOFMessage, callback=None):
         client_id = msg.get_client_id()
-
-        self.received_eofs_cp.add_eof(msg.get_client_id())
+        self.received_eofs_cp.save(msg.get_client_id())
 
         logging.info(
             f"[QUEUE] Received EOFs {self.received_eofs_cp.eofs[client_id]}")
 
         if self.received_eofs_cp.eof_reached(client_id):
             logging.info("[QUEUE] Received EOFs of all workers")
-            self.received_eofs_cp.reset_eof(client_id)
+            self.received_eofs_cp.clear(client_id)
 
             if callback:
                 logging.info("[QUEUE] Executing callback")

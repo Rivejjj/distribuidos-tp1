@@ -31,7 +31,7 @@ class DataCheckpoint(ABC):
         self.change_counter[client_id] = self.change_counter.get(
             client_id, 0) + 1
         self.save_change(change_data, client_id, add_length, add_new_line)
-        if self.change_counter[client_id] % self.checkpoint_interval == 0:
+        if self.change_counter[client_id] % self.checkpoint_interval == 0 and state_cb:
             self.save_state(state_cb, client_id)
             self.change_counter[client_id] = 0
 

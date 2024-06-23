@@ -1,7 +1,7 @@
 import json
 from data_checkpoints.data_checkpoint import DataCheckpoint
-# from review_filter import ReviewFilter
-from data_processors.book_filter.review_filter import ReviewFilter
+from review_filter import ReviewFilter
+# from data_processors.book_filter.review_filter import ReviewFilter
 from utils.initialize import deserialize_dict, serialize_dict
 
 

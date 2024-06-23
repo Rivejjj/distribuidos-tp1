@@ -1,8 +1,8 @@
 import json
 from data_checkpoints.data_checkpoint import DataCheckpoint
-from data_processors.sentiment_score_accumulator.sentiment_score_accumulator import SentimentScoreAccumulator
+# from data_processors.sentiment_score_accumulator.sentiment_score_accumulator import SentimentScoreAccumulator
 from utils.initialize import deserialize_dict, serialize_dict
-# from sentiment_score_accumulator import SentimentScoreAccumulator
+from sentiment_score_accumulator import SentimentScoreAccumulator
 
 
 class SentimentAccumulatorCheckpoint(DataCheckpoint):

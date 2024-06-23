@@ -1,5 +1,6 @@
 import json
 from data_checkpoints.data_checkpoint import DataCheckpoint
+from entities.query_message import QueryMessage
 from utils.initialize import deserialize_dict, serialize_dict
 
 
@@ -34,6 +35,7 @@ class SentTitlesCheckpoint(DataCheckpoint):
         self.titles[client_id] = self.titles.get(client_id, set())
         return title not in self.titles[client_id]
 
-    def delete_client(self, client_id):
+    def delete_client(self, msg: QueryMessage):
+        client_id = msg.get_client_id()
         self.titles.pop(client_id)
-        return super().delete_client(client_id)
+        return super().delete_client(msg)

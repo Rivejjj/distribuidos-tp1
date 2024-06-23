@@ -8,7 +8,7 @@ from entities.query_message import BOOK, REVIEW
 from client_parser import parse_book_from_client, parse_review_from_client
 from entities.review import Review
 from entities.review_msg import ReviewMessage
-from gateway.client_handler import create_client_handler
+from server_handler import create_client_handler
 from utils.initialize import decode, encode
 from rabbitmq.queue import QueueMiddleware
 from utils.parser import parse_client_msg, parse_query_msg
