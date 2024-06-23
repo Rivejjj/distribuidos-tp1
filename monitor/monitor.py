@@ -14,36 +14,49 @@ class Monitor:
         self.last_heartbeat = {}
         self.running = True
         self.workers = workers
-        self.active_workers = {}
+        self.active_workers = {} #
         self.failed_workers = []
         self.restarted_workers = []
 
     def delete_node(self, node):
         logging.warning(f"Connection to {node} lost.")
+        name = self.active_workers[node]
         if node in self.active_workers:
-            self.active_workers[node].close()
+            node.close()
             del self.active_workers[node]
-        if node not in self.restarted_workers:
-            self.failed_workers.append(node)
+        if name not in self.restarted_workers:
+            self.failed_workers.append(name)
+
+    def check_last_heartbeats(self):
+        active_workers = list(self.active_workers.keys())
+        for sock in active_workers:
+            if time.time() - self.last_heartbeat[sock] > MAX_HEARTBEAT_TIME:
+                logging.warning(f"Connection to {self.active_workers[sock]} lost due to inactivity.")
+                self.delete_node(sock)
 
     def check_health(self):
-        ready_to_read, _, _ = select.select(self.active_workers.values(), [], [], MAX_HEARTBEAT_TIME)
-        workers = list(self.active_workers.keys())
-        for worker in workers:
+        logging.warning(f"Checking health: available workers: {self.active_workers.values()} \n Failed workers: {self.failed_workers} \n Restarted workers: {self.restarted_workers}")
+
+        try:
+            ready_to_read, _, _ = select.select(self.active_workers.keys(), [], [], MAX_HEARTBEAT_TIME)
+        except OSError as e:
+            logging.error(f"Error in select {e}")
+            return
+
+        for sock in ready_to_read:
             try:
-                data = self.active_workers[worker].recv(1024)
+                data = sock.recv(1024)
                 if data and data != b"":
-                    self.last_heartbeat[worker] = time.time()
-                    self.active_workers[worker].send(b"Ok")
+                    self.last_heartbeat[sock] = time.time()
+                    sock.send(b"Ok")
+                    logging.warning(f"Received heartbeat from {self.active_workers[sock]}")
                 else:
-                    self.delete_node(worker)
-                if time.time() - self.last_heartbeat[worker] > MAX_HEARTBEAT_TIME:
-                    logging.warning(f"Connection to {worker} lost due to inactivity.")
-                    self.delete_node(worker)
-                    continue
+                    self.delete_node(sock)
             except (BrokenPipeError, OSError) as e:
-                logging.warning(f"Connection to {worker} lost: {e}")
-                self.delete_node(worker)
+                logging.warning(f"Connection to {self.active_workers[sock]} lost: {e}...")
+                self.delete_node(sock)
+        
+        self.check_last_heartbeats()
 
     def connect_to_worker(self,worker):
         logging.warning(f"Trying to connect with: {worker}")
@@ -51,14 +64,22 @@ class Monitor:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(10)
             sock.connect((worker, 22225))
-            self.active_workers[worker] = sock
+            self.active_workers[sock] = worker
+            self.last_heartbeat[sock] = time.time()
             if worker in self.restarted_workers:
                 self.restarted_workers.remove(worker)
             logging.warning(f"Connected to {worker}")
+            logging.warning(f"Active workers: {self.active_workers.values()}")
+
         except (ConnectionRefusedError, socket.timeout) as e:
             if worker not in self.restarted_workers:
                 self.failed_workers.append(worker)
             logging.warning(f"Error connecting with {worker}: {e}")
+        except socket.gaierror as e:
+            logging.warning(f"gaierror with {worker}: {e}")
+            if worker in self.restarted_workers:
+                self.restarted_workers.remove(worker)
+                self.failed_workers.append(worker)
         
     def check_failed_workers(self):
         logging.warning(f"Checking failed connections: {self.failed_workers}")
@@ -75,7 +96,7 @@ class Monitor:
 
     def establish_connections(self):
         for worker in self.workers:
-            if worker in self.active_workers:
+            if worker in self.active_workers.values():
                 continue
             self.connect_to_worker(worker)
 
@@ -98,5 +119,5 @@ class Monitor:
     def stop(self):
         self.running = False
         for worker in self.active_workers:
-            self.active_workers[worker].close()
+            worker.close()
 

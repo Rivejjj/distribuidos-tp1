@@ -34,12 +34,7 @@ class MonitorClient():
                     # if read == b'':
                     #     self.listen_for_connections()
                     logging.warning(f"Answer from server: {read.decode()}")
-                    if self.name == "computers_category_filter_1":
-                        logging.warning(f"Sleeping for 9 seconds")
-                        time.sleep(9)
-                    else:
-                        time.sleep(1)
-                        logging.warning(f"Sleeping for 1 second")
+                    time.sleep(3)
                 except (socket.timeout, OSError) as e:
                     logging.error(f"Error in client: {e}")
                     self.conn.close()
