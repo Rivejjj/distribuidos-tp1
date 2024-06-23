@@ -1,7 +1,7 @@
 import json
 from data_checkpoints.data_checkpoint import DataCheckpoint
-from reviews_counter import ReviewsCounter
-# from data_processors.reviews_counter_accum.reviews_counter import ReviewsCounter
+# from reviews_counter import ReviewsCounter
+from data_processors.reviews_counter_accum.reviews_counter import ReviewsCounter
 from entities.book import Book
 from utils.initialize import deserialize_dict
 
@@ -16,8 +16,8 @@ class BookAuthorsCheckpoint(DataCheckpoint):
         """
         Guarda un autor en el archivo de checkpoint
         """
-        self.checkpoint([book.title, book.authors, client_id],
-                        lambda: self.counter.books)
+        self.checkpoint([book.title, book.authors],
+                        lambda: self.counter.books[client_id], client_id)
 
     def load(self):
         """
@@ -26,12 +26,11 @@ class BookAuthorsCheckpoint(DataCheckpoint):
         # TODO: Que funcione teniendo en cuenta client id
 
         try:
-            state = self.load_state()
-            if state:
-                self.counter.books = deserialize_dict(state)
+            for client_id, books in self.load_state():
+                self.counter.books[client_id] = deserialize_dict(books)
 
-            for change in self.load_changes():
-                title, authors, client_id = change
+            for client_id, change in self.load_changes():
+                title, authors = change
 
                 book = Book(title, authors)
                 self.counter.add_book(book, client_id)

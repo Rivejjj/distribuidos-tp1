@@ -113,6 +113,8 @@ def add_query_to_message(message, query):
 
 def serialize_dict(dic: dict):
     result = {}
+    if type(dic) == set:
+        return list(dic)
     for key, value in dic.items():
         if type(value) == set:
             result[key] = list(value)
@@ -125,18 +127,23 @@ def serialize_dict(dic: dict):
 
 def deserialize_dict(dic: dict, top_level=True, convert_to_set=True, convert_to_tuple=False):
     result = {}
-    for key, value in dic.items():
+    if type(dic) == list and convert_to_set:
+        return set(dic)
+    elif type(dic) == list and convert_to_tuple:
+        return tuple(dic)
+    else:
+        for key, value in dic.items():
 
-        if key.isdigit() and top_level:
-            key = int(key)
-        if type(value) == list and convert_to_set:
-            result[key] = set(value)
-        elif type(value) == list and convert_to_tuple:
-            result[key] = tuple(value)
-        elif type(value) == dict:
-            result[key] = deserialize_dict(
-                value, False, convert_to_set, convert_to_tuple)
-        else:
-            result[key] = value
+            if key.isdigit() and top_level:
+                key = int(key)
+            if type(value) == list and convert_to_set:
+                result[key] = set(value)
+            elif type(value) == list and convert_to_tuple:
+                result[key] = tuple(value)
+            elif type(value) == dict:
+                result[key] = deserialize_dict(
+                    value, False, convert_to_set, convert_to_tuple)
+            else:
+                result[key] = value
 
     return result

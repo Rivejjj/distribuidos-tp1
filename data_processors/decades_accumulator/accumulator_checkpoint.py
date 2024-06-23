@@ -1,7 +1,7 @@
 import json
 from data_checkpoints.data_checkpoint import DataCheckpoint
-from accumulator import Accumulator
-# from data_processors.decades_accumulator.accumulator import Accumulator
+# from accumulator import Accumulator
+from data_processors.decades_accumulator.accumulator import Accumulator
 from entities.book import Book
 from utils.initialize import deserialize_dict, serialize_dict
 
@@ -16,26 +16,23 @@ class AccumulatorCheckpoint(DataCheckpoint):
         """
         Guarda un autor en el archivo de checkpoint
         """
-        self.checkpoint([book.authors, book.published_year, client_id],
-                        lambda: [serialize_dict(self.accumulator.authors), serialize_dict(self.accumulator.completed_authors)])
+        self.checkpoint([book.authors, book.published_year],
+                        lambda: [serialize_dict(self.accumulator.authors[client_id]), serialize_dict(self.accumulator.completed_authors[client_id])], client_id)
 
     def load(self):
         """
         Restaura el estado del filtro de reviews a partir del archivo de checkpoint
         """
-        # TODO: Que funcione teniendo en cuenta client id
 
         try:
-            state = self.load_state()
-            if state:
+            for client_id, state in self.load_state():
                 authors, completed_authors = state
-                self.accumulator.authors = deserialize_dict(authors)
-                self.accumulator.completed_authors = deserialize_dict(
+                self.accumulator.authors[client_id] = deserialize_dict(authors)
+                self.accumulator.completed_authors[client_id] = deserialize_dict(
                     completed_authors)
 
-            for change in self.load_changes():
-                author, published_year, client_id = change
-
+            for client_id, change in self.load_changes():
+                author, published_year = change
                 book = Book(authors=author, published_year=published_year)
                 self.accumulator.add_book(book, client_id)
         except FileNotFoundError:

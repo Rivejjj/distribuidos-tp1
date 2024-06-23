@@ -8,19 +8,33 @@ services:
       - gateway
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - BOOKS_PATH=/data/books_data.csv
       - BOOKS_REVIEWS_PATH=/data/Books_rating.csv
     volumes:
       - ./data/csv:/data
-      - ./data/query:/query
+      - ./data/0/query:/query
+  sender_client_1:
+    container_name: sender_client_1
+    image: client:latest
+    entrypoint: python3 /main.py
+    depends_on:
+      - gateway
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - BOOKS_PATH=/data/books_data.csv
+      - BOOKS_REVIEWS_PATH=/data/Books_rating.csv
+    volumes:
+      - ./data/csv:/data
+      - ./data/1/query:/query
   gateway:
     container_name: gateway
     image: gateway:latest
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - OUTPUT_QUEUES=query1:4;query2:4;query3:4;query4:4
       - INPUT_QUEUE=results
       - QUERY_COUNT=14
@@ -31,7 +45,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=query1
       - OUTPUT_QUEUES=computers:4
       - CATEGORY=Computers
@@ -45,7 +59,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=query1
       - OUTPUT_QUEUES=computers:4
       - CATEGORY=Computers
@@ -59,7 +73,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=query1
       - OUTPUT_QUEUES=computers:4
       - CATEGORY=Computers
@@ -73,7 +87,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=query1
       - OUTPUT_QUEUES=computers:4
       - CATEGORY=Computers
@@ -87,7 +101,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=computers
       - OUTPUT_QUEUES=2000s_filtered:4
       - PUBLISHED_YEAR_RANGE=2000-2023
@@ -101,7 +115,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=computers
       - OUTPUT_QUEUES=2000s_filtered:4
       - PUBLISHED_YEAR_RANGE=2000-2023
@@ -115,7 +129,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=computers
       - OUTPUT_QUEUES=2000s_filtered:4
       - PUBLISHED_YEAR_RANGE=2000-2023
@@ -129,7 +143,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=computers
       - OUTPUT_QUEUES=2000s_filtered:4
       - PUBLISHED_YEAR_RANGE=2000-2023
@@ -143,7 +157,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=2000s_filtered
       - OUTPUT_QUEUES=results:1
       - TITLE_CONTAINS=distributed
@@ -158,7 +172,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=2000s_filtered
       - OUTPUT_QUEUES=results:1
       - TITLE_CONTAINS=distributed
@@ -173,7 +187,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=2000s_filtered
       - OUTPUT_QUEUES=results:1
       - TITLE_CONTAINS=distributed
@@ -188,7 +202,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=2000s_filtered
       - OUTPUT_QUEUES=results:1
       - TITLE_CONTAINS=distributed
@@ -203,7 +217,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=query2
       - OUTPUT_QUEUES=results:1
       - TOP=10
@@ -217,7 +231,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=query2
       - OUTPUT_QUEUES=results:1
       - TOP=10
@@ -231,7 +245,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=query2
       - OUTPUT_QUEUES=results:1
       - TOP=10
@@ -245,7 +259,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=query2
       - OUTPUT_QUEUES=results:1
       - TOP=10
@@ -259,7 +273,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=query3
       - OUTPUT_QUEUES=90s_filtered:4
       - PUBLISHED_YEAR_RANGE=1990-1999
@@ -273,7 +287,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=query3
       - OUTPUT_QUEUES=90s_filtered:4
       - PUBLISHED_YEAR_RANGE=1990-1999
@@ -287,7 +301,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=query3
       - OUTPUT_QUEUES=90s_filtered:4
       - PUBLISHED_YEAR_RANGE=1990-1999
@@ -301,7 +315,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=query3
       - OUTPUT_QUEUES=90s_filtered:4
       - PUBLISHED_YEAR_RANGE=1990-1999
@@ -315,7 +329,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=90s_filtered
       - OUTPUT_QUEUES=500_reviews:1;results:1
       - ID=0
@@ -329,7 +343,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=90s_filtered
       - OUTPUT_QUEUES=500_reviews:1;results:1
       - ID=1
@@ -343,7 +357,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=90s_filtered
       - OUTPUT_QUEUES=500_reviews:1;results:1
       - ID=2
@@ -357,7 +371,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=90s_filtered
       - OUTPUT_QUEUES=500_reviews:1;results:1
       - ID=3
@@ -371,7 +385,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=500_reviews
       - OUTPUT_QUEUES=results:1
       - ID=0
@@ -385,7 +399,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=query4
       - OUTPUT_QUEUES=fiction:4
       - CATEGORY=fiction
@@ -399,7 +413,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=query4
       - OUTPUT_QUEUES=fiction:4
       - CATEGORY=fiction
@@ -413,7 +427,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=query4
       - OUTPUT_QUEUES=fiction:4
       - CATEGORY=fiction
@@ -427,7 +441,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=query4
       - OUTPUT_QUEUES=fiction:4
       - CATEGORY=fiction
@@ -441,7 +455,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=fiction
       - OUTPUT_QUEUES=sentiment_score:1
       - ID=0
@@ -454,7 +468,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=fiction
       - OUTPUT_QUEUES=sentiment_score:1
       - ID=1
@@ -467,7 +481,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=fiction
       - OUTPUT_QUEUES=sentiment_score:1
       - ID=2
@@ -480,7 +494,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=fiction
       - OUTPUT_QUEUES=sentiment_score:1
       - ID=3
@@ -493,7 +507,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=CRITICAL
+      - LOGGING_LEVEL=INFO
       - INPUT_QUEUE=sentiment_score
       - OUTPUT_QUEUES=results:1
       - ID=0

@@ -1,8 +1,8 @@
 import yaml
 
 WORKERS = 4
-CLIENTS = 1
-LOGGING_LEVEL = 'CRITICAL'
+CLIENTS = 2
+LOGGING_LEVEL = 'INFO'
 
 pools = [('computers_category_filter', WORKERS),
          ('2000s_published_year_filter', WORKERS),
@@ -93,7 +93,7 @@ def build_client(i):
         ],
         'volumes': [
             './data/csv:/data',
-            './data/query:/query'
+            f'./data/{i}/query:/query'
         ],
 
     }

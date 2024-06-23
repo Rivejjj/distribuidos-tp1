@@ -116,37 +116,56 @@ class TestCheckpoints(unittest.TestCase):
 
                 cls.books.append(book)
 
-    def test_wal_file_does_not_exist_after_state_checkpoint(self):
-        r1, data_cp = new_filter()
-
-        for client_id in range(CLIENTS):
-            for i in range(data_cp.checkpoint_interval + 1 // CLIENTS):
-                filter_save_new_title(r1, data_cp, f"Title {i}", client_id)
-
-        self.assertFalse(os.path.exists(data_cp.wal_path))
-
     def test_wal_file_exist_after_state_checkpoint(self):
         r1, data_cp = new_filter()
 
         for client_id in range(CLIENTS):
-            for i in range(data_cp.checkpoint_interval // CLIENTS):
+            for i in range(data_cp.checkpoint_interval + 1):
                 filter_save_new_title(r1, data_cp, f"Title {i}", client_id)
 
-        self.assertTrue(os.path.exists(data_cp.wal_path))
+        for client_id in range(CLIENTS):
+            self.assertTrue(os.path.exists(data_cp.wal_path(client_id)))
+
+    def test_wal_file_exist_for_a_client_and_not_for_another(self):
+        r1, data_cp = new_filter()
+
+        client1 = 1
+        client2 = 2
+
+        for i in range(data_cp.checkpoint_interval + 1):
+            filter_save_new_title(r1, data_cp, f"Title {i}", client1)
+
+        for i in range(data_cp.checkpoint_interval):
+            filter_save_new_title(r1, data_cp, f"Title {i}", client2)
+
+        self.assertTrue(os.path.exists(data_cp.wal_path(client1)))
+        self.assertFalse(os.path.exists(data_cp.wal_path(client2)))
+
+    def test_wal_file_does_not_exist_after_state_checkpoint(self):
+        r1, data_cp = new_filter()
+
+        for client_id in range(CLIENTS):
+            for i in range(data_cp.checkpoint_interval):
+                filter_save_new_title(r1, data_cp, f"Title {i}", client_id)
+
+        for client_id in range(CLIENTS):
+            self.assertFalse(os.path.exists(data_cp.wal_path(client_id)))
 
     def test_checkpoint_file_does_not_exist(self):
         r1, data_cp = new_filter()
         for client_id in range(CLIENTS):
-            for i in range(data_cp.checkpoint_interval // 2 // CLIENTS):
+            for i in range(data_cp.checkpoint_interval // 2):
                 filter_save_new_title(r1, data_cp, f"Title {i}", client_id)
 
-        self.assertFalse(os.path.exists(data_cp.cp_path + '.txt'))
+        for client_id in range(CLIENTS):
+            self.assertFalse(os.path.exists(
+                data_cp.cp_path(client_id) + '.txt'))
 
     def test_recover_from_only_checkpoint(self):
         r1, data_cp = new_filter()
 
         for client_id in range(CLIENTS):
-            for i in range(data_cp.checkpoint_interval // CLIENTS):
+            for i in range(data_cp.checkpoint_interval):
                 filter_save_new_title(r1, data_cp, f"Title {i}", client_id)
 
         r2, _ = new_filter()
@@ -157,7 +176,7 @@ class TestCheckpoints(unittest.TestCase):
         r1, data_cp = new_filter()
 
         for client_id in range(CLIENTS):
-            for i in range(data_cp.checkpoint_interval // 2 // CLIENTS):
+            for i in range(data_cp.checkpoint_interval // 2):
                 filter_save_new_title(r1, data_cp, f"Title {i}", client_id)
 
         r2, _ = new_filter()
@@ -223,12 +242,12 @@ class TestCheckpoints(unittest.TestCase):
             msg_cp.save(msg)
             msg_cp.mark_msg_as_sent(msg)
 
-        self.assertFalse(os.path.exists(msg_cp.wal_path))
-        self.assertTrue(os.path.exists(msg_cp.cp_path + '.txt'))
+        self.assertFalse(os.path.exists(msg_cp.wal_path(1)))
+        self.assertTrue(os.path.exists(msg_cp.cp_path(1) + '.txt'))
 
         msg_cp2 = new_message_interval()
 
-        for i in range(100):
+        for i in range(msg_cp.checkpoint_interval):
             msg = gen_q_msg(i, 1)
             self.assertTrue(msg_cp2.is_sent_msg(msg))
 
@@ -239,8 +258,8 @@ class TestCheckpoints(unittest.TestCase):
             msg_cp.save(msg)
             msg_cp.mark_msg_as_sent(msg)
 
-        self.assertTrue(os.path.exists(msg_cp.wal_path))
-        self.assertFalse(os.path.exists(msg_cp.cp_path + '.txt'))
+        self.assertTrue(os.path.exists(msg_cp.wal_path(1)))
+        self.assertFalse(os.path.exists(msg_cp.cp_path(1) + '.txt'))
 
         msg_cp2 = new_message_interval()
 
@@ -291,13 +310,13 @@ class TestCheckpoints(unittest.TestCase):
         self.assertTrue(msg_cp2.is_processed_msg(
             gen_q_msg(msg_cp.checkpoint_interval - 1, 1)))
 
-    def test_load_accumulator_cp(self):
+    def test_load_decades_accumulator_cp(self):
         acc, data_cp = new_acc()
         for client_id in range(CLIENTS):
-            for i in range(int(data_cp.checkpoint_interval * 1.5) // CLIENTS):
+            for i in range(int(data_cp.checkpoint_interval * 1.5)):
                 digit = i % 10
                 book = Book(
-                    authors=f"{i}", published_year=f"1{digit}{digit}{digit}")
+                    authors=f"A{i}", published_year=f"1{digit}{digit}{digit}")
                 acc.add_book(book, client_id)
                 data_cp.save(book, client_id)
 
@@ -312,7 +331,7 @@ class TestCheckpoints(unittest.TestCase):
         # Tarda mucho
         counter, r_cp, b_cp, sent_titles_cp = new_reviews_counter()
         for client_id in range(CLIENTS):
-            for i in range(int(r_cp.checkpoint_interval * 1.5) // CLIENTS):
+            for i in range(int(r_cp.checkpoint_interval * 1.5)):
                 book = Book(title=f"T{i}",
                             authors=f"A{i}")
 
@@ -332,7 +351,7 @@ class TestCheckpoints(unittest.TestCase):
     def test_load_accumulator_cp(self):
         acc, data_cp = new_sentiment_score_acc()
         for client_id in range(CLIENTS):
-            for i in range(int(data_cp.checkpoint_interval * 1.5) // CLIENTS):
+            for i in range(int(data_cp.checkpoint_interval * 1.5)):
                 acc.add_sentiment_score(f"T{i}", i, client_id)
                 data_cp.save(f"T{i}", i, client_id)
 
@@ -343,7 +362,7 @@ class TestCheckpoints(unittest.TestCase):
     def test_load_top_rating_cp(self):
         acc, data_cp = new_top_rating()
         for client_id in range(CLIENTS):
-            for i in range(int(data_cp.checkpoint_interval * 1.5) // CLIENTS):
+            for i in range(int(data_cp.checkpoint_interval * 1.5)):
                 acc.add_title(f"T{i}", i, client_id)
                 data_cp.save(f"T{i}", i, client_id)
 
