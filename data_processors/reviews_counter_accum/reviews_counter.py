@@ -38,9 +38,13 @@ class ReviewsCounter:
     def get_review(self, review: Review, client_id: int):
         title = review.title
 
-        count, total = self.reviews[client_id][title]
+        self.reviews[client_id] = self.reviews.get(client_id, {})
+        count, total = self.reviews[client_id].get(title, (0, 0))
 
         average = total / count
+
+        self.books[client_id] = self.books.get(client_id, {})
+        self.books[client_id][title] = self.books[client_id].get(title, None)
         author = self.books[client_id][title]
         return author, title, average
 

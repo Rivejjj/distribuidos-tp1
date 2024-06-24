@@ -16,7 +16,7 @@ from utils.parser import parse_client_msg
 from utils.sockets import receive
 
 
-TIMEOUT = 5
+TIMEOUT = 50
 
 
 class ClientHandler:

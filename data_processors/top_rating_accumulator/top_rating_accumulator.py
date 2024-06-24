@@ -16,7 +16,7 @@ class TopRatingAccumulator:
 
     def get_top(self, client_id: int):
         top_books = []
-        sorted_dict = sorted(self.books[client_id].items(),
+        sorted_dict = sorted(self.books.get(client_id, {}).items(),
                              key=lambda x: x[1], reverse=True)
         for i in range(min(self.top, len(sorted_dict))):
             top_books.append(sorted_dict[i])

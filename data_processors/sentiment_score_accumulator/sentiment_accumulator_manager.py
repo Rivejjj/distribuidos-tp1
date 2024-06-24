@@ -16,8 +16,9 @@ class SentimentAccumulatorManager(DataManager):
         self.cp = SentimentAccumulatorCheckpoint(self.acc)
 
     def eof_cb(self, msg: QueryMessage):
+        client_id = msg.get_client_id()
         msg = BatchTitleScoreMessage(
-            self.acc.calculate_90th_percentile(), uuid(), msg.get_client_id(), self.query)
+            self.acc.calculate_90th_percentile(client_id), uuid(), client_id, self.query)
 
         if msg.get_query():
             self.queue_middleware.send_to_result(msg)
