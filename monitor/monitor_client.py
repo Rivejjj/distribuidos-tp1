@@ -22,7 +22,6 @@ class MonitorClient():
             self.connected = True
             logging.warning(f"CONNECTED TO MONITOR!")
 
-
     def run(self):
         while self.running:
             self.listen_for_connections()

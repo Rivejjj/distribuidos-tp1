@@ -1,14 +1,15 @@
 name: tp1
 services:
-  # monitor0:
-  #   container_name: monitor0
-  #   image: monitor:latest
-  #   privileged: true
-  #   entrypoint: python3 /main.py
-  #   environment:
-  #     - ID=0
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
+  monitor0:
+    container_name: monitor0
+    image: monitor:latest
+    privileged: true
+    entrypoint: python3 /main.py
+    environment:
+      - ID=0
+      - NAME=monitor0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
   monitor1:
     container_name: monitor1
@@ -17,6 +18,18 @@ services:
     entrypoint: python3 /main.py
     environment:
       - ID=1
+      - NAME=monitor1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  monitor2:
+    container_name: monitor2
+    image: monitor:latest
+    privileged: true
+    entrypoint: python3 /main.py
+    environment:
+      - ID=1
+      - NAME=monitor2
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
@@ -47,36 +60,36 @@ services:
   #     - ID=0
   #   depends_on:
   #     - monitor
-  computers_category_filter_0:
-    container_name: computers_category_filter_0
-    image: book_filter:latest
-    entrypoint: python3 /main.py
-    environment:
-      - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=WARNING 
-      - INPUT_QUEUE=query1
-      - OUTPUT_QUEUES=computers:3
-      - CATEGORY=Computers
-      - ID=0
-      - IS_EQUAL=True
-      - NAME=computers_category_filter_0
-    # depends_on:
-    #   - gateway
-  computers_category_filter_1:
-    container_name: computers_category_filter_1
-    image: book_filter:latest
-    entrypoint: python3 /main.py
-    environment:
-      - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=WARNING
-      - INPUT_QUEUE=query1
-      - OUTPUT_QUEUES=computers:3
-      - CATEGORY=Computers
-      - ID=1
-      - IS_EQUAL=True
-      - NAME=computers_category_filter_1
-    # depends_on:
-    #   - gateway
+  # computers_category_filter_0:
+  #   container_name: computers_category_filter_0
+  #   image: book_filter:latest
+  #   entrypoint: python3 /main.py
+  #   environment:
+  #     - PYTHONUNBUFFERED=1
+  #     - LOGGING_LEVEL=WARNING 
+  #     - INPUT_QUEUE=query1
+  #     - OUTPUT_QUEUES=computers:3
+  #     - CATEGORY=Computers
+  #     - ID=0
+  #     - IS_EQUAL=True
+  #     - NAME=computers_category_filter_0
+  #   # depends_on:
+  #   #   - gateway
+  # computers_category_filter_1:
+  #   container_name: computers_category_filter_1
+  #   image: book_filter:latest
+  #   entrypoint: python3 /main.py
+  #   environment:
+  #     - PYTHONUNBUFFERED=1
+  #     - LOGGING_LEVEL=WARNING
+  #     - INPUT_QUEUE=query1
+  #     - OUTPUT_QUEUES=computers:3
+  #     - CATEGORY=Computers
+  #     - ID=1
+  #     - IS_EQUAL=True
+  #     - NAME=computers_category_filter_1
+  #   # depends_on:
+  #   #   - gateway
   # computers_category_filter_2:
   #   container_name: computers_category_filter_2
   #   image: book_filter:latest
@@ -90,8 +103,8 @@ services:
   #     - ID=2
   #     - IS_EQUAL=True
   #     - NAME=computers_category_filter_2
-  #   depends_on:
-  #     - gateway
+  # #   depends_on:
+  # #     - gateway
   # 2000s_published_year_filter_0:
   #   container_name: 2000s_published_year_filter_0
   #   image: book_filter:latest
@@ -105,8 +118,8 @@ services:
   #     - ID=0
   #     - PREVIOUS_WORKERS=3
   #     - NAME=2000s_published_year_filter_0
-  #   depends_on:
-  #     - gateway
+  # #   depends_on:
+  # #     - gateway
   # 2000s_published_year_filter_1:
   #   container_name: 2000s_published_year_filter_1
   #   image: book_filter:latest
@@ -120,8 +133,8 @@ services:
   #     - ID=1
   #     - PREVIOUS_WORKERS=3
   #     - NAME=2000s_published_year_filter_1
-  #   depends_on:
-  #     - gateway
+  # #   depends_on:
+  # #     - gateway
   # 2000s_published_year_filter_2:
   #   container_name: 2000s_published_year_filter_2
   #   image: book_filter:latest
