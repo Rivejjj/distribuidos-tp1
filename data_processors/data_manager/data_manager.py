@@ -51,7 +51,8 @@ class DataManager(ABC):
         """
         Borra el cliente
         """
-        self.messages_cp.delete_client(msg.get_client_id())
+        self.queue_middleware.delete_client(msg)
+        self.messages_cp.delete_client(msg)
 
     def process_eof(self, eof_msg: EOFMessage):
         self.queue_middleware.send_eof(eof_msg, partial(self.eof_cb, eof_msg))
@@ -64,8 +65,8 @@ class DataManager(ABC):
             msg = parse_query_msg(body)
 
             if msg.is_eof():
-                logging.info("Received EOF")
-                self.process_eof()
+                logging.info(f"Received EOF of client {msg.get_client_id()}")
+                self.process_eof(msg)
                 ch.basic_ack(delivery_tag=method.delivery_tag)
                 return
 

@@ -10,7 +10,7 @@ class TopRatingAccumulator:
         self.top = top
         self.books = {}  # client -> title -> avg_rating
 
-    def add_title(self, title: str, avg_rating: float | str, client_id: int):
+    def add_title(self, title: str, avg_rating: str, client_id: int):
         self.books[client_id] = self.books.get(client_id, {})
         self.books[client_id][title] = float(avg_rating)
 
@@ -24,4 +24,7 @@ class TopRatingAccumulator:
         return top_books
 
     def clear(self, msg: QueryMessage):
-        self.books.pop(msg.get_client_id())
+        client_id = msg.get_client_id()
+
+        if client_id in self.books:
+            self.books.pop(msg.get_client_id())

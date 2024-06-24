@@ -18,7 +18,11 @@ class SentimentAccumulatorManager(DataManager):
     def eof_cb(self, msg: QueryMessage):
         msg = BatchTitleScoreMessage(
             self.acc.calculate_90th_percentile(), uuid(), msg.get_client_id(), self.query)
-        self.queue_middleware.send_to_all(encode(msg))
+
+        if msg.get_query():
+            self.queue_middleware.send_to_result(msg)
+        else:
+            self.queue_middleware.send_to_all(encode(msg))
         self.delete_client(msg)
 
     def process_title_score(self, title_score_msg: TitleScoreMessage):

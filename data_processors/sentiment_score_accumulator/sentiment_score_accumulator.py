@@ -22,4 +22,5 @@ class SentimentScoreAccumulator:
 
     def clear(self, msg: QueryMessage):
         client_id = msg.get_client_id()
-        self.title_sentiment_score.pop(client_id)
+        if client_id in self.title_sentiment_score:
+            self.title_sentiment_score.pop(client_id)

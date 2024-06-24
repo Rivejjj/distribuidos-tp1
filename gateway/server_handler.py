@@ -1,4 +1,5 @@
 import logging
+from multiprocessing import Event
 import signal
 import socket
 from entities.book import Book
@@ -7,24 +8,19 @@ from entities.eof_msg import EOFMessage
 from entities.query_message import BOOK, REVIEW
 from entities.review import Review
 from entities.review_msg import ReviewMessage
+from entities.client_dc import ClientDCMessage
 from client_parser import parse_book_from_client, parse_review_from_client
 from rabbitmq.queue import QueueMiddleware
-from utils.initialize import decode, encode
+from utils.initialize import decode, encode, uuid
 from utils.parser import parse_client_msg
 from utils.sockets import receive
 
 
-MAX_MESSAGE_BYTES = 4
-EXIT = "exit"
-WINNERS = "winners"
-CONFIRMATION_MSG_LENGTH = 3
-SUCCESS_MSG = "suc"
-ERROR_MSG = "err"
-WAITING_MSG = "waiting"
+TIMEOUT = 5
 
 
 class ClientHandler:
-    def __init__(self, client_sock, output_queues, client_id):
+    def __init__(self, client_sock: socket.socket, output_queues, client_id):
         # Initialize server socket
         signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
 
@@ -39,9 +35,12 @@ class ClientHandler:
     def _close_client_socket(self):
         logging.info(
             f'[{self.client_id}] action: closing client socket | result: in_progress')
+        self.queue.send_to_all(encode(ClientDCMessage(uuid(), self.client_id)))
+        logging.info(f"Sending client disconnect message {self.client_id}")
         if self.client_sock:
             self.client_sock.close()
             self.client_sock = None
+
         logging.info(
             f'[{self.client_id}] action: closing client socket | result: success')
 
@@ -53,9 +52,13 @@ class ClientHandler:
         client socket will also be closed
         """
         try:
+            self.client_sock.settimeout(TIMEOUT)
+
             while True:
                 msg = decode(receive(self.client_sock)).rstrip()
                 self.__process_batch(msg)
+        except socket.timeout as e:
+            logging.error(f"[{self.client_id}] Socket timeout")
         except OSError as e:
             logging.error(
                 f"[{self.client_id}] action: receive_message | result: fail | error: {e}")
@@ -74,12 +77,12 @@ class ClientHandler:
         for (name, i) in pool:
             q_msg = self.__create_q_msg_from_book_for_query(book.copy(), i)
             self.queue.send_to_pool(
-                encode(str(q_msg)), book.title, next_pool_name=name)
+                encode(q_msg), book.title, next_pool_name=name)
 
         query2 = "query2"
         q_msg = self.__create_q_msg_from_book_for_query(book.copy(), 2)
         self.queue.send_to_pool(
-            encode(str(q_msg)), book.authors, next_pool_name=query2)
+            encode(q_msg), book.authors, next_pool_name=query2)
         logging.info(f'[{self.client_id}] sending to workers')
 
     def __process_review(self, msg):

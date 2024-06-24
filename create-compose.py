@@ -311,7 +311,8 @@ def build_fiction_category_filter(i):
             f'OUTPUT_QUEUES=fiction:{WORKERS}',
             'CATEGORY=fiction',
             f'ID={i}',
-            'SAVE_BOOKS=True'
+            'SAVE_BOOKS=True',
+            'NO_SEND=True'
         ],
         'volumes': [
             f'./data/checkpoint/{container_name}:/.checkpoints'

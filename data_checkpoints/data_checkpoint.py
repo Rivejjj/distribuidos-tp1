@@ -102,8 +102,12 @@ class DataCheckpoint(ABC):
 
     def delete_client(self, msg: QueryMessage):
         client_id = msg.get_client_id()
-        shutil.rmtree(f"{self.path}/{client_id}")
-        self.change_counter.pop(client_id)
+
+        path = f"{self.path}/{client_id}"
+        if os.path.exists(path):
+            shutil.rmtree(f"{self.path}/{client_id}")
+        if client_id in self.change_counter:
+            self.change_counter.pop(client_id)
 
     @ abstractmethod
     def load(self):

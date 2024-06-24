@@ -57,17 +57,17 @@ class ReviewsCounterManager(DataManager):
             if not msg_already_processed:
                 self.sent_titles_cp.save(title, client_id)
             authors_msg = TitleAuthorsMessage(
-                title, author, *review_msg.get_headers())
+                title, author, *review_msg.get_headers(), self.query)
             result.append(authors_msg)
 
         title_score_msg = TitleScoreMessage(
-            title, avg, *review_msg.get_headers())
+            title, avg, *review_msg.get_headers(), self.query)
 
         result.append(title_score_msg)
 
         return result
 
-    def send_to_next_worker(self, result):
+    def send_to_next_worker(self, result: list[QueryMessage]):
         for msg in result:
             next_pool_name = ''
             if msg.get_identifier() == TITLE_SCORE:
@@ -75,8 +75,11 @@ class ReviewsCounterManager(DataManager):
             elif msg.get_identifier() == TITLE_AUTHORS:
                 next_pool_name = 'results'
 
-            self.queue_middleware.send_to_pool(
-                encode(msg), msg.get_title(), next_pool_name=next_pool_name)
+            if msg.get_query():
+                self.queue_middleware.send_to_result(msg)
+            else:
+                self.queue_middleware.send_to_pool(
+                    encode(msg), msg.get_title(), next_pool_name=next_pool_name)
 
     def process_query_message(self, msg):
         if msg.get_identifier() == BOOK:

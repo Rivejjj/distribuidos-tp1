@@ -46,5 +46,9 @@ class ReviewsCounter:
 
     def clear(self, msg: QueryMessage):
         client_id = msg.get_client_id()
-        self.books.pop(client_id)
-        self.reviews.pop(client_id)
+
+        if client_id in self.books:
+            self.books.pop(client_id)
+
+        if client_id in self.reviews:
+            self.reviews.pop(client_id)

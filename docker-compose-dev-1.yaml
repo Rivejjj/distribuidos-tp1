@@ -13,7 +13,7 @@ services:
     - BOOKS_REVIEWS_PATH=/data/Books_rating.csv
     volumes:
     - ./data/csv:/data
-    - ./data/query:/query
+    - ./data/0/query:/query
   sender_client_1:
     container_name: sender_client_1
     image: client:latest
@@ -27,7 +27,7 @@ services:
     - BOOKS_REVIEWS_PATH=/data/Books_rating.csv
     volumes:
     - ./data/csv:/data
-    - ./data/query:/query
+    - ./data/1/query:/query
   gateway:
     container_name: gateway
     image: gateway:latest
@@ -405,6 +405,7 @@ services:
     - CATEGORY=fiction
     - ID=0
     - SAVE_BOOKS=True
+    - NO_SEND=True
     volumes:
     - ./data/checkpoint/fiction_category_filter_0:/.checkpoints
   fiction_category_filter_1:
@@ -419,6 +420,7 @@ services:
     - CATEGORY=fiction
     - ID=1
     - SAVE_BOOKS=True
+    - NO_SEND=True
     volumes:
     - ./data/checkpoint/fiction_category_filter_1:/.checkpoints
   fiction_category_filter_2:
@@ -433,6 +435,7 @@ services:
     - CATEGORY=fiction
     - ID=2
     - SAVE_BOOKS=True
+    - NO_SEND=True
     volumes:
     - ./data/checkpoint/fiction_category_filter_2:/.checkpoints
   fiction_category_filter_3:
@@ -447,6 +450,7 @@ services:
     - CATEGORY=fiction
     - ID=3
     - SAVE_BOOKS=True
+    - NO_SEND=True
     volumes:
     - ./data/checkpoint/fiction_category_filter_3:/.checkpoints
   sentiment_analyzer_0:

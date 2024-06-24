@@ -17,7 +17,7 @@ class MessagesCheckpoint(DataCheckpoint):
     def save(self, msg: QueryMessage):
         id = msg.get_id()
         client_id = msg.get_client_id()
-        if self.pending_message:
+        if self.pending_message.get(client_id, False):
             self.save_change('\n', client_id, False, True)
 
         self.processed_messages[client_id] = self.processed_messages.get(
@@ -47,7 +47,6 @@ class MessagesCheckpoint(DataCheckpoint):
         """
         try:
             for client_id, state in self.load_state():
-                print(client_id, state)
                 sent, unsent = state
                 self.processed_messages[client_id] = {
                     msg: True for msg in sent}
@@ -61,7 +60,6 @@ class MessagesCheckpoint(DataCheckpoint):
                     self.pending_message[client_id] = True
 
             for client_id, msg, is_sent in self.load_changes():
-                print(client_id, msg, is_sent)
 
                 self.processed_messages[client_id] = self.processed_messages.get(
                     client_id, {})
@@ -121,5 +119,7 @@ class MessagesCheckpoint(DataCheckpoint):
     def delete_client(self, msg: QueryMessage):
         client_id = msg.get_client_id()
         super().delete_client(msg)
-        self.processed_messages.pop(client_id)
-        self.pending_message.pop(client_id)
+        if client_id in self.processed_messages:
+            self.processed_messages.pop(client_id)
+        if client_id in self.pending_message:
+            self.pending_message.pop(client_id)

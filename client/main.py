@@ -20,7 +20,7 @@ def receive_results(address, port):
     client = Client(address, port)
     while True:
         msg = client.receive_message()
-        # logging.info("message received: ", msg)
+        logging.info("message received: ", msg)
         if msg == "EOF":
             break
 
@@ -68,7 +68,7 @@ def run(config_params):
     client = Client(config_params["address"], config_params["port"])
 
     logging.info("Sending books")
-    send_file(client, config_params["books_path"], BOOK, 30, 50)
+    send_file(client, config_params["books_path"], BOOK, 30)
     # logging.info("Sending reviews")
     # send_file(
     #     client, config_params["books_reviews_path"], REVIEW, 30)

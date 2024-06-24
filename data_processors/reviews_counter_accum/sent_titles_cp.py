@@ -37,5 +37,6 @@ class SentTitlesCheckpoint(DataCheckpoint):
 
     def delete_client(self, msg: QueryMessage):
         client_id = msg.get_client_id()
-        self.titles.pop(client_id)
+        if client_id in self.titles:
+            self.titles.pop(client_id)
         return super().delete_client(msg)

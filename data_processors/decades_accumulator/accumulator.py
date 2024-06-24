@@ -45,5 +45,9 @@ class Accumulator:
 
     def clear(self, msg: QueryMessage):
         client_id = msg.get_client_id()
-        self.authors.pop(client_id)
-        self.completed_authors.pop(client_id)
+
+        if client_id in self.authors:
+            self.authors.pop(client_id)
+
+        if client_id in self.completed_authors:
+            self.completed_authors.pop(client_id)

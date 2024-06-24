@@ -17,4 +17,6 @@ class ReviewFilter:
         return review.title in self.titles.get(client_id, set())
 
     def clear(self, msg: QueryMessage):
-        self.titles.pop(msg.get_client_id())
+        client_id = msg.get_client_id()
+        if client_id in self.titles:
+            self.titles.pop(client_id)

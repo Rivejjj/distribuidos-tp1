@@ -24,7 +24,7 @@ class AccumulatorManager(DataManager):
         book = book_msg.get_book()
 
         msg = AuthorsMessage(
-            book.authors, *book_msg.get_headers())
+            book.authors, *book_msg.get_headers(), self.query)
 
         client_id = msg.get_client_id()
 
@@ -44,8 +44,12 @@ class AccumulatorManager(DataManager):
 
     def send_to_next_worker(self, result: AuthorsMessage):
         msg = result
-        self.queue_middleware.send_to_pool(
-            encode(msg), msg.get_author())
+
+        if msg.get_query():
+            self.queue_middleware.send_to_result(msg)
+        else:
+            self.queue_middleware.send_to_pool(
+                encode(msg), msg.get_author())
 
     def process_query_message(self, msg):
         if msg.get_identifier() == BOOK and msg.get_book():

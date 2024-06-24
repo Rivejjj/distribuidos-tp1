@@ -1,5 +1,6 @@
 import json
 from data_checkpoints.data_checkpoint import DataCheckpoint
+from entities.query_message import QueryMessage
 
 
 class ReceivedEOF(DataCheckpoint):
@@ -20,8 +21,11 @@ class ReceivedEOF(DataCheckpoint):
     def eof_reached(self, client_id: int) -> bool:
         return self.eofs[client_id] >= self.eof_count
 
-    def clear(self, client_id: int):
-        self.eofs.pop(client_id)
+    def clear(self, msg: QueryMessage):
+        client_id = msg.get_client_id()
+        if client_id in self.eofs:
+            self.eofs.pop(client_id)
+        super().delete_client(msg)
 
     def load(self):
         """

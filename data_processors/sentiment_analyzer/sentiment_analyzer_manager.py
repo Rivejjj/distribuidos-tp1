@@ -23,7 +23,7 @@ class SentimentAnalyzerManager(DataManager):
         review = review_msg.get_review()
         polarity_score = self.analyzer.analyze(review.text)
 
-        return TitleScoreMessage(review.title, polarity_score, *review_msg.get_headers())
+        return TitleScoreMessage(review.title, polarity_score, *review_msg.get_headers(), self.query)
 
     def send_to_next_worker(self, msg):
         self.queue_middleware.send_to_pool(

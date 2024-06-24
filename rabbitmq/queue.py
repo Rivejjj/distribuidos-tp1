@@ -6,8 +6,11 @@ import signal
 import pika
 
 from entities.eof_msg import EOFMessage
+from entities.query_message import QueryMessage
 from rabbitmq.eofs_cp import ReceivedEOF
 from utils.initialize import encode, uuid
+
+RESULTS_QUEUE = 'results'
 
 
 class QueueMiddleware:
@@ -27,6 +30,12 @@ class QueueMiddleware:
         self.__calculate_queue_pools(output_queues)
 
         self.output_queues = []
+
+        self.result_queue = None
+
+        if (RESULTS_QUEUE, 1) in output_queues:
+            output_queues.remove((RESULTS_QUEUE, 1))
+            self.__declare_result_queue()
         self.__declare_output_queues(output_queues)
 
         if input_queue:
@@ -52,13 +61,25 @@ class QueueMiddleware:
                 self.output_queues.append(queue_name)
 
     def __declare_input_queue(self, input_queue, id):
-        logging.info(f"Declaring input queue with params: {input_queue}, {id}")
-        self.input_queue = f"{input_queue}_{id}"
 
-        logging.info(f"[QUEUE] DECLARING INPUT QUEUE {self.input_queue}")
+        if input_queue == RESULTS_QUEUE:
+            self.channel.exchange_declare(
+                exchange=RESULTS_QUEUE, exchange_type='direct')
 
-        self.channel.queue_declare(
-            queue=self.input_queue, durable=True)
+            result = self.channel.queue_declare(queue='', exclusive=True)
+            self.input_queue = result.method.queue
+
+            self.channel.queue_bind(
+                exchange=RESULTS_QUEUE, queue=self.input_queue, routing_key=str(id))
+        else:
+            logging.info(
+                f"Declaring input queue with params: {input_queue}, {id}")
+            self.input_queue = f"{input_queue}_{id}"
+
+            logging.info(f"[QUEUE] DECLARING INPUT QUEUE {self.input_queue}")
+
+            self.channel.queue_declare(
+                queue=self.input_queue, durable=True)
 
     def start_consuming(self, callback):
         if self.input_queue:
@@ -99,16 +120,19 @@ class QueueMiddleware:
         self.received_eofs_cp.save(msg.get_client_id())
 
         logging.info(
-            f"[QUEUE] Received EOFs {self.received_eofs_cp.eofs[client_id]}")
+            f"[QUEUE] Received EOFs {self.received_eofs_cp.eofs[client_id]} for client {client_id}")
 
         if self.received_eofs_cp.eof_reached(client_id):
-            logging.info("[QUEUE] Received EOFs of all workers")
-            self.received_eofs_cp.clear(client_id)
+            logging.info(
+                f"[QUEUE] Received EOFs of all workers for client {client_id}")
+            self.received_eofs_cp.clear(msg)
 
             if callback:
                 logging.info("[QUEUE] Executing callback")
                 callback()
-            self.send_to_all(encode(EOFMessage(uuid(), client_id)))
+            msg = EOFMessage(uuid(), client_id)
+            self.send_to_all(encode(msg))
+            self.send_to_result(msg)
             logging.info(
                 f"[QUEUE] Sending EOF to next workers {self.output_queues}")
             return True
@@ -138,3 +162,19 @@ class QueueMiddleware:
         logging.info("Received SIGTERM - shutting gracefully")
         self.end()
         return
+
+    def __declare_result_queue(self):
+        logging.info("DECLARING EXCHANGE")
+        self.channel.exchange_declare(
+            exchange=RESULTS_QUEUE, exchange_type='direct')
+
+        self.result_queue = RESULTS_QUEUE
+
+    def send_to_result(self, message: QueryMessage):
+        if self.result_queue:
+            self.channel.basic_publish(
+                exchange=RESULTS_QUEUE, routing_key=str(message.get_client_id()), body=encode(message))
+
+    def delete_client(self, msg: QueryMessage):
+        self.send_to_all(encode(msg))
+        self.received_eofs_cp.clear(msg)

@@ -31,14 +31,20 @@ class FilterManager(DataManager):
                 self.review_filter,
                 '.checkpoints/review_filter')
 
+        self.no_send = config_params["no_send"]
+
     def eof_cb(self, eof_msg: QueryMessage):
         self.delete_client(eof_msg)
 
     def send_to_next_worker(self, result):
         msg, title = result
         logging.info(f"Send to next queue: {msg} {title}")
-        self.queue_middleware.send_to_pool(
-            encode(msg), title)
+
+        if msg.get_query():
+            self.queue_middleware.send_to_result(msg)
+        else:
+            self.queue_middleware.send_to_pool(
+                encode(msg), title)
 
     def process_book(self, book_msg: BookMessage):
         logging.info(f"New book")
@@ -51,7 +57,10 @@ class FilterManager(DataManager):
             self.review_filter.add_title(book.title, book_msg.get_client_id())
             self.review_filter_cp.save(book.title, book_msg.get_client_id())
 
-        return BookMessage(book, *book_msg.get_headers()), book.title
+        if self.no_send:
+            return
+
+        return BookMessage(book, *book_msg.get_headers(), self.query), book.title
 
     def process_review(self, review_msg: ReviewMessage):
         review = review_msg.get_review()
@@ -59,7 +68,7 @@ class FilterManager(DataManager):
             return
         logging.info(f"Review accepted: {review.title}")
 
-        return ReviewMessage(review, *review_msg.get_headers()), review.title
+        return ReviewMessage(review, *review_msg.get_headers(), self.query), review.title
 
     def process_query_message(self, msg):
         if msg.get_identifier() == BOOK and msg.get_book():
