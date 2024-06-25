@@ -1,131 +1,112 @@
-import select
 import logging
 import socket
 import time
+import select
 
 class LeaderHandler():
-    def __init__(self, monitors,name,lock, active_monitors):
+    def __init__(self,monitors,active_monitors,lock,name):
         self.monitors = monitors
-        self.active_monitors = active_monitors # {monitor: conn}
-        self.leader = None
+        self.active_monitors = active_monitors
         self.lock = lock
+        self.leader = None
         self.name = name
+        self.running = True
 
-    def send_hearbeat(self):
-        try:
-            self.active_monitors[self.leader].send(self.name)
-        except BrokenPipeError:
-            self.leader = None
-            self.active_monitors.pop(self.leader)
-            self.elect_leader()
+    def find_and_delete(self,conn):
+        for name,connection in self.active_monitors.items():
+            if conn.getsockname() == connection.getsockname():
+                del self.active_monitors[name]
+                break
 
-    def elect_leader(self):
-        max_id = self.name[-1]
-        self.leader = self.name
-        for monitor in self.active_monitors:
-            if monitor[-1] > max_id:
-                max_id = monitor[-1]
-                self.leader = monitor
-
-    def add_monitor(self, monitor, conn):
-        self.active_monitors[monitor] = conn
-
-    def __find_monitor(self, conn):
-        logging.warning(f"LOOKING FOR conn: {conn}")
-        logging.warning(f"active monitors: {self.active_monitors}")
-        for monitor, c in self.active_monitors.items():
-            if c == conn:
-                logging.warning(f"found monitor: {monitor}")
-                return monitor
-        logging.warning(f"monitor not found")
+    def find_socket(self, conn):
+        for connection in self.active_monitors.values():
+            if conn.getsockname() == connection.getsockname():
+                return connection
         return None
 
-    def remove_monitor(self, conn):
-        monitor = self.__find_monitor(conn)
-        if monitor:
-            conn.close()
-            self.active_monitors.pop(monitor)
+    def send_leader_message(self):
+        with self.lock:
+            for monitor, conn in self.active_monitors.items():
+                try:
+                    conn.send(bytes(self.name, 'utf-8'))
+                    logging.warning(f"Sending leader message to {monitor}")
+                except (ConnectionResetError, OSError) as e:
+                    logging.warning(f"Connection to {monitor} lost: {e}")
+                    self.find_and_delete(conn)
+                    if len(self.active_monitors) == 0:
+                        self.leader = (self.name,None)
 
 
-    def handle_message(self,conn, data):
-        logging.warning(f"received message: {data}")
-        if data == b"":
-            self.remove_monitor(conn)
+    def check_connections(self):
+        if self.leader[0] == self.name:
+            with self.lock:
+                readable, _, _ = select.select(self.active_monitors.values(), [], [], 1)
+            for conn in readable:
+                sock = self.find_socket(conn)
+                if sock:
+                    try:
+                        data = conn.recv(1024)
+                        logging.warning(f"Received heartbeat from {data}")
+                        conn.send(b"Ok")
+                    except (ConnectionResetError, OSError, BrokenPipeError) as e:
+                        logging.warning(f"Connection to {data} lost: {e}")
+                        with self.lock:
+                            self.find_and_delete(conn)
+                            logging.warning(f"active monitors: {self.active_monitors.keys()}")
+                        
+                else:
+                    logging.warning(f"Connection not found")
         else:
             try:
-                conn.send(b"Ok")
-            except (BrokenPipeError, ConnectionResetError) as e:
-                logging.error(f"Error sending message: {e}")
-                self.remove_monitor(conn)
-            
-
-    def check_monitors(self):
-        try:
-            readable, _, _ = select.select(self.active_monitors.values(), [], [], 1)
-        except OSError as e:
-            logging.error(f"Error in leader handler: {e}")
-
-        for conn in readable:
-            try:
-                data = conn.recv(1024)
-            except ConnectionResetError:
-                self.remove_monitor(conn)
-                continue
-
-            self.handle_message(conn,data)
-
-            
+                self.leader[1].send(bytes(self.name, 'utf-8'))
+                logging.warning(f"Sending heartbeat to {self.leader[0]}")
+                self.leader[1].recv(1024)
+            except (ConnectionResetError, OSError) as e:
+                logging.warning(f"Connection to {self.leader[0]} lost: {e}")
+                self.get_leader()
+            time.sleep(1)
 
     def connect_with_monitors(self):
         tries = 5
-        while tries > 0:
-            if len(self.active_monitors) == len(self.monitors):
-                break
-            for mon in self.monitors:
-                self.lock.acquire()
-                if mon not in self.active_monitors.keys():
-                    try:
-                        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                        sock.settimeout(10.0)
-                        sock.connect((mon, 22226))
-                        sock.send(self.name.encode())
-                        recv = sock.recv(1024)
-                        if recv == b"Ok":
-                            logging.warning(f"connected to {mon}: recv: {recv}")
-                            self.active_monitors[mon] = sock
-                            self.lock.release()
-                            continue
-                    except socket.gaierror as e:
-                        logging.warning(f"could not connect to {mon}: {e}")
-                        sock.close()
-                        self.lock.release()
-                        break
-                    except ConnectionRefusedError as e:
-                        logging.warning(f"could not connect to {mon}: {e}")
-                        pass
-                    self.lock.release()
-                    tries -= 1
-                else:
-                    logging.warning(f"already connected to {mon}")
-                    self.lock.release()
-            time.sleep(1)
-            tries -= 1
-        
-    def run(self):
-        while True:
-            if len(self.active_monitors) == 0:
-                logging.error("I am the lone leader 8)")
-                time.sleep(3)
-                continue
-            if self.name == self.leader:
-                    self.check_monitors()
-            else: 
-            
+        while tries > 0 :
+            for monitor in self.monitors:
+                with self.lock:
+                    if monitor in self.active_monitors:
+                        continue
                 try:
-                    self.active_monitors[self.leader].send(b"Hello im " + self.name.encode())
-                    logging.warning(f"sent hello to leader: {self.leader}")
-                except Exception as e:
-                    logging.error(f"error sending hello to {self.leader}: {e}")
-          
-                    
-            time.sleep(2)
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    sock.connect((monitor, 22226))
+                    sock.send(bytes(self.name, 'utf-8'))
+                    sock.settimeout(10)
+                    data = sock.recv(1024)
+                    if data and data not in self.active_monitors:
+                        with self.lock:
+                            logging.warning(f"active monitors: {self.active_monitors}")
+                            self.active_monitors[monitor] = sock
+                            logging.warning(f"Received connection from: {monitor}")
+                            if len(self.active_monitors) == len(self.monitors):
+                                logging.warning(f"Connected with all monitors")
+                                return
+                    else:
+                        sock.close()
+                except ConnectionRefusedError as e:
+                    logging.warning(f"Error connecting with {monitor}: {e}")
+            tries -= 1
+            time.sleep(1)
+
+    def get_leader(self):
+        logging.warning(f"Getting leader")
+        self.leader = (self.name,None)
+        max_id = self.name[-1]
+        with self.lock:
+            for monitor, conn in self.active_monitors.items():
+                if monitor[-1] > max_id:
+                    self.leader = (monitor,conn)
+                    max_id = monitor[-1]
+
+    def run(self):
+        logging.warning(f"starting leader handler ")
+        self.connect_with_monitors()
+        self.get_leader()
+        while self.running:
+            self.check_connections()

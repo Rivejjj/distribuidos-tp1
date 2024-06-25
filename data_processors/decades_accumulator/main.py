@@ -9,8 +9,9 @@ from utils.initialize import add_query_to_message, decode, encode, get_queue_nam
 from utils.parser import parse_book, parse_query_msg
 from monitor.monitor_client import MonitorClient
 
-def send_heartbeat(address, port, name):
-    monitor_client = MonitorClient(address, port, name)
+def send_heartbeat(name):
+    logging.warning(f"Starting monitor client with name {name}")
+    monitor_client = MonitorClient(name)
     monitor_client.run()
 
 def process_eof(queue_middleware: QueueMiddleware, accum: Accumulator):
@@ -60,8 +61,7 @@ def main():
 
     accum = Accumulator()
 
-    process = Process(target=send_heartbeat, args=(
-        "monitor", 22223, config_params["name"]))
+    process = Process(target=send_heartbeat, args=(config_params["name"],))
     process.start()
 
 

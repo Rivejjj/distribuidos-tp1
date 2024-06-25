@@ -114,8 +114,7 @@ def main():
         review_filter = ReviewFilter()
 
     name = config_params["name"]
-    process = Process(target=send_heartbeat, args=(
-        name,))
+    process = Process(target=send_heartbeat, args=(name,))
     process.daemon = True
     process.start()
 

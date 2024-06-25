@@ -10,7 +10,7 @@ MAX_HEARTBEAT_TIME = 3 * HEALTH_CHECK_INTERVAL + 1
 
 class Monitor:
     def __init__(self, workers):
-        signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
+        #signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
         self.last_heartbeat = {}
         self.running = True
         self.workers = workers 
@@ -29,19 +29,18 @@ class Monitor:
 
     def check_last_heartbeats(self):
         active_workers = list(self.active_workers.keys())
-        time = time.time()
+        actual_time = time.time()
         for sock in active_workers:
-            if time - self.last_heartbeat[sock] > MAX_HEARTBEAT_TIME:
+            if actual_time - self.last_heartbeat[sock] > MAX_HEARTBEAT_TIME:
                 logging.warning(f"Connection to {self.active_workers[sock]} lost due to inactivity.")
                 self.delete_node(sock)
 
     def check_health(self):
-        #logging.warning(f"Checking health: available workers: {self.active_workers.values()} \nFailed workers: {self.failed_workers} \nRestarted workers: {self.restarted_workers}")
+        # logging.warning(f"Checking health: available workers: {self.active_workers.values()} \nFailed workers: {self.failed_workers} \nRestarted workers: {self.restarted_workers}")
         try:
             ready_to_read, _, _ = select.select(self.active_workers.keys(), [], [], MAX_HEARTBEAT_TIME)
         except OSError as e:
             logging.error(f"Error in select: {e}")
-            return
         for sock in ready_to_read:
             try:
                 data = sock.recv(1024)
@@ -60,27 +59,29 @@ class Monitor:
         logging.warning(f"Trying to connect with: {worker}")
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(10)
             sock.connect((worker, 22225))
+            sock.settimeout(10)
             self.active_workers[sock] = worker
             self.last_heartbeat[sock] = time.time()
             if worker in self.restarted_workers:
                 self.restarted_workers.remove(worker)
             logging.warning(f"Connected to {worker}")
             logging.warning(f"Active workers: {self.active_workers.values()}")
-
         except (ConnectionRefusedError, socket.timeout) as e:
+            logging.warning(f"Error connecting with {worker}: {e}")
             if worker not in self.restarted_workers:
                 self.failed_workers.append(worker)
-            logging.warning(f"Error connecting with {worker}: {e}")
         except socket.gaierror as e:
             logging.warning(f"gaierror with {worker}: {e}")
+            if worker not in self.failed_workers:
+                self.failed_workers.append(worker)
             if worker in self.restarted_workers:
                 self.restarted_workers.remove(worker)
-                self.failed_workers.append(worker)
+        except OSError as e:
+            logging.error(f"Error connecting with {worker}: {e}")
+            self.connect_to_worker(worker)
         
     def check_failed_workers(self):
-        #logging.warning(f"Checking failed connections: {self.failed_workers}")
 
         failed_conns = list(self.failed_workers)
         for worker in failed_conns:
@@ -98,21 +99,14 @@ class Monitor:
                 continue
             self.connect_to_worker(worker)
 
-    # def connect_with_monitors(self):
-    #     for i in self.monitors:
-    #         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #         self.monitors[sock] = None
-    #         sock.bind(('', 22226))
-
     def run(self):
         logging.warning("Starting monitor")
-        # self.connect_with_monitors()
         self.establish_connections()
-
         while self.running:
             self.check_failed_workers()
             self.check_health()
-        
+        logging.warning("Monitor stopped")
+
     def revive_node(self, node):
         result = subprocess.run(['/revive.sh',node],
                                 check=False, 

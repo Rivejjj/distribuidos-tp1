@@ -7,9 +7,9 @@ from utils.initialize import add_query_to_message, encode, get_queue_names, deco
 from utils.parser import parse_query_msg, split_line
 from monitor.monitor_client import MonitorClient
 
-
-def send_heartbeat(address, port, name):
-    monitor_client = MonitorClient(address, port, name)
+def send_heartbeat(name):
+    logging.warning(f"Starting monitor client with name {name}")
+    monitor_client = MonitorClient(name)
     monitor_client.run()
 
 def send_results(sentiment_acc: SentimentScoreAccumulator, queue_middleware: QueueMiddleware, query=None):
@@ -57,8 +57,7 @@ def main():
 
     accumulator = SentimentScoreAccumulator()
 
-    process = Process(target=send_heartbeat, args=(
-        "monitor", 22223, config_params["name"]))
+    process = Process(target=send_heartbeat, args=(config_params["name"],))
     process.start()
 
     queue_middleware = QueueMiddleware(get_queue_names(

@@ -8,8 +8,9 @@ from utils.initialize import decode, encode, get_queue_names, init
 from utils.parser import parse_query_msg, parse_review
 from monitor.monitor_client import MonitorClient
 
-def send_heartbeat(address, port, name):
-    monitor_client = MonitorClient(address, port, name)
+def send_heartbeat(name):
+    logging.warning(f"Starting monitor client with name {name}")
+    monitor_client = MonitorClient(name)
     monitor_client.run()
 
 
@@ -52,8 +53,7 @@ def main():
     sentiment_analyzer = SentimentAnalizer()
 
 
-    process = Process(target=send_heartbeat, args=(
-        "monitor", 22223, config_params["name"]))
+    process = Process(target=send_heartbeat, args=(config_params["name"],))
     process.start()
 
     queue_middleware = QueueMiddleware(

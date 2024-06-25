@@ -9,7 +9,6 @@ class MonitorClient():
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind(('', 22225))
         self.sock.listen()
-        self.sock.settimeout(10)
         self.connected = False
         self.conn = None
         self.addr = None
@@ -19,6 +18,7 @@ class MonitorClient():
     def listen_for_connections(self):
         while not self.connected:
             self.conn, self.addr = self.sock.accept()
+            self.conn.settimeout(10)
             self.connected = True
             logging.warning(f"CONNECTED TO MONITOR!")
 
@@ -39,6 +39,7 @@ class MonitorClient():
                     self.conn.close()
                     self.connected = False
                     break
+                time.sleep(1)
 
 
     def restart_connection(self):
