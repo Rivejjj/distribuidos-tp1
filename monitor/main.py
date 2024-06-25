@@ -14,7 +14,10 @@ def run_monitor(workers):
     monitor.run()
 
 def handle_leader(monitors,active_monitros,lock,config_params):
-    leader_handler = LeaderHandler(monitors,active_monitros,lock,config_params["name"])
+    if config_params["name"] == "monitor2":
+        leader_handler = LeaderHandler(monitors,active_monitros,lock,config_params["name"], True)
+    else:
+        leader_handler = LeaderHandler(monitors,active_monitros,lock,config_params["name"], False)
     leader_handler.run()
 
 
