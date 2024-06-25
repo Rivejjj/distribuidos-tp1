@@ -82,7 +82,6 @@ class Monitor:
             self.connect_to_worker(worker)
         
     def check_failed_workers(self):
-
         failed_conns = list(self.failed_workers)
         for worker in failed_conns:
             if worker not in self.restarted_workers:
