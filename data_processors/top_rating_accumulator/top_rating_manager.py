@@ -18,12 +18,12 @@ class TopRatingManager(DataManager):
 
     def eof_cb(self, msg: QueryMessage):
         client_id = msg.get_client_id()
-        msg = BatchTitleScoreMessage(
+        result_msg = BatchTitleScoreMessage(
             self.acc.get_top(client_id), uuid(), client_id, self.query)
-        if msg.get_query():
-            self.queue_middleware.send_to_result(msg)
+        if result_msg.get_query():
+            self.queue_middleware.send_to_result(result_msg)
         else:
-            self.queue_middleware.send_to_all(encode(msg))
+            self.queue_middleware.send_to_all(encode(result_msg))
         self.delete_client(msg)
 
     def process_title_score(self, title_score_msg: TitleScoreMessage):

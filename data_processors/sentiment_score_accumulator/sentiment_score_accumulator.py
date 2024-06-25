@@ -16,7 +16,7 @@ class SentimentScoreAccumulator:
 
     def calculate_90th_percentile(self, client_id: int):
         title_scores = [(title, score[1] / score[0])
-                        for title, score in self.title_sentiment_score[client_id].items()]
+                        for title, score in self.title_sentiment_score.get(client_id, {}).items()]
         title_scores.sort(key=lambda x: x[1])
         return title_scores[int(len(title_scores) * 0.9):]
 

@@ -14,7 +14,7 @@ RESULTS_QUEUE = 'results'
 
 
 class QueueMiddleware:
-    def __init__(self, output_queues, input_queue=None, id=0, previous_workers=0):
+    def __init__(self, output_queues, input_queue=None, id=0, previous_workers=0, save_to_file=True):
         signal.signal(signal.SIGTERM, lambda signal, frame: self.end())
         # logging.info("Connecting to queue: queue_names=%s", queue_names)
         self.connection = pika.BlockingConnection(
@@ -43,7 +43,8 @@ class QueueMiddleware:
 
         self.channel.start_consuming()
 
-        self.received_eofs_cp = ReceivedEOF(previous_workers)
+        self.received_eofs_cp = ReceivedEOF(
+            previous_workers, save_to_file=save_to_file)
 
     def __calculate_queue_pools(self, output_queues):
         for name, worker_count in output_queues:
@@ -107,7 +108,7 @@ class QueueMiddleware:
         # logging.info(f"[QUEUE] Sending message to all: {message}")
 
         for name in self.output_queues:
-            # logging.info(f"[QUEUE] Sending message to {name}")
+            logging.info(f"[QUEUE] Sending message {message} to {name}")
             self.send(name, message)
 
     def send_to_all_except(self, message, except_queue):
@@ -125,16 +126,21 @@ class QueueMiddleware:
         if self.received_eofs_cp.eof_reached(client_id):
             logging.info(
                 f"[QUEUE] Received EOFs of all workers for client {client_id}")
-            self.received_eofs_cp.clear(msg)
 
             if callback:
                 logging.info("[QUEUE] Executing callback")
                 callback()
-            msg = EOFMessage(uuid(), client_id)
+
+            id = uuid()
+            logging.info(f"[QUEUE] Created uuid {id}")
+            msg = EOFMessage(id, client_id)
             self.send_to_all(encode(msg))
             self.send_to_result(msg)
             logging.info(
                 f"[QUEUE] Sending EOF to next workers {self.output_queues}")
+
+            self.received_eofs_cp.clear(msg)
+
             return True
 
         return False
@@ -172,9 +178,10 @@ class QueueMiddleware:
 
     def send_to_result(self, message: QueryMessage):
         if self.result_queue:
+            logging.info(f"Sending to result exchange {message}")
             self.channel.basic_publish(
                 exchange=RESULTS_QUEUE, routing_key=str(message.get_client_id()), body=encode(message))
 
     def delete_client(self, msg: QueryMessage):
-        self.send_to_all(encode(msg))
+        # self.send_to_all(encode(msg))
         self.received_eofs_cp.clear(msg)

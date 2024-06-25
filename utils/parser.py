@@ -41,6 +41,15 @@ def parse_client_msg(msg):
     return int(identifier), data
 
 
+def convert_to_title_score(title_scores):
+    for title_score in title_scores:
+        title_score = title_score.split('\t')
+        if len(title_score) != 2:
+            continue
+        title, score = title_score
+        yield title, float(score)
+
+
 def parse_query_msg(msg: bytes):
     header, data = decode(msg).split(QUERY_MSG_SEPARATOR, 1)
 
@@ -63,7 +72,7 @@ def parse_query_msg(msg: bytes):
     elif identifier == EOF:
         return EOFMessage(*header)
     elif identifier == BATCH_TITLE_SCORE:
-        return BatchTitleScoreMessage(*data.split(DATA_SEPARATOR), *header)
+        return BatchTitleScoreMessage(list(convert_to_title_score(data.split('\n'))), *header)
     elif identifier == CLIENT_DC:
         return ClientDCMessage(*header)
     else:

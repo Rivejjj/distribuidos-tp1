@@ -19,7 +19,7 @@ from utils.sockets import receive
 TIMEOUT = 50
 
 
-class ClientHandler:
+class ServerHandler:
     def __init__(self, client_sock: socket.socket, output_queues, client_id):
         # Initialize server socket
         signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
@@ -35,14 +35,17 @@ class ClientHandler:
     def _close_client_socket(self):
         logging.info(
             f'[{self.client_id}] action: closing client socket | result: in_progress')
-        self.queue.send_to_all(encode(ClientDCMessage(uuid(), self.client_id)))
-        logging.info(f"Sending client disconnect message {self.client_id}")
+
         if self.client_sock:
             self.client_sock.close()
             self.client_sock = None
 
         logging.info(
             f'[{self.client_id}] action: closing client socket | result: success')
+
+    def _send_client_dc_message(self):
+        self.queue.send_to_all(
+            encode(ClientDCMessage(uuid(), self.client_id)))
 
     def handle_client_connection(self):
         """
@@ -56,9 +59,14 @@ class ClientHandler:
 
             while True:
                 msg = decode(receive(self.client_sock)).rstrip()
-                self.__process_batch(msg)
+                finished = self.__process_batch(msg)
+                if finished:
+                    logging.info(f"Received EOF")
+                    break
         except socket.timeout as e:
             logging.error(f"[{self.client_id}] Socket timeout")
+            self._send_client_dc_message()
+            logging.info(f"Sending client disconnect message {self.client_id}")
         except OSError as e:
             logging.error(
                 f"[{self.client_id}] action: receive_message | result: fail | error: {e}")
@@ -106,7 +114,7 @@ class ClientHandler:
 
             self.cur_id += 1
             self.queue.send_eof(EOFMessage(self.cur_id, self.client_id))
-            return
+            return True
 
         identifier, data = parse_client_msg(batch.strip())
         msgs = data.split("\n")
@@ -159,11 +167,13 @@ class ClientHandler:
         logging.info(
             '[{self.client_id}] action: receive_termination_signal | result: in_progress')
         self._close_client_socket()
+        self._send_client_dc_message()
+
         logging.info(
             f'[{self.client_id}] action: receive_termination_signal | result: success')
 
 
-def create_client_handler(client_socket, output_queues, client_id):
-    c_handler = ClientHandler(client_socket, output_queues, client_id)
+def create_server_handler(client_socket, output_queues, client_id):
+    c_handler = ServerHandler(client_socket, output_queues, client_id)
 
     c_handler.handle_client_connection()

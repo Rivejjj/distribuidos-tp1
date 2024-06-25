@@ -1,3 +1,4 @@
+import logging
 from data_processors.data_manager.data_manager import DataManager
 from entities.eof_msg import EOFMessage
 from sentiment_accumulator_cp import SentimentAccumulatorCheckpoint
@@ -17,13 +18,13 @@ class SentimentAccumulatorManager(DataManager):
 
     def eof_cb(self, msg: QueryMessage):
         client_id = msg.get_client_id()
-        msg = BatchTitleScoreMessage(
+        result_msg = BatchTitleScoreMessage(
             self.acc.calculate_90th_percentile(client_id), uuid(), client_id, self.query)
 
-        if msg.get_query():
-            self.queue_middleware.send_to_result(msg)
+        if result_msg.get_query():
+            self.queue_middleware.send_to_result(result_msg)
         else:
-            self.queue_middleware.send_to_all(encode(msg))
+            self.queue_middleware.send_to_all(encode(result_msg))
         self.delete_client(msg)
 
     def process_title_score(self, title_score_msg: TitleScoreMessage):
@@ -45,4 +46,5 @@ class SentimentAccumulatorManager(DataManager):
 
     def delete_client(self, msg: QueryMessage):
         self.acc.clear(msg)
+        self.cp.delete_client(msg)
         return super().delete_client(msg)

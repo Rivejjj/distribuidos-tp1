@@ -5,7 +5,7 @@ from utils.initialize import deserialize_dict, serialize_dict
 
 
 class SentTitlesCheckpoint(DataCheckpoint):
-    def __init__(self, save_path='.checkpoints/counter'):
+    def __init__(self, save_path='.checkpoints/sent_titles'):
         super().__init__(save_path)
         self.titles = {}
         self.load()

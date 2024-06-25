@@ -8,7 +8,7 @@ from entities.query_message import BOOK, REVIEW
 from client_parser import parse_book_from_client, parse_review_from_client
 from entities.review import Review
 from entities.review_msg import ReviewMessage
-from server_handler import create_client_handler
+from server_handler import create_server_handler
 from utils.initialize import decode, encode
 from rabbitmq.queue import QueueMiddleware
 from utils.parser import parse_client_msg, parse_query_msg
@@ -42,7 +42,7 @@ class Server:
             try:
                 logging.info(f"waiting for connection")
                 client_sock = self.__accept_new_connection(self._server_socket)
-                process = Process(target=create_client_handler,
+                process = Process(target=create_server_handler,
                                   args=(client_sock, self.output_queues, self.cur_client))
 
                 self.cur_client += 1

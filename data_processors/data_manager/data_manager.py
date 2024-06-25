@@ -20,6 +20,7 @@ class DataManager(ABC):
                 config_params), input_queue=config_params["input_queue"], id=config_params["id"], previous_workers=config_params["previous_workers"])
 
         self.query = config_params["query"]
+        self.processed_messages = {}
 
     def run(self):
         self.queue_middleware.start_consuming(
@@ -64,6 +65,11 @@ class DataManager(ABC):
         def callback(ch, method, properties, body):
             msg = parse_query_msg(body)
 
+            client_id = msg.get_client_id()
+
+            self.processed_messages[client_id] = self.processed_messages.get(
+                client_id, set())
+
             if msg.is_eof():
                 logging.info(f"Received EOF of client {msg.get_client_id()}")
                 self.process_eof(msg)
@@ -83,7 +89,7 @@ class DataManager(ABC):
                 return
 
             logging.info(
-                f"Received message: {msg}")
+                f"Received message: {msg.get_id()}")
 
             result = self.process_query_message(msg)
 

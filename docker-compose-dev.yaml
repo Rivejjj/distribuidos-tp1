@@ -9,25 +9,25 @@ services:
     environment:
     - PYTHONUNBUFFERED=1
     - LOGGING_LEVEL=INFO
-    - BOOKS_PATH=/data/books_data.csv
-    - BOOKS_REVIEWS_PATH=/data/Books_rating.csv
+    - BOOKS_PATH=/data/books_data_reduced.csv
+    - BOOKS_REVIEWS_PATH=/data/Books_rating_reduced.csv
     volumes:
     - ./data/csv:/data
     - ./data/0/query:/query
-  sender_client_1:
-    container_name: sender_client_1
-    image: client:latest
-    entrypoint: python3 /main.py
-    depends_on:
-    - gateway
-    environment:
-    - PYTHONUNBUFFERED=1
-    - LOGGING_LEVEL=INFO
-    - BOOKS_PATH=/data/books_data.csv
-    - BOOKS_REVIEWS_PATH=/data/Books_rating.csv
-    volumes:
-    - ./data/csv:/data
-    - ./data/1/query:/query
+  # sender_client_1:
+  #   container_name: sender_client_1
+  #   image: client:latest
+  #   entrypoint: python3 /main.py
+  #   depends_on:
+  #   - gateway
+  #   environment:
+  #   - PYTHONUNBUFFERED=1
+  #   - LOGGING_LEVEL=INFO
+  #   - BOOKS_PATH=/data/books_data.csv
+  #   - BOOKS_REVIEWS_PATH=/data/Books_rating.csv
+  #   volumes:
+  #   - ./data/csv:/data
+  #   - ./data/1/query:/query
   gateway:
     container_name: gateway
     image: gateway:latest

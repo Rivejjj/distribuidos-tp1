@@ -61,7 +61,7 @@ class ReviewsCounterManager(DataManager):
             result.append(authors_msg)
 
         title_score_msg = TitleScoreMessage(
-            title, avg, *review_msg.get_headers(), self.query)
+            title, avg, *review_msg.get_headers())
 
         result.append(title_score_msg)
 

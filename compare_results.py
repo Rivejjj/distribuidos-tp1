@@ -33,10 +33,12 @@ def sort_file(path, write_path):
 
 def main():
     for i in range(1, 6):
-        sort_file(f'data/query/query{i}.csv',
-                  f'data/query_result/query{i}.csv')
-        compare_files_with_rounding(f'data/query_result/query{i}.csv',
-                                    f'data/kaggle_results/query_{i}_kaggle.csv')
+        sort_file(f'data/0/query/query{i}.csv',
+                  f'data/query_result/0/query{i}.csv')
+        sort_file(f'data/kaggle_results/query{i}_reduced.csv',
+                  f'data/kaggle_results/query{i}_reduced_sorted.csv')
+        compare_files_with_rounding(f'data/query_result/0/query{i}.csv',
+                                    f'data/kaggle_results/query{i}_reduced_sorted.csv')
 
 
 if __name__ == '__main__':
