@@ -26,6 +26,7 @@ class SentimentAccumulatorManager(DataManager):
         else:
             self.queue_middleware.send_to_all(encode(result_msg))
         self.delete_client(msg)
+        super().delete_client(msg)
 
     def process_title_score(self, title_score_msg: TitleScoreMessage):
         if self.messages_cp.is_processed_msg(title_score_msg):

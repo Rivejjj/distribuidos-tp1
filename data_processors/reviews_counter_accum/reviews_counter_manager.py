@@ -22,9 +22,6 @@ class ReviewsCounterManager(DataManager):
 
         self.sent_titles_cp = SentTitlesCheckpoint()
 
-    def eof_cb(self, msg: QueryMessage):
-        return self.delete_client(msg)
-
     def process_book(self, book_msg: BookMessage):
         if self.messages_cp.is_processed_msg(book_msg):
             return

@@ -17,9 +17,6 @@ class AccumulatorManager(DataManager):
         self.accum = Accumulator()
         self.accum_cp = AccumulatorCheckpoint(self.accum)
 
-    def eof_cb(self, msg: EOFMessage):
-        return self.delete_client(msg)
-
     def process_book(self, book_msg: BookMessage):
         book = book_msg.get_book()
 
@@ -28,9 +25,12 @@ class AccumulatorManager(DataManager):
 
         client_id = msg.get_client_id()
 
-        if self.messages_cp.is_processed_msg(book_msg) and self.accum.check_valid_author(book.authors, client_id):
-            logging.info(f"Already processed")
-            return msg
+        if self.accum.check_valid_author(book.authors, client_id):
+            if self.messages_cp.is_processed_msg(book_msg):
+                logging.info(f"Already processed")
+                return msg
+            else:
+                return
 
         send_author = self.accum.add_book(book, client_id)
         self.accum_cp.save(book, client_id)

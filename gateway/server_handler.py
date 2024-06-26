@@ -61,7 +61,7 @@ class ServerHandler:
                 msg = decode(receive(self.client_sock)).rstrip()
                 finished = self.__process_batch(msg)
                 if finished:
-                    logging.info(f"Received EOF")
+                    logging.critical(f"Received EOF")
                     break
         except socket.timeout as e:
             logging.error(f"[{self.client_id}] Socket timeout")
@@ -109,10 +109,9 @@ class ServerHandler:
 
     def __process_batch(self, batch):
         if batch == "EOF":
-            logging.info(
+            logging.critical(
                 f"[{self.client_id}] RECEIVED EOF, closing connection with client {self.client_sock}")
 
-            self.cur_id += 1
             self.queue.send_eof(EOFMessage(self.cur_id, self.client_id))
             return True
 

@@ -26,6 +26,11 @@ class Accumulator:
         if author in self.completed_authors[client_id]:
             return False
 
+        self.authors[client_id] = self.authors.get(client_id, {})
+
+        self.authors[client_id][author] = self.authors[client_id].get(
+            author, set())
+
         result = len(self.authors[client_id][author]) >= 10
         if result:
             self.completed_authors[client_id].add(author)

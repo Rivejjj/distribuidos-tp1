@@ -26,12 +26,11 @@ class DataManager(ABC):
         self.queue_middleware.start_consuming(
             self.process_message())
 
-    @abstractmethod
     def eof_cb(self, eof_msg: EOFMessage):
         """
         Metodo que se llama al cumplir los requerimientos del eof
         """
-        pass
+        self.delete_client(eof_msg)
 
     @abstractmethod
     def send_to_next_worker(self, result):

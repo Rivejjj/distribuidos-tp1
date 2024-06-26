@@ -25,6 +25,7 @@ class TopRatingManager(DataManager):
         else:
             self.queue_middleware.send_to_all(encode(result_msg))
         self.delete_client(msg)
+        super().delete_client(msg)
 
     def process_title_score(self, title_score_msg: TitleScoreMessage):
         title, score = title_score_msg.get_title(), title_score_msg.get_score()

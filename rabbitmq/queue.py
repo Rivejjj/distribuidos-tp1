@@ -120,23 +120,23 @@ class QueueMiddleware:
         client_id = msg.get_client_id()
         self.received_eofs_cp.save(msg.get_client_id())
 
-        logging.info(
+        logging.critical(
             f"[QUEUE] Received EOFs {self.received_eofs_cp.eofs[client_id]} for client {client_id}")
 
         if self.received_eofs_cp.eof_reached(client_id):
-            logging.info(
+            logging.critical(
                 f"[QUEUE] Received EOFs of all workers for client {client_id}")
 
             if callback:
-                logging.info("[QUEUE] Executing callback")
+                logging.critical("[QUEUE] Executing callback")
                 callback()
 
             id = uuid()
-            logging.info(f"[QUEUE] Created uuid {id}")
+            logging.critical(f"[QUEUE] Created uuid {id}")
             msg = EOFMessage(id, client_id)
             self.send_to_all(encode(msg))
             self.send_to_result(msg)
-            logging.info(
+            logging.critical(
                 f"[QUEUE] Sending EOF to next workers {self.output_queues}")
 
             self.received_eofs_cp.clear(msg)

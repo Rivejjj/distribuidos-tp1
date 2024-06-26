@@ -17,6 +17,8 @@ class DataCollectorHandler:
         self.receiver_queue = QueueMiddleware(
             [], input_queue=input_queue, id=id, previous_workers=query_count, save_to_file=False)
 
+        self.received = set()
+
     def run(self):
         """
         Dummy Server loop
@@ -54,18 +56,25 @@ class DataCollectorHandler:
     def handle_result(self):
         def callback(ch, method, properties, body):
             try:
-                logging.info(f"[QUERY RESULT]: {body}")
+                logging.critical(f"[QUERY RESULT]: {body}")
                 msg = parse_query_msg(body)
                 client_id = msg.get_client_id()
+
+                if msg.get_id() in self.received:
+                    logging.critical(f"Repetead message {msg.get_id()}")
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                    return
+
+                self.received.add(msg.get_id())
 
                 if msg.is_eof():
                     self.receiver_queue.received_eofs_cp.save(
                         client_id)
-                    logging.info(
+                    logging.critical(
                         f"[FINAL] EOF received {self.receiver_queue.received_eofs_cp.eofs[client_id]}")
 
                     if self.receiver_queue.received_eofs_cp.eof_reached(client_id):
-                        logging.info("All queries finished")
+                        logging.critical("All queries finished")
                         send_message(self.client_sock, "EOF")
                         self.receiver_queue.received_eofs_cp.clear(msg)
 
@@ -74,12 +83,13 @@ class DataCollectorHandler:
                     return
 
                 if msg.is_dc():
-                    logging.info(f"Client disconnect {msg.get_client_id()}")
+                    logging.critical(
+                        f"Client disconnect {msg.get_client_id()}")
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                     self.stop()
                     return
 
-                logging.info(f"[DATA COLLECTOR] Received result {msg}")
+                logging.critical(f"[DATA COLLECTOR] Received result {msg}")
 
                 query = msg.get_query()
 
@@ -90,7 +100,7 @@ class DataCollectorHandler:
 
                 client_data = msg.serialize_data().replace(DATA_SEPARATOR, ',')
 
-                logging.info(f"[DATA COLLECTOR] {query} {client_data}")
+                logging.critical(f"[DATA COLLECTOR] {query} {client_data}")
 
                 send_message(self.client_sock,
                              f"{query}:{client_data}".rstrip(','))

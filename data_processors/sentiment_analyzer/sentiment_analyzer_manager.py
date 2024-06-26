@@ -16,9 +16,6 @@ class SentimentAnalyzerManager(DataManager):
         self.queue_middleware.start_consuming(
             self.process_message())
 
-    def eof_cb(self, msg: QueryMessage):
-        return self.delete_client(msg)
-
     def process_review(self, review_msg: ReviewMessage):
         review = review_msg.get_review()
         polarity_score = self.analyzer.analyze(review.text)

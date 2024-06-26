@@ -33,9 +33,6 @@ class FilterManager(DataManager):
 
         self.no_send = config_params["no_send"]
 
-    def eof_cb(self, eof_msg: QueryMessage):
-        self.delete_client(eof_msg)
-
     def send_to_next_worker(self, result):
         msg, title = result
         logging.info(f"Send to next queue: {msg} {title}")
