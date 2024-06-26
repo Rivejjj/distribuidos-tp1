@@ -1,14 +1,16 @@
+from multiprocessing import Process
 import socket
 import logging
 import signal
+from data_collector_handler import create_data_collector_handler
 from utils.initialize import decode
 from rabbitmq.queue import QueueMiddleware
-from utils.parser import parse_query_msg
+from utils.parser import DATA_SEPARATOR, parse_query_msg
 from utils.sockets import send_message
 
 
 class DataCollector:
-    def __init__(self, results_port, listen_backlog, query_count, input_queue=None, id=0):
+    def __init__(self, results_port, listen_backlog, query_count, input_queue=None):
         # Initialize server socket
         signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
 
@@ -17,13 +19,10 @@ class DataCollector:
         self.results_server_socket.bind(('', results_port))
         self.results_server_socket.listen(listen_backlog)
 
-        self.client_sock = None
-
-        self.receiver_queue = QueueMiddleware(
-            [], input_queue=input_queue, id=id)
-
         self.query_count = query_count
-        self.received_eofs = 0
+        self.input_queue = input_queue
+        self.cur_client = 0
+        self.processes = []
 
     def run(self):
         """
@@ -40,13 +39,14 @@ class DataCollector:
                     self.results_server_socket)
 
                 logging.info(f"results client sock: {client_sock}")
-                self.client_sock = client_sock
-                self.receiver_queue.start_consuming(self.handle_result())
+                process = Process(target=create_data_collector_handler,
+                                  args=(client_sock, self.query_count, self.input_queue, self.cur_client))
+
+                self.cur_client += 1
+                self.processes.append(process)
+                process.start()
             except OSError:
                 break
-
-        if self.client_sock:
-            self.client_sock.close()
 
     def __accept_new_connection(self, socket):
         """
@@ -71,40 +71,8 @@ class DataCollector:
         self.results_server_socket.close()
         logging.info('action: closing listening socket | result: success')
 
-        self._close_client_socket()
-
-        self.receiver_queue.end()
+        for process in self.processes:
+            process.terminate()
 
         logging.info(
             f'action: receive_termination_signal | result: success')
-
-    def _close_client_socket(self):
-        logging.info('action: closing client socket | result: in_progress')
-        if self.client_sock:
-            self.client_sock.close()
-            self.client_sock = None
-        logging.info('action: closing client socket | result: success')
-
-    def handle_result(self):
-        def callback(ch, method, properties, body):
-            logging.info(f"[QUERY RESULT]: {decode(body)}")
-            msg = decode(body).strip()
-
-            # logging.info(self.client_sock)
-
-            if msg == "EOF":
-                self.received_eofs += 1
-                logging.info(f"[FINAL] EOF received {self.received_eofs}")
-
-                if self.received_eofs >= self.query_count:
-                    logging.info("All queries finished")
-                    send_message(self.client_sock, "EOF")
-                    self.received_eofs = 0
-                return
-
-            _, data = parse_query_msg(msg)
-
-            client_data = data.replace("\t", ",")
-
-            send_message(self.client_sock, client_data)
-        return callback

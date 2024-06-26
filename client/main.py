@@ -20,7 +20,8 @@ def receive_results(address, port):
     client = Client(address, port)
     while True:
         msg = client.receive_message()
-        # logging.info("message received: ", msg)
+        print(msg)
+
         if msg == "EOF":
             break
 
@@ -47,6 +48,7 @@ def send_file(client, filename, identifier, batch_size=10, max_batches=0):
             for _ in range(batch_size):
                 line = file.readline()
                 batch += line
+            # print(batch)
             client.send_message(batch)
             batch = f"{identifier}{QUERY_MSG_SEPARATOR}"
             time.sleep(2)

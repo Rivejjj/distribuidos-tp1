@@ -3,7 +3,7 @@ from utils.to_str import to_str
 
 
 class Book:
-    def __init__(self, title, authors, publisher, published_year, categories):
+    def __init__(self, title=None, authors=None, publisher=None, published_year=None, categories=None):
         self.title = title
         self.authors = authors
         self.publisher = publisher

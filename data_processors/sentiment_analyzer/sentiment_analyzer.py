@@ -1,7 +1,7 @@
 from textblob import TextBlob
 
 
-class SentimentAnalizer:
+class SentimentAnalyzer:
     def __init__(self):
         pass
 

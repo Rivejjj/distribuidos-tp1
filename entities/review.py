@@ -4,7 +4,7 @@ from utils.to_str import to_str
 
 
 class Review:
-    def __init__(self, title, score, text):
+    def __init__(self, title=None, score=None, text=None):
         self.title = title
         self.score = score
         self.text = text
@@ -15,7 +15,6 @@ class Review:
 
     def sanitize(self):
         if not self.title or not self.score or not self.text:
-            # print("Missing fields",self.title, self.score, self.text)
             return False
         return True
 

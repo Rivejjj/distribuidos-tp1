@@ -1,6 +1,8 @@
 import yaml
 
-WORKERS = 3
+WORKERS = 4
+CLIENTS = 2
+LOGGING_LEVEL = 'INFO'
 
 pools = [('computers_category_filter', WORKERS),
          ('2000s_published_year_filter', WORKERS),
@@ -23,7 +25,8 @@ def create_docker_compose():
         }
 
         # config['services']['rabbitmq'] = build_rabbitmq()
-        config['services']['sender_client'] = build_client()
+        for i in range(CLIENTS):
+            config['services'][f'sender_client_{i}'] = build_client(i)
         config['services']['gateway'] = build_gateway()
 
         build_query1(config['services'])
@@ -64,7 +67,7 @@ def build_gateway():
         'entrypoint': 'python3 /main.py',
         'environment': [
             'PYTHONUNBUFFERED=1',
-            'LOGGING_LEVEL=INFO',
+            f'LOGGING_LEVEL={LOGGING_LEVEL}',
             f'OUTPUT_QUEUES=query1:{WORKERS};query2:{WORKERS};query3:{WORKERS};query4:{WORKERS}',
             'INPUT_QUEUE=results',
             f'QUERY_COUNT={WORKERS+WORKERS+WORKERS+2}',
@@ -74,9 +77,9 @@ def build_gateway():
     }
 
 
-def build_client():
+def build_client(i):
     return {
-        'container_name': 'sender_client',
+        'container_name': f'sender_client_{i}',
         'image': 'client:latest',
         'entrypoint': 'python3 /main.py',
         'depends_on': [
@@ -84,13 +87,13 @@ def build_client():
         ],
         'environment': [
             'PYTHONUNBUFFERED=1',
-            'LOGGING_LEVEL=INFO',
+            f'LOGGING_LEVEL={LOGGING_LEVEL}',
             'BOOKS_PATH=/data/books_data.csv',
             'BOOKS_REVIEWS_PATH=/data/Books_rating.csv'
         ],
         'volumes': [
             './data/csv:/data',
-            './data/query:/query'
+            f'./data/{i}/query:/query'
         ],
 
     }
@@ -142,49 +145,58 @@ def build_query5(config_services):
 
 
 def build_computer_category_filter(i):
+    container_name = f'computers_category_filter_{i}'
     return {
-        'container_name': f'computers_category_filter_{i}',
+        'container_name': container_name,
         'image': 'book_filter:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
             'PYTHONUNBUFFERED=1',
-            'LOGGING_LEVEL=INFO',
+            f'LOGGING_LEVEL={LOGGING_LEVEL}',
             'INPUT_QUEUE=query1',
             f'OUTPUT_QUEUES=computers:{WORKERS}',
             'CATEGORY=Computers',
             f'ID={i}',
             'IS_EQUAL=True'
         ],
+        'volumes': [
+            f'./data/checkpoint/{container_name}:/.checkpoints'
+        ],
 
     }
 
 
 def build_2000s_published_year_filter(i):
+    container_name = f'2000s_published_year_filter_{i}'
     return {
-        'container_name': f'2000s_published_year_filter_{i}',
+        'container_name': container_name,
         'image': 'book_filter:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
             'PYTHONUNBUFFERED=1',
-            'LOGGING_LEVEL=INFO',
+            f'LOGGING_LEVEL={LOGGING_LEVEL}',
             'INPUT_QUEUE=computers',
             f'OUTPUT_QUEUES=2000s_filtered:{WORKERS}',
             'PUBLISHED_YEAR_RANGE=2000-2023',
             f'ID={i}',
             f'PREVIOUS_WORKERS={WORKERS}'
         ],
+        'volumes': [
+            f'./data/checkpoint/{container_name}:/.checkpoints'
+        ],
 
     }
 
 
 def build_title_contains_filter(i):
+    container_name = f'title_contains_filter_{i}'
     return {
-        'container_name': f'title_contains_filter_{i}',
+        'container_name': container_name,
         'image': 'book_filter:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
             'PYTHONUNBUFFERED=1',
-            'LOGGING_LEVEL=INFO',
+            f'LOGGING_LEVEL={LOGGING_LEVEL}',
             'INPUT_QUEUE=2000s_filtered',
             f'OUTPUT_QUEUES=results:1',
             'TITLE_CONTAINS=distributed',
@@ -192,133 +204,161 @@ def build_title_contains_filter(i):
             'QUERY=1',
             f'PREVIOUS_WORKERS={WORKERS}'
         ],
+        'volumes': [
+            f'./data/checkpoint/{container_name}:/.checkpoints'
+        ],
 
 
     }
 
 
 def build_decades_accumulator(i):
+    container_name = f'decades_accumulator_{i}'
     return {
-        'container_name': f'decades_accumulator_{i}',
+        'container_name': container_name,
         'image': 'decades_accumulator:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
             'PYTHONUNBUFFERED=1',
-            'LOGGING_LEVEL=INFO',
+            f'LOGGING_LEVEL={LOGGING_LEVEL}',
             'INPUT_QUEUE=query2',
             'OUTPUT_QUEUES=results:1',
             'TOP=10',
             f'ID={i}',
             'QUERY=2',
         ],
+        'volumes': [
+            f'./data/checkpoint/{container_name}:/.checkpoints'
+        ],
 
     }
 
 
 def build_1990s_published_year_filter(i):
+    container_name = f'1990s_published_year_filter_{i}'
     return {
-        'container_name': f'1990s_published_year_filter_{i}',
+        'container_name': container_name,
         'image': 'book_filter:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
             'PYTHONUNBUFFERED=1',
-            'LOGGING_LEVEL=INFO',
+            f'LOGGING_LEVEL={LOGGING_LEVEL}',
             'INPUT_QUEUE=query3',
             f'OUTPUT_QUEUES=90s_filtered:{WORKERS}',
             'PUBLISHED_YEAR_RANGE=1990-1999',
             f'ID={i}',
             'SAVE_BOOKS=True',
         ],
-
+        'volumes': [
+            f'./data/checkpoint/{container_name}:/.checkpoints'
+        ],
     }
 
 
 def build_reviews_counter(i):
-
+    container_name = f'reviews_counter_{i}'
     return {
-        'container_name': f'reviews_counter_{i}',
+        'container_name': container_name,
         'image': 'reviews_counter_accum:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
             'PYTHONUNBUFFERED=1',
-            'LOGGING_LEVEL=INFO',
+            f'LOGGING_LEVEL={LOGGING_LEVEL}',
             'INPUT_QUEUE=90s_filtered',
             'OUTPUT_QUEUES=500_reviews:1;results:1',
             f'ID={i}',
             'QUERY=3',
             f'PREVIOUS_WORKERS={WORKERS}'
         ],
-
-
+        'volumes': [
+            f'./data/checkpoint/{container_name}:/.checkpoints'
+        ],
     }
 
 
 def build_avg_rating_accumulator():
+    container_name = 'avg_rating_accumulator'
     return {
-        'container_name': 'avg_rating_accumulator',
+        'container_name': container_name,
         'image': 'top_rating_accumulator:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
             'PYTHONUNBUFFERED=1',
-            'LOGGING_LEVEL=INFO',
+            f'LOGGING_LEVEL={LOGGING_LEVEL}',
             'INPUT_QUEUE=500_reviews',
             'OUTPUT_QUEUES=results:1',
             'ID=0',
             'QUERY=4',
             f'PREVIOUS_WORKERS={WORKERS}'
         ],
+        'volumes': [
+            f'./data/checkpoint/{container_name}:/.checkpoints'
+        ],
 
     }
 
 
 def build_fiction_category_filter(i):
+    container_name = f'fiction_category_filter_{i}'
     return {
-        'container_name': f'fiction_category_filter_{i}',
+        'container_name': container_name,
         'image': 'book_filter:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
             'PYTHONUNBUFFERED=1',
-            'LOGGING_LEVEL=INFO',
+            f'LOGGING_LEVEL={LOGGING_LEVEL}',
             'INPUT_QUEUE=query4',
             f'OUTPUT_QUEUES=fiction:{WORKERS}',
             'CATEGORY=fiction',
             f'ID={i}',
-            'SAVE_BOOKS=True'
+            'SAVE_BOOKS=True',
+            'NO_SEND=True'
+        ],
+        'volumes': [
+            f'./data/checkpoint/{container_name}:/.checkpoints'
         ],
 
     }
 
 
 def build_sentiment_analyzer(i):
+    container_name = f'sentiment_analyzer_{i}'
     return {
-        'container_name': f'sentiment_analyzer_{i}',
+        'container_name': container_name,
         'image': 'sentiment_analyzer:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
             'PYTHONUNBUFFERED=1',
-            'LOGGING_LEVEL=INFO',
+            f'LOGGING_LEVEL={LOGGING_LEVEL}',
             'INPUT_QUEUE=fiction',
             f'OUTPUT_QUEUES=sentiment_score:1',
             f'ID={i}',
             f'PREVIOUS_WORKERS={WORKERS}'
+        ],
+        'volumes': [
+            f'./data/checkpoint/{container_name}:/.checkpoints'
         ],
 
     }
 
 
 def build_sentiment_score_accumulator():
+    container_name = 'sentiment_score_accumulator'
     return {
-        'container_name': 'sentiment_score_accumulator',
+        'container_name': container_name,
         'image': 'sentiment_score_accumulator:latest',
         'entrypoint': 'python3 /main.py',
         'environment': [
             'PYTHONUNBUFFERED=1',
-            'LOGGING_LEVEL=INFO',
+            f'LOGGING_LEVEL={LOGGING_LEVEL}',
             'INPUT_QUEUE=sentiment_score',
             'OUTPUT_QUEUES=results:1',
             'ID=0',
             'QUERY=5',
             f'PREVIOUS_WORKERS={WORKERS}'
+        ],
+        'volumes': [
+            f'./data/checkpoint/{container_name}:/.checkpoints'
         ],
 
     }
