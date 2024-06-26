@@ -45,11 +45,9 @@ class Monitor:
         for sock in ready_to_read:
             try:
                 data = receive(sock)
-                # data = sock.recv(1024)
                 if data and data != b"":
                     self.last_heartbeat[sock] = time.time()
                     send_message(sock, "Ok")
-                    # sock.send(b"Ok")
                     logging.warning(f"Received heartbeat from {self.active_workers[sock]}")
                 else:
                     self.delete_node(sock)

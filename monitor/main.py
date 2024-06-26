@@ -79,12 +79,10 @@ if __name__ == "__main__":
     while running:
         conn, addr = sock.accept()
         data = receive(conn)
-        # data = conn.recv(1024)
         if data:
             logging.warning(f"Received connection from: {data.decode()}")
             monitor_name = data.decode()
             send_message(conn, "Ok")
-            # conn.send(b"Ok")
             with lock:
                 if monitor_name not in active_monitors:
                     active_monitors[monitor_name] = conn

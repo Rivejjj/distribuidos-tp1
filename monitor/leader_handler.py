@@ -41,7 +41,6 @@ class LeaderHandler():
     def send_heartbeat(self):
         try:
             send_message(self.leader[1], self.name)
-            # self.leader[1].send(bytes(self.name, 'utf-8'))
             logging.warning(f"Sending heartbeat to {self.leader[0]}")
         except (ConnectionResetError, OSError) as e:
             logging.warning(f"Could not send to {self.leader[0]} lost: {e}")
@@ -64,7 +63,6 @@ class LeaderHandler():
                     try:
                         logging.warning(f"Sending election message to {name}")
                         send_message(conn, msg)
-                        # conn.send(bytes(msg, 'utf-8'))
                     except (ConnectionResetError, OSError) as e:
                         logging.warning(f"Connection to {name} lost: {e}")
                         self.find_and_delete(conn)
@@ -82,15 +80,12 @@ class LeaderHandler():
                 data = decode(receive(conn))
                 if data and data.startswith("coordinator"):
                     self.handle_coordinator_message(conn,data)
-                # data = conn.recv(1024)
                 if data and data.startswith("monitor"):
                     logging.warning(f"Received heartbeat from {data}")
                     send_message(conn, "Ok")
-                    # conn.send(b"Ok")
                 elif data and data.startswith("election"):
                     msg = "answer" + self.name
                     send_message(conn, msg)
-                    # conn.send(bytes(msg, 'utf-8'))
                     return
             except socket.timeout:
                 logging.warning(f"Timeout waiting for leader. I am leader")
@@ -107,7 +102,6 @@ class LeaderHandler():
         msg = "answer"
         try:
             send_message(conn, msg)
-            # conn.send(bytes(msg, 'utf-8'))
         except (ConnectionResetError, OSError) as e:
             logging.warning(f"Connection lost: {e}")
             self.find_and_delete(conn)
@@ -132,7 +126,6 @@ class LeaderHandler():
         elif data.startswith("monitor"):
             logging.warning(f"Received heartbeat from {data}")
             send_message(conn, "Ok")
-            # conn.send(b"Ok")
         elif data.startswith("election"):
             self.handle_election_message(conn)
         elif data.startswith("coordinator"):
@@ -147,7 +140,6 @@ class LeaderHandler():
             conn.setblocking(True)
             conn.settimeout(5)
             data = decode(receive(conn))
-            # data = conn.recv(1024)
             self.handle_message(conn,name,data)
         except socket.timeout:
             logging.warning(f"Timeout reading from {name}")
@@ -189,10 +181,8 @@ class LeaderHandler():
                     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     sock.connect((monitor, 22226))
                     send_message(sock, self.name)
-                    # sock.send(bytes(self.name, 'utf-8'))
                     sock.settimeout(5)
                     data = decode(receive(sock))
-                    # data = sock.recv(1024)
                     if data and data not in self.active_monitors:
                         with self.lock:
                             self.active_monitors[monitor] = sock
@@ -214,7 +204,6 @@ class LeaderHandler():
             for conn in self.active_monitors.values():
                 msg = "coordinator:" + self.name
                 send_message(conn, msg)
-                # conn.send(bytes(msg, "utf-8"))
 
     def get_leader(self):
         if self.highest_id:

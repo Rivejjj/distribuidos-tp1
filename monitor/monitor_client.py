@@ -30,10 +30,8 @@ class MonitorClient():
                 try:
                     logging.warning(f"Sending heartbeat to monitor")
                     send_message(self.conn, self.name)
-                    # self.conn.send(bytes(self.name, 'utf-8'))
                     data = decode(receive(self.conn))
-                    # read = self.conn.recv(1024)
-                    # if read == b'':
+                    # if data == b'':
                     #     self.listen_for_connections()
                     logging.warning(f"Answer from server: {data}")
                     time.sleep(3)
