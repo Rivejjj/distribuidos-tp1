@@ -2,12 +2,12 @@ import yaml
 
 WORKERS = 4
 CLIENTS = 3
-MONITORS = 1
+MONITORS = 3
 LOGGING_LEVEL = 'INFO'
 
 
 def create_docker_compose():
-    with open(f"docker-compose-dev-1.yaml", "w") as file:
+    with open(f"docker-compose-dev.yaml", "w") as file:
         config = {
             'name': 'tp1',
             'services': {}
@@ -418,7 +418,7 @@ def generate_all_workers():
 
 
 def create_atomic_bomb():
-    with open('atomic_bomb2.sh', 'w') as f:
+    with open('atomic_bomb.sh', 'w') as f:
         f.write('#!/bin/bash\n')
 
         f.write(f'docker kill {" ".join(generate_all_workers())}\n')

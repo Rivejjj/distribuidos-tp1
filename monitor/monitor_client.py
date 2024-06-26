@@ -2,7 +2,8 @@ import socket
 import logging
 import time
 import signal
-
+from utils.sockets import receive, send_message
+from utils.initialize import decode
 class MonitorClient():
     def __init__(self, name):
         signal.signal(signal.SIGTERM, lambda signal, frame: self.close())
@@ -28,11 +29,11 @@ class MonitorClient():
             while self.connected:
                 try:
                     logging.warning(f"Sending heartbeat to monitor")
-                    self.conn.send(bytes(self.name, 'utf-8'))
-                    read = self.conn.recv(1024)
-                    # if read == b'':
+                    send_message(self.conn, self.name)
+                    data = decode(receive(self.conn))
+                    # if data == b'':
                     #     self.listen_for_connections()
-                    logging.warning(f"Answer from server: {read.decode()}")
+                    logging.warning(f"Answer from server: {data}")
                     time.sleep(3)
                 except (socket.timeout, OSError) as e:
                     logging.error(f"Error in client: {e}")
