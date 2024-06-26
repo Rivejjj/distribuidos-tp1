@@ -5,6 +5,7 @@ import time
 import socket
 import select 
 from utils.sockets import receive, send_message
+from utils.monitor import revive
 
 HEALTH_CHECK_INTERVAL = 3
 MAX_HEARTBEAT_TIME = 3 * HEALTH_CHECK_INTERVAL + 1
@@ -86,7 +87,7 @@ class Monitor:
         failed_conns = list(self.failed_workers)
         for worker in failed_conns:
             if worker not in self.restarted_workers:
-                self.revive_node(worker)
+                revive(worker)
                 self.failed_workers.remove(worker)
                 self.restarted_workers.append(worker)
 
@@ -107,13 +108,6 @@ class Monitor:
             self.check_health()
         logging.warning("Monitor stopped")
 
-    def revive_node(self, node):
-        result = subprocess.run(['/revive.sh',node],
-                                check=False, 
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
-        logging.warning('Command executed. Result={}\n. Output={}\n. Error={}\n'.
-        format(result.returncode, result.stdout, result.stderr))
 
     def stop(self):
         self.running = False

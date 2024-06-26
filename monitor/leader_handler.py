@@ -2,9 +2,10 @@ import logging
 import socket
 import time
 import select
-import errno
+import subprocess
 from utils.sockets import receive, send_message
 from utils.initialize import decode
+from utils.monitor import revive
 
 TIME_BETWEEN_HEARTBEATS = 2
 
@@ -17,6 +18,8 @@ class LeaderHandler():
         self.leader = None #(name sock)
         self.name = name
         self.running = True
+        self.revived_monitors = set()
+        
 
     def find_and_delete(self,conn):
         name,connection = self.find_socket(conn)
@@ -169,6 +172,21 @@ class LeaderHandler():
         
         if self.leader and self.leader[0] != self.name:
             self.send_heartbeat()
+            return
+        
+        if self.leader and self.leader[0] == self.name:
+            self.revive_monitors()
+            return 
+
+    def revive_monitors(self):
+        with self.lock:
+            for monitor in self.monitors:
+                if monitor not in self.active_monitors and monitor not in self.revived_monitors:
+                    revive(monitor)
+                    self.revived_monitors.add(monitor)
+            for monitor in self.active_monitors.keys():
+                if monitor in self.revived_monitors:
+                    self.revived_monitors.remove(monitor)
 
     def connect_with_monitors(self):
         tries = 5
@@ -182,14 +200,16 @@ class LeaderHandler():
                     sock.connect((monitor, 22226))
                     send_message(sock, self.name)
                     sock.settimeout(5)
-                    data = decode(receive(sock))
-                    if data and data not in self.active_monitors:
+                    name = decode(receive(sock))
+                    if name and name not in self.active_monitors:
                         with self.lock:
                             self.active_monitors[monitor] = sock
                             logging.warning(f"Received connection from: {monitor}")
                             if len(self.active_monitors) == len(self.monitors):
                                 logging.warning(f"Connected with all monitors: {self.active_monitors.keys()}")
                                 return
+                        if name in self.revived_monitors:
+                            self.revived_monitors.remove(name)
                     else:
                         logging.warning(f"NOT DATA: {monitor}")
                         sock.close()
