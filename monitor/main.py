@@ -1,5 +1,6 @@
 import logging
 import socket
+import signal
 from multiprocessing import Process, Manager
 from utils.initialize import initialize_config, initialize_log
 from utils.sockets import send_message, receive
@@ -36,7 +37,8 @@ if __name__ == "__main__":
     config_params["port"] = int(config_params["port"])
     initialize_log(logging, config_params["logging_level"])
 
-    # handle sigterm
+    
+
 
     monitors = ['monitor0', 'monitor1', 'monitor2']
     if config_params["name"] in monitors:
@@ -65,4 +67,5 @@ if __name__ == "__main__":
     else:
         leader_handler = LeaderHandler(
             monitors, active_monitors, lock, config_params["name"], False, workers)
+        
     leader_handler.run()

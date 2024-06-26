@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import json
 import shutil
 import os
+import logging
 
 from entities.query_message import QueryMessage
 DIRECTORY = 'data_checkpoints/.checkpoints'
@@ -12,6 +13,10 @@ MAX_LENGTH_BYTES = 8
 class DataCheckpoint(ABC):
     def __init__(self, path, checkpoint_interval=10000):
         self.path = path
+        logging.warning(f"            DataCheckpoint path: {path}")
+        # logging.warning(f"{self.wal_path(0)}")
+        # logging.warning(f"{self.cp_path(0)}")
+
         self.checkpoint_interval = checkpoint_interval
         self.change_counter = {}
 

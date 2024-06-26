@@ -4,6 +4,9 @@ import time
 import signal
 from utils.sockets import receive, send_message
 from utils.initialize import decode
+
+TIME_TO_WAIT = 3
+
 class MonitorClient():
     def __init__(self, name):
         signal.signal(signal.SIGTERM, lambda signal, frame: self.close())
@@ -34,12 +37,12 @@ class MonitorClient():
                     # if data == b'':
                     #     self.listen_for_connections()
                     logging.warning(f"Answer from server: {data}")
-                    time.sleep(3)
-                except (socket.timeout, OSError) as e:
+                    time.sleep(TIME_TO_WAIT)
+                except (socket.timeout, OSError, EOFError) as e:
                     logging.error(f"Error in client: {e}")
                     self.conn.close()
                     self.connected = False
-                    break
+                    break   
                 time.sleep(1)
 
 

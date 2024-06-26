@@ -13,7 +13,7 @@ MAX_HEARTBEAT_TIME = 3 * HEALTH_CHECK_INTERVAL + 1
 
 class Monitor:
     def __init__(self, workers):
-        # signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
+        signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
         self.last_heartbeat = {}
         self.running = True
         self.workers = workers
@@ -30,13 +30,15 @@ class Monitor:
         if name not in self.restarted_workers:
             self.failed_workers.append(name)
 
+
     def check_last_heartbeats(self):
         active_workers = list(self.active_workers.keys())
-        actual_time = time.time()
         for sock in active_workers:
+            actual_time = time.time()
             if actual_time - self.last_heartbeat[sock] > MAX_HEARTBEAT_TIME:
                 logging.warning(
-                    f"Connection to {self.active_workers[sock]} lost due to inactivity.")
+                    f"[WORKER HANDLER] Connection to {self.active_workers[sock]} lost due to inactivity.")
+                logging.warning(f"times: {actual_time} - {self.last_heartbeat[sock]} ={actual_time - self.last_heartbeat[sock]}")
                 self.delete_node(sock)
 
     def check_health(self):
@@ -45,7 +47,7 @@ class Monitor:
             ready_to_read, _, _ = select.select(
                 self.active_workers.keys(), [], [], MAX_HEARTBEAT_TIME)
         except OSError as e:
-            logging.error(f"Error in select: {e}")
+            logging.error(f"[WORKER HANDLER] Error in select: {e}")
         for sock in ready_to_read:
             try:
                 data = receive(sock)
@@ -53,17 +55,17 @@ class Monitor:
                     self.last_heartbeat[sock] = time.time()
                     send_message(sock, "Ok")
                     logging.warning(
-                        f"Received heartbeat from {self.active_workers[sock]}")
+                        f"[WORKER HANDLER] Received heartbeat from {self.active_workers[sock]}")
                 else:
                     self.delete_node(sock)
-            except (BrokenPipeError, OSError) as e:
+            except (BrokenPipeError, OSError, EOFError) as e:
                 logging.warning(
-                    f"Connection to {self.active_workers[sock]} lost: {e}...")
+                    f"[WORKER HANDLER] Connection to {self.active_workers[sock]} lost: {e}...")
                 self.delete_node(sock)
         self.check_last_heartbeats()
 
     def connect_to_worker(self, worker):
-        logging.warning(f"Trying to connect with: {worker}")
+        logging.warning(f"[WORKER HANDLER] Trying to connect with: {worker}")
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.connect((worker, 22225))
@@ -72,20 +74,21 @@ class Monitor:
             self.last_heartbeat[sock] = time.time()
             if worker in self.restarted_workers:
                 self.restarted_workers.remove(worker)
-            logging.warning(f"Connected to {worker}")
-            logging.warning(f"Active workers: {self.active_workers.values()}")
+            logging.warning(f"[WORKER HANDLER] Connected to {worker} and time: {self.last_heartbeat[sock]}")
+            logging.warning(f"[WORKER HANDLER] Active workers: {self.active_workers.values()}")
         except (ConnectionRefusedError, socket.timeout) as e:
-            logging.warning(f"Error connecting with {worker}: {e}")
+            logging.warning(f"[WORKER HANDLER] Error connecting with {worker}: {e}")
             if worker not in self.restarted_workers:
                 self.failed_workers.append(worker)
         except socket.gaierror as e:
-            logging.warning(f"gaierror with {worker}: {e}")
+            logging.warning(f"[WORKER HANDLER] gaierror with {worker}: {e}")
             if worker not in self.failed_workers:
                 self.failed_workers.append(worker)
             if worker in self.restarted_workers:
+                logging.warning(f"[WORKER HANDLER] Removing {worker} from restarted workers")
                 self.restarted_workers.remove(worker)
         except OSError as e:
-            logging.error(f"Error connecting with {worker}: {e}")
+            logging.error(f"[WORKER HANDLER] Error connecting with {worker}: {e}")
             self.connect_to_worker(worker)
 
     def check_failed_workers(self):
@@ -106,12 +109,12 @@ class Monitor:
             self.connect_to_worker(worker)
 
     def run(self):
-        logging.warning("Starting monitor")
+        logging.warning("[WORKER HANDLER] Starting monitor")
         self.establish_connections()
         while self.running:
             self.check_failed_workers()
             self.check_health()
-        logging.warning("Monitor stopped")
+        logging.warning("[WORKER HANDLER] Monitor stopped")
 
     def stop(self):
         self.running = False

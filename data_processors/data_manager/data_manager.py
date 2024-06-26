@@ -33,8 +33,13 @@ class DataManager(ABC):
         self.monitor_process.join()
 
     def run(self):
-        self.queue_middleware.start_consuming(
-            self.process_message())
+        try:
+            self.queue_middleware.start_consuming(
+                self.process_message())
+        except OSError as e:
+            logging.error(f"Error while consuming from queue {e}")
+        except AttributeError as e :
+            logging.error(f"Error while consuming from queue: {e}")
 
     def eof_cb(self, eof_msg: EOFMessage):
         """

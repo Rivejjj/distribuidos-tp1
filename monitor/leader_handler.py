@@ -2,7 +2,7 @@ import logging
 import socket
 import time
 import select
-import subprocess
+import signal
 from multiprocessing import Process
 from utils.sockets import receive, send_message
 from utils.initialize import decode
@@ -16,6 +16,7 @@ MAX_HEARTBEAT_TIMEOUT = 3 * TIME_BETWEEN_HEARTBEATS + 1
 
 class LeaderHandler():
     def __init__(self, monitors, active_monitors, lock, name, highest_id, workers):
+        signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
         self.highest_id = highest_id
         self.monitors = monitors
         self.active_monitors = active_monitors  # {monitor:conn}
@@ -247,7 +248,8 @@ class LeaderHandler():
             for conn in self.active_monitors.values():
                 msg = "coordinator:" + self.name
                 send_message(conn, msg)
-        self.start_workers()
+        if not self.workers_handler:           
+            self.start_workers()
 
     def get_leader(self):
         if self.highest_id:
@@ -268,6 +270,15 @@ class LeaderHandler():
         self.get_leader()
         while self.running:
             self.check_connections()
+
+    def stop(self):
+        logging.warning(f"Stopping leader handler")
+        self.running = False
+        if self.workers_handler:
+            self.workers_handler.terminate()
+        with self.lock:
+            for conn in self.active_monitors.values():
+                conn.close()
 
 
 def run_monitor(workers):
