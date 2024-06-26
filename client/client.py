@@ -1,7 +1,7 @@
 import socket
 import logging
 from utils.initialize import decode
-from utils.sockets import receive, safe_receive, send_message, send_success
+from utils.sockets import receive, send_message
 
 MAX_MESSAGE_BYTES = 16
 SUCCESS_MSG = "suc"

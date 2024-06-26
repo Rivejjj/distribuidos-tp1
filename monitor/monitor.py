@@ -4,6 +4,7 @@ import subprocess
 import time 
 import socket
 import select 
+from utils.sockets import receive, send_message
 
 HEALTH_CHECK_INTERVAL = 3
 MAX_HEARTBEAT_TIME = 3 * HEALTH_CHECK_INTERVAL + 1
@@ -43,10 +44,12 @@ class Monitor:
             logging.error(f"Error in select: {e}")
         for sock in ready_to_read:
             try:
-                data = sock.recv(1024)
+                data = receive(sock)
+                # data = sock.recv(1024)
                 if data and data != b"":
                     self.last_heartbeat[sock] = time.time()
-                    sock.send(b"Ok")
+                    send_message(sock, "Ok")
+                    # sock.send(b"Ok")
                     logging.warning(f"Received heartbeat from {self.active_workers[sock]}")
                 else:
                     self.delete_node(sock)
