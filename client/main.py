@@ -20,7 +20,8 @@ def receive_results(address, port):
     client = Client(address, port)
     while True:
         msg = client.receive_message()
-        # logging.info("message received: ", msg)
+        print(msg)
+
         if msg == "EOF":
             break
 
@@ -46,6 +47,7 @@ def send_file(client, filename, identifier, batch_size=10, max_batches=0):
             for _ in range(batch_size):
                 line = file.readline()
                 batch += line
+            # print(batch)
             client.send_message(batch)
             batch = f"{identifier}{QUERY_MSG_SEPARATOR}"
         except EOFError as e:
@@ -70,8 +72,8 @@ def run(config_params):
     logging.info("Sending books")
     send_file(client, config_params["books_path"], BOOK, 30)
     logging.info("Sending reviews")
-    # send_file(
-    #     client, config_params["books_reviews_path"], REVIEW, 30)
+    send_file(
+        client, config_params["books_reviews_path"], REVIEW, 30)
     logging.info("Sending EOF")
     client.send_message("EOF")
 
@@ -81,6 +83,7 @@ def run(config_params):
 
 def main():
     config_params = initialize()
+    print(config_params)
     run(config_params)
 
 

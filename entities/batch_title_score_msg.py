@@ -13,5 +13,5 @@ class BatchTitleScoreMessage(QueryMessage):
 
     def serialize_data(self) -> str:
         title_score_str = map(
-            lambda title, score: to_str([title, score]), self.content)
+            lambda titlescore: to_str(titlescore), self.content)
         return "\n".join(title_score_str)

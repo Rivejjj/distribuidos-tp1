@@ -1,0 +1,10 @@
+diff data/0/query/query1.csv data/1/query/query1.csv
+diff data/0/query/query1.csv data/2/query/query1.csv
+diff data/0/query/query2.csv data/1/query/query2.csv
+diff data/0/query/query2.csv data/2/query/query2.csv
+diff data/0/query/query3.csv data/1/query/query3.csv
+diff data/0/query/query3.csv data/2/query/query3.csv
+diff data/0/query/query4.csv data/1/query/query4.csv
+diff data/0/query/query4.csv data/2/query/query4.csv
+diff data/0/query/query5.csv data/1/query/query5.csv
+diff data/0/query/query5.csv data/2/query/query5.csv

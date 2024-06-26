@@ -1,7 +1,7 @@
 import yaml
 
-WORKERS = 3
-CLIENTS = 1
+WORKERS = 4
+CLIENTS = 2
 LOGGING_LEVEL = 'INFO'
 
 pools = [('computers_category_filter', WORKERS),
@@ -93,7 +93,7 @@ def build_client(i):
         ],
         'volumes': [
             './data/csv:/data',
-            './data/query:/query'
+            f'./data/{i}/query:/query'
         ],
 
     }
@@ -311,7 +311,8 @@ def build_fiction_category_filter(i):
             f'OUTPUT_QUEUES=fiction:{WORKERS}',
             'CATEGORY=fiction',
             f'ID={i}',
-            'SAVE_BOOKS=True'
+            'SAVE_BOOKS=True',
+            'NO_SEND=True'
         ],
         'volumes': [
             f'./data/checkpoint/{container_name}:/.checkpoints'

@@ -1,14 +1,20 @@
+
+
 import logging
 import signal
-import time
+
 import pika
 
 from entities.eof_msg import EOFMessage
-from utils.initialize import add_query_to_message, encode, uuid
+from entities.query_message import QueryMessage
+from rabbitmq.eofs_cp import ReceivedEOF
+from utils.initialize import encode, uuid
+
+RESULTS_QUEUE = 'results'
 
 
 class QueueMiddleware:
-    def __init__(self, output_queues, input_queue=None, id=0, previous_workers=0):
+    def __init__(self, output_queues, input_queue=None, id=0, previous_workers=0, save_to_file=True):
         signal.signal(signal.SIGTERM, lambda signal, frame: self.end())
         # logging.info("Connecting to queue: queue_names=%s", queue_names)
         self.connection = pika.BlockingConnection(
@@ -24,6 +30,12 @@ class QueueMiddleware:
         self.__calculate_queue_pools(output_queues)
 
         self.output_queues = []
+
+        self.result_queue = None
+
+        if (RESULTS_QUEUE, 1) in output_queues:
+            output_queues.remove((RESULTS_QUEUE, 1))
+            self.__declare_result_queue()
         self.__declare_output_queues(output_queues)
 
         if input_queue:
@@ -31,8 +43,8 @@ class QueueMiddleware:
 
         self.channel.start_consuming()
 
-        self.previous_workers = previous_workers
-        self.received_eofs = 0
+        self.received_eofs_cp = ReceivedEOF(
+            previous_workers, save_to_file=save_to_file)
 
     def __calculate_queue_pools(self, output_queues):
         for name, worker_count in output_queues:
@@ -50,13 +62,25 @@ class QueueMiddleware:
                 self.output_queues.append(queue_name)
 
     def __declare_input_queue(self, input_queue, id):
-        logging.info(f"Declaring input queue with params: {input_queue}, {id}")
-        self.input_queue = f"{input_queue}_{id}"
 
-        logging.info(f"[QUEUE] DECLARING INPUT QUEUE {self.input_queue}")
+        if input_queue == RESULTS_QUEUE:
+            self.channel.exchange_declare(
+                exchange=RESULTS_QUEUE, exchange_type='direct')
 
-        self.channel.queue_declare(
-            queue=self.input_queue, durable=True)
+            result = self.channel.queue_declare(queue='', exclusive=True)
+            self.input_queue = result.method.queue
+
+            self.channel.queue_bind(
+                exchange=RESULTS_QUEUE, queue=self.input_queue, routing_key=str(id))
+        else:
+            logging.info(
+                f"Declaring input queue with params: {input_queue}, {id}")
+            self.input_queue = f"{input_queue}_{id}"
+
+            logging.info(f"[QUEUE] DECLARING INPUT QUEUE {self.input_queue}")
+
+            self.channel.queue_declare(
+                queue=self.input_queue, durable=True)
 
     def start_consuming(self, callback):
         if self.input_queue:
@@ -84,7 +108,7 @@ class QueueMiddleware:
         # logging.info(f"[QUEUE] Sending message to all: {message}")
 
         for name in self.output_queues:
-            # logging.info(f"[QUEUE] Sending message to {name}")
+            logging.info(f"[QUEUE] Sending message {message} to {name}")
             self.send(name, message)
 
     def send_to_all_except(self, message, except_queue):
@@ -93,21 +117,30 @@ class QueueMiddleware:
                 self.send(name, message)
 
     def send_eof(self, msg: EOFMessage, callback=None):
+        client_id = msg.get_client_id()
+        self.received_eofs_cp.save(msg.get_client_id())
 
-        self.received_eofs += 1
-        logging.info(f"[QUEUE] Received EOFs {self.received_eofs}")
+        logging.critical(
+            f"[QUEUE] Received EOFs {self.received_eofs_cp.eofs[client_id]} for client {client_id}")
 
-        if self.received_eofs >= self.previous_workers:
-            logging.info("[QUEUE] Received EOFs of all workers")
-            self.received_eofs = 0
+        if self.received_eofs_cp.eof_reached(client_id):
+            logging.critical(
+                f"[QUEUE] Received EOFs of all workers for client {client_id}")
 
             if callback:
-                logging.info("[QUEUE] Executing callback")
+                logging.critical("[QUEUE] Executing callback")
                 callback()
-            # Cambiar urgente despues de pensarlo
-            self.send_to_all(encode(EOFMessage(uuid(), msg.get_client_id())))
-            logging.info(
+
+            id = uuid()
+            logging.critical(f"[QUEUE] Created uuid {id}")
+            msg = EOFMessage(id, client_id)
+            self.send_to_all(encode(msg))
+            self.send_to_result(msg)
+            logging.critical(
                 f"[QUEUE] Sending EOF to next workers {self.output_queues}")
+
+            self.received_eofs_cp.clear(msg)
+
             return True
 
         return False
@@ -135,3 +168,20 @@ class QueueMiddleware:
         logging.info("Received SIGTERM - shutting gracefully")
         self.end()
         return
+
+    def __declare_result_queue(self):
+        logging.info("DECLARING EXCHANGE")
+        self.channel.exchange_declare(
+            exchange=RESULTS_QUEUE, exchange_type='direct')
+
+        self.result_queue = RESULTS_QUEUE
+
+    def send_to_result(self, message: QueryMessage):
+        if self.result_queue:
+            logging.info(f"Sending to result exchange {message}")
+            self.channel.basic_publish(
+                exchange=RESULTS_QUEUE, routing_key=str(message.get_client_id()), body=encode(message))
+
+    def delete_client(self, msg: QueryMessage):
+        # self.send_to_all(encode(msg))
+        self.received_eofs_cp.clear(msg)

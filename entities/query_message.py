@@ -9,6 +9,7 @@ AUTHORS = 4
 TITLE_SCORE = 5
 EOF = 6
 BATCH_TITLE_SCORE = 7
+CLIENT_DC = 8
 QUERY_MSG_SEPARATOR = ";"
 
 
@@ -19,19 +20,22 @@ class QueryMessage(ABC):
         self.client_id = client_id
         self.query = query
 
-    def get_client_id(self):
+    def get_client_id(self) -> int:
         return self.client_id
 
-    def get_id(self):
+    def get_id(self) -> int:
         return self.id
 
-    def get_identifier(self):
+    def get_identifier(self) -> int:
         return self.identifier
 
     def get_query(self):
         return self.query
 
     def get_headers(self):
+        """
+        Devuelve el id, id del cliente y la query que contiene el mensaje
+        """
         headers = [self.id, self.client_id]
         if self.query:
             headers.append(self.query)
@@ -40,6 +44,9 @@ class QueryMessage(ABC):
 
     @abstractmethod
     def serialize_data(self) -> str:
+        """
+        Representacion de string de la data que contiene el mensaje
+        """
         pass
 
     def __str__(self):
@@ -49,3 +56,6 @@ class QueryMessage(ABC):
 
     def is_eof(self) -> bool:
         return self.identifier == EOF
+
+    def is_dc(self) -> bool:
+        return self.identifier == CLIENT_DC
