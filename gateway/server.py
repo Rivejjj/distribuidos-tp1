@@ -2,18 +2,7 @@ from multiprocessing import Process
 import socket
 import logging
 import signal
-import time
-from entities.book import Book
-from entities.book_msg import BookMessage
-from entities.query_message import BOOK, REVIEW
-from client_parser import parse_book_from_client, parse_review_from_client
-from entities.review import Review
-from entities.review_msg import ReviewMessage
 from server_handler import create_server_handler
-from utils.initialize import decode, encode
-from rabbitmq.queue import QueueMiddleware
-from utils.parser import parse_client_msg, parse_query_msg
-from utils.sockets import receive
 
 
 class Server:

@@ -1,5 +1,4 @@
 import logging
-from multiprocessing import Event
 import signal
 import socket
 from entities.book import Book
