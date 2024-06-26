@@ -1,6 +1,6 @@
 import logging
 import subprocess
-from monitor_client import MonitorClient
+from monitor_client import MonitorClient # type: ignore
 
 
 def send_heartbeat(name):

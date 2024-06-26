@@ -87,48 +87,48 @@ services:
   #   - INPUT_QUEUE=results
   #   - QUERY_COUNT=14
   #   - ID=0
-  # computers_category_filter_0:
-  #   container_name: computers_category_filter_0
-  #   image: book_filter:latest
-  #   entrypoint: python3 /main.py
-  #   environment:
-  #   - PYTHONUNBUFFERED=1
-  #   - LOGGING_LEVEL=CRITICAL
-  #   - INPUT_QUEUE=query1
-  #   - OUTPUT_QUEUES=computers:4
-  #   - CATEGORY=Computers
-  #   - ID=0
-  #   - IS_EQUAL=True
-  #   volumes:
-  #   - ./data/checkpoint/computers_category_filter_0:/.checkpoints
-  # computers_category_filter_1:
-  #   container_name: computers_category_filter_1
-  #   image: book_filter:latest
-  #   entrypoint: python3 /main.py
-  #   environment:
-  #   - PYTHONUNBUFFERED=1
-  #   - LOGGING_LEVEL=CRITICAL
-  #   - INPUT_QUEUE=query1
-  #   - OUTPUT_QUEUES=computers:4
-  #   - CATEGORY=Computers
-  #   - ID=1
-  #   - IS_EQUAL=True
-  #   volumes:
-  #   - ./data/checkpoint/computers_category_filter_1:/.checkpoints
-  # computers_category_filter_2:
-  #   container_name: computers_category_filter_2
-  #   image: book_filter:latest
-  #   entrypoint: python3 /main.py
-  #   environment:
-  #   - PYTHONUNBUFFERED=1
-  #   - LOGGING_LEVEL=CRITICAL
-  #   - INPUT_QUEUE=query1
-  #   - OUTPUT_QUEUES=computers:4
-  #   - CATEGORY=Computers
-  #   - ID=2
-  #   - IS_EQUAL=True
-  #   volumes:
-  #   - ./data/checkpoint/computers_category_filter_2:/.checkpoints
+  computers_category_filter_0:
+    container_name: computers_category_filter_0
+    image: book_filter:latest
+    entrypoint: python3 /main.py
+    environment:
+    - PYTHONUNBUFFERED=1
+    - LOGGING_LEVEL=CRITICAL
+    - INPUT_QUEUE=query1
+    - OUTPUT_QUEUES=computers:4
+    - CATEGORY=Computers
+    - ID=0
+    - IS_EQUAL=True
+    volumes:
+    - ./data/checkpoint/computers_category_filter_0:/.checkpoints
+  computers_category_filter_1:
+    container_name: computers_category_filter_1
+    image: book_filter:latest
+    entrypoint: python3 /main.py
+    environment:
+    - PYTHONUNBUFFERED=1
+    - LOGGING_LEVEL=CRITICAL
+    - INPUT_QUEUE=query1
+    - OUTPUT_QUEUES=computers:4
+    - CATEGORY=Computers
+    - ID=1
+    - IS_EQUAL=True
+    volumes:
+    - ./data/checkpoint/computers_category_filter_1:/.checkpoints
+  computers_category_filter_2:
+    container_name: computers_category_filter_2
+    image: book_filter:latest
+    entrypoint: python3 /main.py
+    environment:
+    - PYTHONUNBUFFERED=1
+    - LOGGING_LEVEL=CRITICAL
+    - INPUT_QUEUE=query1
+    - OUTPUT_QUEUES=computers:4
+    - CATEGORY=Computers
+    - ID=2
+    - IS_EQUAL=True
+    volumes:
+    - ./data/checkpoint/computers_category_filter_2:/.checkpoints
   # computers_category_filter_3:
   #   container_name: computers_category_filter_3
   #   image: book_filter:latest

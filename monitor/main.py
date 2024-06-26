@@ -10,12 +10,21 @@ def run_monitor(workers):
     monitor = Monitor(workers)
     monitor.run()
 
-def handle_leader(monitors,active_monitros,lock,config_params):
-    if config_params["name"] == "monitor2":
-        leader_handler = LeaderHandler(monitors,active_monitros,lock,config_params["name"], True)
-    else:
-        leader_handler = LeaderHandler(monitors,active_monitros,lock,config_params["name"], False)
-    leader_handler.run()
+def listen_for_connections(running,sock,lock,active_monitors):
+    while running:
+        conn, addr = sock.accept()
+        data = receive(conn)
+        if data:
+            logging.warning(f"Received connection from: {data.decode()}")
+            monitor_name = data.decode()
+            send_message(conn, "Ok")
+            with lock:
+                if monitor_name not in active_monitors:
+                    active_monitors[monitor_name] = conn
+                    logging.warning(f"active monitors: {active_monitors.keys()}")
+        else:
+            conn.close()
+            logging.warning(f"Connection closed")
 
 
 if __name__ == "__main__":
@@ -25,9 +34,9 @@ if __name__ == "__main__":
     
     # handle sigterm
     
-    # workers = ['computers_category_filter_0',
-    #             'computers_category_filter_1',
-    #             'computers_category_filter_2',
+    workers = ['computers_category_filter_0',
+                'computers_category_filter_1',
+                'computers_category_filter_2',]
     #             '2000s_published_year_filter_0',
     #             '2000s_published_year_filter_1',
     #             '2000s_published_year_filter_2',
@@ -57,8 +66,6 @@ if __name__ == "__main__":
     # process.daemon = True
     # process.start()
 
-    
-
     monitors = ['monitor0','monitor1', 'monitor2']
     if config_params["name"] in monitors:
         monitors.remove(config_params["name"])
@@ -67,30 +74,19 @@ if __name__ == "__main__":
     lock = manager.Lock()
     active_monitors = manager.dict() # {monitor_name: socket}
 
-    process = Process(target=handle_leader, args=(monitors,active_monitors,lock,config_params))
-    process.daemon = True
-    process.start()
-
     running = True
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.bind(('', 22226))
     sock.listen()
 
-    while running:
-        conn, addr = sock.accept()
-        data = receive(conn)
-        if data:
-            logging.warning(f"Received connection from: {data.decode()}")
-            monitor_name = data.decode()
-            send_message(conn, "Ok")
-            with lock:
-                if monitor_name not in active_monitors:
-                    active_monitors[monitor_name] = conn
-                    logging.warning(f"active monitors: {active_monitors.keys()}")
-        else:
-            conn.close()
-            logging.warning(f"Connection closed")
+    process = Process(target=listen_for_connections, args=(running,sock,lock,active_monitors))
+    process.daemon = True
+    process.start()
     
 
-    
+    if config_params["name"] == "monitor2": #could be envvar
+        leader_handler = LeaderHandler(monitors,active_monitors,lock,config_params["name"], True, workers)
+    else:
+        leader_handler = LeaderHandler(monitors,active_monitors,lock,config_params["name"], False, workers)
+    leader_handler.run()
     

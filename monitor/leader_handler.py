@@ -3,22 +3,30 @@ import socket
 import time
 import select
 import subprocess
+from multiprocessing import Process
 from utils.sockets import receive, send_message
 from utils.initialize import decode
 from utils.monitor import revive
+from monitor import Monitor
+
 
 TIME_BETWEEN_HEARTBEATS = 2
+MAX_HEARTBEAT_TIMEOUT = 3 * TIME_BETWEEN_HEARTBEATS + 1
 
 class LeaderHandler():
-    def __init__(self,monitors,active_monitors,lock,name,highest_id):
+    def __init__(self,monitors,active_monitors,lock,name,highest_id,workers):
         self.highest_id = highest_id
         self.monitors = monitors
         self.active_monitors = active_monitors # {monitor:conn}
         self.lock = lock
         self.leader = None #(name sock)
+        self.leader_hearbeat = None
         self.name = name
         self.running = True
         self.revived_monitors = set()
+        self.heartbeats = {}
+        self.workers_handler = None
+        self.workers = workers
         
 
     def find_and_delete(self,conn):
@@ -50,9 +58,9 @@ class LeaderHandler():
             self.get_leader()
         try:
             self.leader[1].setblocking(True)
-            data = decode(receive(self.leader[1]))
-            #actualize timestamp
-        except (ConnectionResetError, OSError, EOFError) as e:
+            self.leader[1].settimeout(MAX_HEARTBEAT_TIMEOUT)
+            decode(receive(self.leader[1]))
+        except (ConnectionResetError, OSError, EOFError, socket.timeout) as e:
             logging.warning(f"Connection to {self.leader[0]} lost: {e}")
             self.leader = None
             self.get_leader()
@@ -72,7 +80,6 @@ class LeaderHandler():
 
     def wait_for_answer(self):
         logging.warning(f"Waiting for answer")
-
         readable, _, _ = select.select(list(self.active_monitors.values()), [], [], 5)
         if not readable:
             logging.warning(f"Timeout polling. I am leader")
@@ -117,6 +124,8 @@ class LeaderHandler():
         msg = data.split(":")
         leader = msg[1]
         if leader[-1] > self.name[-1]:
+            if self.workers_handler:
+                self.workers_handler.stop()
             self.leader = (leader,conn)
             logging.warning(f"New leader: {self.leader[0]}")
         else:
@@ -127,6 +136,7 @@ class LeaderHandler():
             logging.warning(f"Connection to {name} lost")
             self.find_and_delete(conn)
         elif data.startswith("monitor"):
+            self.heartbeats[name] = time.time()
             logging.warning(f"Received heartbeat from {data}")
             send_message(conn, "Ok")
         elif data.startswith("election"):
@@ -152,6 +162,14 @@ class LeaderHandler():
             self.find_and_delete(conn)
             logging.warning(f"active monitors: {self.active_monitors.keys()}")
 
+    def check_heartbeats(self):
+        items = self.heartbeats.items()
+        for name,timestamp in items:
+            if time.time() - timestamp > MAX_HEARTBEAT_TIMEOUT:
+                logging.warning(f"Lost heartbeat from {name}")
+                self.find_and_delete(self.active_monitors)
+                del self.heartbeats[name]
+
     def check_connections(self):
         with self.lock:
             if len(self.active_monitors) == 0:
@@ -176,6 +194,7 @@ class LeaderHandler():
         
         if self.leader and self.leader[0] == self.name:
             self.revive_monitors()
+            self.check_heartbeats()
             return 
 
     def revive_monitors(self):
@@ -224,6 +243,7 @@ class LeaderHandler():
             for conn in self.active_monitors.values():
                 msg = "coordinator:" + self.name
                 send_message(conn, msg)
+        self.start_workers()
 
     def get_leader(self):
         if self.highest_id:
@@ -233,9 +253,18 @@ class LeaderHandler():
         self.send_election_message()
         
 
+    def start_workers(self):
+        self.workers_handler = Process(target=run_monitor, args=(self.workers,))
+        self.workers_handler.daemon = True
+        self.workers_handler.start()
+
     def run(self):
         logging.warning(f"starting leader handler ")
         self.connect_with_monitors()
         self.get_leader()
         while self.running:
             self.check_connections()
+
+def run_monitor(workers):
+    monitor = Monitor(workers)
+    monitor.run()

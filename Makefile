@@ -9,7 +9,7 @@ docker-image:
 	docker build -f ./monitor/Dockerfile -t "monitor:latest" .
 	# docker build -f ./gateway/Dockerfile -t "gateway:latest" .
 	# docker build -f ./client/Dockerfile -t "client:latest" .
-	# docker build -f ./data_processors/book_filter/Dockerfile -t "book_filter:latest" .
+	docker build -f ./data_processors/book_filter/Dockerfile -t "book_filter:latest" .
 	# docker build -f ./data_processors/decades_accumulator/Dockerfile -t "decades_accumulator:latest" .
 	# docker build -f ./data_processors/top_rating_accumulator/Dockerfile -t "top_rating_accumulator:latest" .
 	# docker build -f ./data_processors/reviews_counter_accum/Dockerfile -t "reviews_counter_accum:latest" .
