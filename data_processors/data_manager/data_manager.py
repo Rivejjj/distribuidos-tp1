@@ -8,7 +8,7 @@ from entities.client_dc import ClientDCMessage
 from entities.eof_msg import EOFMessage
 from entities.query_message import QueryMessage
 from rabbitmq.queue import QueueMiddleware
-from utils.initialize import get_queue_names
+from utils.initialize import encode, get_queue_names
 from utils.monitor import start_monitor_process
 from utils.parser import parse_query_msg
 
@@ -94,6 +94,7 @@ class DataManager(ABC):
                 logging.info(
                     f"Received Client disconnect {msg.get_client_id()}")
                 self.delete_client(msg)
+                self.queue_middleware.send_to_all(encode(msg))
                 ch.basic_ack(delivery_tag=method.delivery_tag)
                 return
 

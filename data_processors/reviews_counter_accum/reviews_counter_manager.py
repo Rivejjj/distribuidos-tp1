@@ -87,6 +87,6 @@ class ReviewsCounterManager(DataManager):
     def delete_client(self, msg: ClientDCMessage):
         self.book_authors_cp.delete_client(msg)
         self.counter.clear(msg)
-        self.book_authors_cp.delete_client(msg)
+        self.reviews_counter_cp.delete_client(msg)
         self.sent_titles_cp.delete_client(msg)
         return super().delete_client(msg)
