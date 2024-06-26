@@ -3,6 +3,8 @@ COPY data_processors/top_rating_accumulator /
 COPY entities /entities
 COPY rabbitmq /rabbitmq
 COPY utils /utils
+COPY monitor/monitor_client.py /monitor/monitor_client.py
+
 COPY data_processors/data_manager /data_processors/data_manager
 COPY data_checkpoints/data_checkpoint.py /data_checkpoints/data_checkpoint.py
 COPY data_checkpoints/messages_checkpoint.py  /data_checkpoints/messages_checkpoint.py

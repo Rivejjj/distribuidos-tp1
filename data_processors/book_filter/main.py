@@ -1,11 +1,24 @@
+from multiprocessing import Process
+import logging
+from rabbitmq.queue import QueueMiddleware
+from utils.initialize import get_queue_names, init, initialize_config
+from book_filter import BookFilter
+from review_filter import ReviewFilter
+from monitor.monitor_client import MonitorClient
 import logging
 from filter_manager import FilterManager
 from utils.initialize import init, initialize_config
 
 
+def send_heartbeat(name):
+    logging.warning(f"Starting monitor client with name {name}")
+    monitor_client = MonitorClient(name)
+    monitor_client.run()
+
+
 def initialize():
     all_params = ["category",
-                  "published_year_range", "title_contains", "save_books", "is_equal", "no_send"]
+                  "published_year_range", "title_contains", "save_books", "is_equal", "no_send", "name"]
 
     params = list(map(lambda param: (param, False), all_params))
 
@@ -25,11 +38,8 @@ def initialize():
 
 
 def main():
-
     config_params = initialize()
-
     manager = FilterManager(config_params)
-
     manager.run()
 
 

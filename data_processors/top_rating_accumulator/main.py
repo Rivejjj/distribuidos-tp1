@@ -1,4 +1,3 @@
-
 import logging
 from top_rating_manager import TopRatingManager
 from utils.initialize import init

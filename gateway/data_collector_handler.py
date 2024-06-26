@@ -1,7 +1,5 @@
-import socket
 import logging
 import signal
-from utils.initialize import decode
 from rabbitmq.queue import QueueMiddleware
 from utils.parser import DATA_SEPARATOR, parse_query_msg
 from utils.sockets import send_message

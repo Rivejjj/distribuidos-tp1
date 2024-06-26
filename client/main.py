@@ -37,6 +37,7 @@ def receive_results(address, port):
 
 
 def send_file(client, filename, identifier, batch_size=10, max_batches=0):
+
     file = open(filename, "r")
     line = file.readline()
     batch = f"{identifier}{QUERY_MSG_SEPARATOR}"
