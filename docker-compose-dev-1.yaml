@@ -1,5 +1,21 @@
 name: tp1
 services:
+  rabbitmq:
+    container_name: rabbit
+    build:
+      context: ./rabbitmq
+      dockerfile: rabbitmq.dockerfile
+    ports:
+    - 15672:15672
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:15672/
+      interval: 10s
+      timeout: 5s
+      retries: 10
   sender_client_0:
     container_name: sender_client_0
     image: client:latest
@@ -9,8 +25,8 @@ services:
     environment:
     - PYTHONUNBUFFERED=1
     - LOGGING_LEVEL=INFO
-    - BOOKS_PATH=/data/books_data.csv
-    - BOOKS_REVIEWS_PATH=/data/Books_rating.csv
+    - BOOKS_PATH=/data/books_data_reduced.csv
+    - BOOKS_REVIEWS_PATH=/data/Books_rating_reduced.csv
     volumes:
     - ./data/csv:/data
     - ./data/0/query:/query
@@ -23,11 +39,36 @@ services:
     environment:
     - PYTHONUNBUFFERED=1
     - LOGGING_LEVEL=INFO
-    - BOOKS_PATH=/data/books_data.csv
-    - BOOKS_REVIEWS_PATH=/data/Books_rating.csv
+    - BOOKS_PATH=/data/books_data_reduced.csv
+    - BOOKS_REVIEWS_PATH=/data/Books_rating_reduced.csv
     volumes:
     - ./data/csv:/data
     - ./data/1/query:/query
+  sender_client_2:
+    container_name: sender_client_2
+    image: client:latest
+    entrypoint: python3 /main.py
+    depends_on:
+    - gateway
+    environment:
+    - PYTHONUNBUFFERED=1
+    - LOGGING_LEVEL=INFO
+    - BOOKS_PATH=/data/books_data_reduced.csv
+    - BOOKS_REVIEWS_PATH=/data/Books_rating_reduced.csv
+    volumes:
+    - ./data/csv:/data
+    - ./data/2/query:/query
+  monitor0:
+    container_name: monitor0
+    image: monitor:latest
+    privileged: true
+    entrypoint: python3 /main.py
+    environment:
+    - ID=0
+    - NAME=monitor0
+    - WORKERS=computers_category_filter_0,computers_category_filter_1,computers_category_filter_2,computers_category_filter_3,2000s_published_year_filter_0,2000s_published_year_filter_1,2000s_published_year_filter_2,2000s_published_year_filter_3,title_contains_filter_0,title_contains_filter_1,title_contains_filter_2,title_contains_filter_3,decades_accumulator_0,decades_accumulator_1,decades_accumulator_2,decades_accumulator_3,1990s_published_year_filter_0,1990s_published_year_filter_1,1990s_published_year_filter_2,1990s_published_year_filter_3,reviews_counter_0,reviews_counter_1,reviews_counter_2,reviews_counter_3,fiction_category_filter_0,fiction_category_filter_1,fiction_category_filter_2,fiction_category_filter_3,sentiment_analyzer_0,sentiment_analyzer_1,sentiment_analyzer_2,sentiment_analyzer_3,avg_rating_accumulator,sentiment_score_accumulator
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
   gateway:
     container_name: gateway
     image: gateway:latest
@@ -51,6 +92,7 @@ services:
     - CATEGORY=Computers
     - ID=0
     - IS_EQUAL=True
+    - NAME=computers_category_filter_0
     volumes:
     - ./data/checkpoint/computers_category_filter_0:/.checkpoints
   computers_category_filter_1:
@@ -65,6 +107,7 @@ services:
     - CATEGORY=Computers
     - ID=1
     - IS_EQUAL=True
+    - NAME=computers_category_filter_1
     volumes:
     - ./data/checkpoint/computers_category_filter_1:/.checkpoints
   computers_category_filter_2:
@@ -79,6 +122,7 @@ services:
     - CATEGORY=Computers
     - ID=2
     - IS_EQUAL=True
+    - NAME=computers_category_filter_2
     volumes:
     - ./data/checkpoint/computers_category_filter_2:/.checkpoints
   computers_category_filter_3:
@@ -93,6 +137,7 @@ services:
     - CATEGORY=Computers
     - ID=3
     - IS_EQUAL=True
+    - NAME=computers_category_filter_3
     volumes:
     - ./data/checkpoint/computers_category_filter_3:/.checkpoints
   2000s_published_year_filter_0:
@@ -107,6 +152,7 @@ services:
     - PUBLISHED_YEAR_RANGE=2000-2023
     - ID=0
     - PREVIOUS_WORKERS=4
+    - NAME=2000s_published_year_filter_0
     volumes:
     - ./data/checkpoint/2000s_published_year_filter_0:/.checkpoints
   2000s_published_year_filter_1:
@@ -121,6 +167,7 @@ services:
     - PUBLISHED_YEAR_RANGE=2000-2023
     - ID=1
     - PREVIOUS_WORKERS=4
+    - NAME=2000s_published_year_filter_1
     volumes:
     - ./data/checkpoint/2000s_published_year_filter_1:/.checkpoints
   2000s_published_year_filter_2:
@@ -135,6 +182,7 @@ services:
     - PUBLISHED_YEAR_RANGE=2000-2023
     - ID=2
     - PREVIOUS_WORKERS=4
+    - NAME=2000s_published_year_filter_2
     volumes:
     - ./data/checkpoint/2000s_published_year_filter_2:/.checkpoints
   2000s_published_year_filter_3:
@@ -149,6 +197,7 @@ services:
     - PUBLISHED_YEAR_RANGE=2000-2023
     - ID=3
     - PREVIOUS_WORKERS=4
+    - NAME=2000s_published_year_filter_3
     volumes:
     - ./data/checkpoint/2000s_published_year_filter_3:/.checkpoints
   title_contains_filter_0:
@@ -164,6 +213,7 @@ services:
     - ID=0
     - QUERY=1
     - PREVIOUS_WORKERS=4
+    - NAME=title_contains_filter_0
     volumes:
     - ./data/checkpoint/title_contains_filter_0:/.checkpoints
   title_contains_filter_1:
@@ -179,6 +229,7 @@ services:
     - ID=1
     - QUERY=1
     - PREVIOUS_WORKERS=4
+    - NAME=title_contains_filter_1
     volumes:
     - ./data/checkpoint/title_contains_filter_1:/.checkpoints
   title_contains_filter_2:
@@ -194,6 +245,7 @@ services:
     - ID=2
     - QUERY=1
     - PREVIOUS_WORKERS=4
+    - NAME=title_contains_filter_2
     volumes:
     - ./data/checkpoint/title_contains_filter_2:/.checkpoints
   title_contains_filter_3:
@@ -209,6 +261,7 @@ services:
     - ID=3
     - QUERY=1
     - PREVIOUS_WORKERS=4
+    - NAME=title_contains_filter_3
     volumes:
     - ./data/checkpoint/title_contains_filter_3:/.checkpoints
   decades_accumulator_0:
@@ -223,6 +276,7 @@ services:
     - TOP=10
     - ID=0
     - QUERY=2
+    - NAME=decades_accumulator_0
     volumes:
     - ./data/checkpoint/decades_accumulator_0:/.checkpoints
   decades_accumulator_1:
@@ -237,6 +291,7 @@ services:
     - TOP=10
     - ID=1
     - QUERY=2
+    - NAME=decades_accumulator_1
     volumes:
     - ./data/checkpoint/decades_accumulator_1:/.checkpoints
   decades_accumulator_2:
@@ -251,6 +306,7 @@ services:
     - TOP=10
     - ID=2
     - QUERY=2
+    - NAME=decades_accumulator_2
     volumes:
     - ./data/checkpoint/decades_accumulator_2:/.checkpoints
   decades_accumulator_3:
@@ -265,6 +321,7 @@ services:
     - TOP=10
     - ID=3
     - QUERY=2
+    - NAME=decades_accumulator_3
     volumes:
     - ./data/checkpoint/decades_accumulator_3:/.checkpoints
   1990s_published_year_filter_0:
@@ -279,6 +336,7 @@ services:
     - PUBLISHED_YEAR_RANGE=1990-1999
     - ID=0
     - SAVE_BOOKS=True
+    - NAME=1990s_published_year_filter_0
     volumes:
     - ./data/checkpoint/1990s_published_year_filter_0:/.checkpoints
   1990s_published_year_filter_1:
@@ -293,6 +351,7 @@ services:
     - PUBLISHED_YEAR_RANGE=1990-1999
     - ID=1
     - SAVE_BOOKS=True
+    - NAME=1990s_published_year_filter_1
     volumes:
     - ./data/checkpoint/1990s_published_year_filter_1:/.checkpoints
   1990s_published_year_filter_2:
@@ -307,6 +366,7 @@ services:
     - PUBLISHED_YEAR_RANGE=1990-1999
     - ID=2
     - SAVE_BOOKS=True
+    - NAME=1990s_published_year_filter_2
     volumes:
     - ./data/checkpoint/1990s_published_year_filter_2:/.checkpoints
   1990s_published_year_filter_3:
@@ -321,6 +381,7 @@ services:
     - PUBLISHED_YEAR_RANGE=1990-1999
     - ID=3
     - SAVE_BOOKS=True
+    - NAME=1990s_published_year_filter_3
     volumes:
     - ./data/checkpoint/1990s_published_year_filter_3:/.checkpoints
   reviews_counter_0:
@@ -335,6 +396,7 @@ services:
     - ID=0
     - QUERY=3
     - PREVIOUS_WORKERS=4
+    - NAME=reviews_counter_0
     volumes:
     - ./data/checkpoint/reviews_counter_0:/.checkpoints
   reviews_counter_1:
@@ -349,6 +411,7 @@ services:
     - ID=1
     - QUERY=3
     - PREVIOUS_WORKERS=4
+    - NAME=reviews_counter_1
     volumes:
     - ./data/checkpoint/reviews_counter_1:/.checkpoints
   reviews_counter_2:
@@ -363,6 +426,7 @@ services:
     - ID=2
     - QUERY=3
     - PREVIOUS_WORKERS=4
+    - NAME=reviews_counter_2
     volumes:
     - ./data/checkpoint/reviews_counter_2:/.checkpoints
   reviews_counter_3:
@@ -377,6 +441,7 @@ services:
     - ID=3
     - QUERY=3
     - PREVIOUS_WORKERS=4
+    - NAME=reviews_counter_3
     volumes:
     - ./data/checkpoint/reviews_counter_3:/.checkpoints
   avg_rating_accumulator:
@@ -391,6 +456,7 @@ services:
     - ID=0
     - QUERY=4
     - PREVIOUS_WORKERS=4
+    - NAME=avg_rating_accumulator
     volumes:
     - ./data/checkpoint/avg_rating_accumulator:/.checkpoints
   fiction_category_filter_0:
@@ -406,6 +472,7 @@ services:
     - ID=0
     - SAVE_BOOKS=True
     - NO_SEND=True
+    - NAME=fiction_category_filter_0
     volumes:
     - ./data/checkpoint/fiction_category_filter_0:/.checkpoints
   fiction_category_filter_1:
@@ -421,6 +488,7 @@ services:
     - ID=1
     - SAVE_BOOKS=True
     - NO_SEND=True
+    - NAME=fiction_category_filter_1
     volumes:
     - ./data/checkpoint/fiction_category_filter_1:/.checkpoints
   fiction_category_filter_2:
@@ -436,6 +504,7 @@ services:
     - ID=2
     - SAVE_BOOKS=True
     - NO_SEND=True
+    - NAME=fiction_category_filter_2
     volumes:
     - ./data/checkpoint/fiction_category_filter_2:/.checkpoints
   fiction_category_filter_3:
@@ -451,6 +520,7 @@ services:
     - ID=3
     - SAVE_BOOKS=True
     - NO_SEND=True
+    - NAME=fiction_category_filter_3
     volumes:
     - ./data/checkpoint/fiction_category_filter_3:/.checkpoints
   sentiment_analyzer_0:
@@ -464,6 +534,7 @@ services:
     - OUTPUT_QUEUES=sentiment_score:1
     - ID=0
     - PREVIOUS_WORKERS=4
+    - NAME=sentiment_analyzer_0
     volumes:
     - ./data/checkpoint/sentiment_analyzer_0:/.checkpoints
   sentiment_analyzer_1:
@@ -477,6 +548,7 @@ services:
     - OUTPUT_QUEUES=sentiment_score:1
     - ID=1
     - PREVIOUS_WORKERS=4
+    - NAME=sentiment_analyzer_1
     volumes:
     - ./data/checkpoint/sentiment_analyzer_1:/.checkpoints
   sentiment_analyzer_2:
@@ -490,6 +562,7 @@ services:
     - OUTPUT_QUEUES=sentiment_score:1
     - ID=2
     - PREVIOUS_WORKERS=4
+    - NAME=sentiment_analyzer_2
     volumes:
     - ./data/checkpoint/sentiment_analyzer_2:/.checkpoints
   sentiment_analyzer_3:
@@ -503,6 +576,7 @@ services:
     - OUTPUT_QUEUES=sentiment_score:1
     - ID=3
     - PREVIOUS_WORKERS=4
+    - NAME=sentiment_analyzer_3
     volumes:
     - ./data/checkpoint/sentiment_analyzer_3:/.checkpoints
   sentiment_score_accumulator:
@@ -517,5 +591,6 @@ services:
     - ID=0
     - QUERY=5
     - PREVIOUS_WORKERS=4
+    - NAME=sentiment_score_accumulator
     volumes:
     - ./data/checkpoint/sentiment_score_accumulator:/.checkpoints

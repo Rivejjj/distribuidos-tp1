@@ -1,20 +1,9 @@
 import yaml
 
 WORKERS = 4
-CLIENTS = 2
+CLIENTS = 3
+MONITORS = 1
 LOGGING_LEVEL = 'INFO'
-
-pools = [('computers_category_filter', WORKERS),
-         ('2000s_published_year_filter', WORKERS),
-         ('title_contains_filter', WORKERS),
-         ('decades-accumulator', WORKERS),
-         ('1990s_published_year_filter', WORKERS),
-         ('reviews_counter', WORKERS),
-         ('avg_rating_accumulator', 1),
-         ('fiction_category_filter', WORKERS),
-         ('sentiment_analyzer', WORKERS),
-         ('sentiment_score_accumulator', 1)
-         ]
 
 
 def create_docker_compose():
@@ -27,6 +16,10 @@ def create_docker_compose():
         # config['services']['rabbitmq'] = build_rabbitmq()
         for i in range(CLIENTS):
             config['services'][f'sender_client_{i}'] = build_client(i)
+
+        for i in range(MONITORS):
+            config['services'][f'monitor{i}'] = build_monitor(i)
+
         config['services']['gateway'] = build_gateway()
 
         build_query1(config['services'])
@@ -88,8 +81,8 @@ def build_client(i):
         'environment': [
             'PYTHONUNBUFFERED=1',
             f'LOGGING_LEVEL={LOGGING_LEVEL}',
-            'BOOKS_PATH=/data/books_data.csv',
-            'BOOKS_REVIEWS_PATH=/data/Books_rating.csv'
+            'BOOKS_PATH=/data/books_data_reduced.csv',
+            'BOOKS_REVIEWS_PATH=/data/Books_rating_reduced.csv'
         ],
         'volumes': [
             './data/csv:/data',
@@ -157,7 +150,8 @@ def build_computer_category_filter(i):
             f'OUTPUT_QUEUES=computers:{WORKERS}',
             'CATEGORY=Computers',
             f'ID={i}',
-            'IS_EQUAL=True'
+            'IS_EQUAL=True',
+            f'NAME={container_name}'
         ],
         'volumes': [
             f'./data/checkpoint/{container_name}:/.checkpoints'
@@ -179,7 +173,8 @@ def build_2000s_published_year_filter(i):
             f'OUTPUT_QUEUES=2000s_filtered:{WORKERS}',
             'PUBLISHED_YEAR_RANGE=2000-2023',
             f'ID={i}',
-            f'PREVIOUS_WORKERS={WORKERS}'
+            f'PREVIOUS_WORKERS={WORKERS}',
+            f'NAME={container_name}'
         ],
         'volumes': [
             f'./data/checkpoint/{container_name}:/.checkpoints'
@@ -202,7 +197,8 @@ def build_title_contains_filter(i):
             'TITLE_CONTAINS=distributed',
             f'ID={i}',
             'QUERY=1',
-            f'PREVIOUS_WORKERS={WORKERS}'
+            f'PREVIOUS_WORKERS={WORKERS}',
+            f'NAME={container_name}'
         ],
         'volumes': [
             f'./data/checkpoint/{container_name}:/.checkpoints'
@@ -226,6 +222,7 @@ def build_decades_accumulator(i):
             'TOP=10',
             f'ID={i}',
             'QUERY=2',
+            f'NAME={container_name}'
         ],
         'volumes': [
             f'./data/checkpoint/{container_name}:/.checkpoints'
@@ -248,6 +245,7 @@ def build_1990s_published_year_filter(i):
             'PUBLISHED_YEAR_RANGE=1990-1999',
             f'ID={i}',
             'SAVE_BOOKS=True',
+            f'NAME={container_name}'
         ],
         'volumes': [
             f'./data/checkpoint/{container_name}:/.checkpoints'
@@ -268,7 +266,8 @@ def build_reviews_counter(i):
             'OUTPUT_QUEUES=500_reviews:1;results:1',
             f'ID={i}',
             'QUERY=3',
-            f'PREVIOUS_WORKERS={WORKERS}'
+            f'PREVIOUS_WORKERS={WORKERS}',
+            f'NAME={container_name}'
         ],
         'volumes': [
             f'./data/checkpoint/{container_name}:/.checkpoints'
@@ -289,7 +288,8 @@ def build_avg_rating_accumulator():
             'OUTPUT_QUEUES=results:1',
             'ID=0',
             'QUERY=4',
-            f'PREVIOUS_WORKERS={WORKERS}'
+            f'PREVIOUS_WORKERS={WORKERS}',
+            f'NAME={container_name}'
         ],
         'volumes': [
             f'./data/checkpoint/{container_name}:/.checkpoints'
@@ -312,7 +312,8 @@ def build_fiction_category_filter(i):
             'CATEGORY=fiction',
             f'ID={i}',
             'SAVE_BOOKS=True',
-            'NO_SEND=True'
+            'NO_SEND=True',
+            f'NAME={container_name}'
         ],
         'volumes': [
             f'./data/checkpoint/{container_name}:/.checkpoints'
@@ -333,7 +334,8 @@ def build_sentiment_analyzer(i):
             'INPUT_QUEUE=fiction',
             f'OUTPUT_QUEUES=sentiment_score:1',
             f'ID={i}',
-            f'PREVIOUS_WORKERS={WORKERS}'
+            f'PREVIOUS_WORKERS={WORKERS}',
+            f'NAME={container_name}'
         ],
         'volumes': [
             f'./data/checkpoint/{container_name}:/.checkpoints'
@@ -355,7 +357,8 @@ def build_sentiment_score_accumulator():
             'OUTPUT_QUEUES=results:1',
             'ID=0',
             'QUERY=5',
-            f'PREVIOUS_WORKERS={WORKERS}'
+            f'PREVIOUS_WORKERS={WORKERS}',
+            f'NAME={container_name}'
         ],
         'volumes': [
             f'./data/checkpoint/{container_name}:/.checkpoints'
@@ -379,8 +382,51 @@ def build_network():
     }
 
 
+def build_monitor(i):
+    container_name = f'monitor{i}'
+    return {
+        "container_name": container_name,
+        "image": 'monitor:latest',
+        "privileged": True,
+        "entrypoint": 'python3 /main.py',
+        "environment": [
+            f'ID={i}',
+            f'NAME={container_name}',
+            f'WORKERS={",".join(generate_all_workers())}'
+        ],
+        "volumes": ['/var/run/docker.sock:/var/run/docker.sock']
+    }
+
+
+def generate_all_workers():
+    worker_names = [
+        'computers_category_filter',
+        '2000s_published_year_filter',
+        'title_contains_filter',
+        'decades_accumulator',
+        '1990s_published_year_filter',
+        'reviews_counter',
+        'fiction_category_filter',
+        'sentiment_analyzer',
+    ]
+    all_worker_names = [
+        f'{name}_{worker}' for name in worker_names for worker in range(WORKERS)]
+
+    all_worker_names.append('avg_rating_accumulator')
+    all_worker_names.append('sentiment_score_accumulator')
+    return all_worker_names
+
+
+def create_atomic_bomb():
+    with open('atomic_bomb2.sh', 'w') as f:
+        f.write('#!/bin/bash\n')
+
+        f.write(f'docker kill {" ".join(generate_all_workers())}\n')
+
+
 def main():
     create_docker_compose()
+    create_atomic_bomb()
 
 
 if __name__ == "__main__":

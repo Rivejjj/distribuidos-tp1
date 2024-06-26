@@ -1,0 +1,2 @@
+#!/bin/bash
+docker kill reviews_counter_0  fiction_category_filter_2 sentiment_score_accumulator decades_accumulator_2
