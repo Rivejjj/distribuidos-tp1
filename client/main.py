@@ -3,7 +3,7 @@ from multiprocessing import Process
 from client import Client
 from entities.query_message import BOOK, QUERY_MSG_SEPARATOR, REVIEW
 from utils.initialize import initialize_config, initialize_log
-import time
+
 
 def initialize():
 
@@ -37,7 +37,7 @@ def receive_results(address, port):
 
 
 def send_file(client, filename, identifier, batch_size=10, max_batches=0):
-    
+
     file = open(filename, "r")
     line = file.readline()
     batch = f"{identifier}{QUERY_MSG_SEPARATOR}"
@@ -51,7 +51,6 @@ def send_file(client, filename, identifier, batch_size=10, max_batches=0):
             # print(batch)
             client.send_message(batch)
             batch = f"{identifier}{QUERY_MSG_SEPARATOR}"
-            time.sleep(2)
         except EOFError as e:
             print(f"[CLIENT] Finished sending file: {e}")
             break
@@ -72,10 +71,10 @@ def run(config_params):
     client = Client(config_params["address"], config_params["port"])
 
     logging.info("Sending books")
-    send_file(client, config_params["books_path"], BOOK, 2)
+    send_file(client, config_params["books_path"], BOOK, 30)
     logging.info("Sending reviews")
     send_file(
-        client, config_params["books_reviews_path"], REVIEW, 2)
+        client, config_params["books_reviews_path"], REVIEW, 30)
     logging.info("Sending EOF")
     client.send_message("EOF")
 
