@@ -86,7 +86,11 @@ class QueueMiddleware:
         if self.input_queue:
             self.channel.basic_consume(
                 queue=self.input_queue, on_message_callback=callback, auto_ack=False)
-        self.channel.start_consuming()
+        try:
+            self.channel.start_consuming()
+        except OSError as e:
+            logging.error(f"Error while consuming from queue {e}")
+
 
     def end(self):
         if self.channel.is_open:

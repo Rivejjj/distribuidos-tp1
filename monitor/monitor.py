@@ -48,6 +48,7 @@ class Monitor:
                 self.active_workers.keys(), [], [], MAX_HEARTBEAT_TIME)
         except OSError as e:
             logging.error(f"[WORKER HANDLER] Error in select: {e}")
+            return
         for sock in ready_to_read:
             try:
                 data = receive(sock)

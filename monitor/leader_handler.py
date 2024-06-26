@@ -110,6 +110,7 @@ class LeaderHandler():
         self.leader = None
         if self.highest_id:
             self.send_coordinator_msg()
+            return
         logging.warning(f"Handling election message")
         msg = "answer"
         try:
@@ -181,7 +182,7 @@ class LeaderHandler():
             try:
                 readable, _, _ = select.select(
                     list(self.active_monitors.values()), [], [], TIME_BETWEEN_HEARTBEATS)
-            except Exception as e:
+            except OSError as e:
                 logging.warning(f"Error selecting: {e}")
                 return
         for conn in readable:

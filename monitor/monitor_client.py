@@ -21,7 +21,11 @@ class MonitorClient():
 
     def listen_for_connections(self):
         while not self.connected:
-            self.conn, self.addr = self.sock.accept()
+            try:
+                self.conn, self.addr = self.sock.accept()
+            except OSError as e:
+                logging.error(f"Error in client: {e}")
+                break
             self.conn.settimeout(10)
             self.connected = True
             logging.warning(f"CONNECTED TO MONITOR!")
