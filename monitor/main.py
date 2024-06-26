@@ -6,11 +6,13 @@ from utils.sockets import send_message, receive
 from monitor import Monitor
 from leader_handler import LeaderHandler
 
+
 def run_monitor(workers):
     monitor = Monitor(workers)
     monitor.run()
 
-def listen_for_connections(running,sock,lock,active_monitors):
+
+def listen_for_connections(running, sock, lock, active_monitors):
     while running:
         conn, addr = sock.accept()
         data = receive(conn)
@@ -21,72 +23,46 @@ def listen_for_connections(running,sock,lock,active_monitors):
             with lock:
                 if monitor_name not in active_monitors:
                     active_monitors[monitor_name] = conn
-                    logging.warning(f"active monitors: {active_monitors.keys()}")
+                    logging.warning(
+                        f"active monitors: {active_monitors.keys()}")
         else:
             conn.close()
             logging.warning(f"Connection closed")
 
 
 if __name__ == "__main__":
-    config_params = initialize_config([('port', True), ('host', True), ('logging_level', True), ('name', True)])
+    config_params = initialize_config(
+        [('port', True), ('host', True), ('logging_level', True), ('name', True), ('workers', True)])
     config_params["port"] = int(config_params["port"])
     initialize_log(logging, config_params["logging_level"])
-    
+
     # handle sigterm
-    
-    workers = ['computers_category_filter_0',
-                'computers_category_filter_1',
-                'computers_category_filter_2',]
-    #             '2000s_published_year_filter_0',
-    #             '2000s_published_year_filter_1',
-    #             '2000s_published_year_filter_2',
-    #             'title_contains_filter_0',
-    #             'title_contains_filter_1',
-    #             'title_contains_filter_2',
-    #             'decades_accumulator_0',
-    #             'decades_accumulator_1',
-    #             'decades_accumulator_2',
-    #             '1990s_published_year_filter_0',
-    #             '1990s_published_year_filter_1',
-    #             '1990s_published_year_filter_2',
-    #             'reviews_counter_0',
-    #             'reviews_counter_1',
-    #             'reviews_counter_2',
-    #             'avg_rating_accumulator',
-    #             'fiction_category_filter_0',
-    #             'fiction_category_filter_1',
-    #             'fiction_category_filter_2',
-    #             'sentiment_analyzer_0',
-    #             'sentiment_analyzer_1',
-    #             'sentiment_analyzer_2',
-    #             'sentiment_score_accumulator'
-                # ]
 
-    # process = Process(target=run_monitor, args=(workers,))
-    # process.daemon = True
-    # process.start()
-
-    monitors = ['monitor0','monitor1', 'monitor2']
+    monitors = ['monitor0', 'monitor1', 'monitor2']
     if config_params["name"] in monitors:
         monitors.remove(config_params["name"])
 
     manager = Manager()
     lock = manager.Lock()
-    active_monitors = manager.dict() # {monitor_name: socket}
+    active_monitors = manager.dict()  # {monitor_name: socket}
 
     running = True
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.bind(('', 22226))
     sock.listen()
 
-    process = Process(target=listen_for_connections, args=(running,sock,lock,active_monitors))
+    process = Process(target=listen_for_connections, args=(
+        running, sock, lock, active_monitors))
     process.daemon = True
     process.start()
-    
 
-    if config_params["name"] == "monitor2": #could be envvar
-        leader_handler = LeaderHandler(monitors,active_monitors,lock,config_params["name"], True, workers)
+    config_params["workers"] = config_params["workers"].split(',')
+    workers = config_params["workers"]
+
+    if config_params["name"] == "monitor2":  # could be envvar
+        leader_handler = LeaderHandler(
+            monitors, active_monitors, lock, config_params["name"], True, workers)
     else:
-        leader_handler = LeaderHandler(monitors,active_monitors,lock,config_params["name"], False, workers)
+        leader_handler = LeaderHandler(
+            monitors, active_monitors, lock, config_params["name"], False, workers)
     leader_handler.run()
-    

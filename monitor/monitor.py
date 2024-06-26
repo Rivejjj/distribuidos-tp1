@@ -1,24 +1,25 @@
-import logging 
+import logging
 import signal
 import subprocess
-import time 
+import time
 import socket
-import select 
+import select
 from utils.sockets import receive, send_message
-from utils.monitor import revive
+from utils.revive import revive
 
 HEALTH_CHECK_INTERVAL = 3
 MAX_HEARTBEAT_TIME = 3 * HEALTH_CHECK_INTERVAL + 1
 
+
 class Monitor:
     def __init__(self, workers):
-        #signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
+        # signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
         self.last_heartbeat = {}
         self.running = True
-        self.workers = workers 
-        self.active_workers = {} # {socket: worker}
-        self.failed_workers = [] # [worker]
-        self.restarted_workers = [] # [worker]
+        self.workers = workers
+        self.active_workers = {}  # {socket: worker}
+        self.failed_workers = []  # [worker]
+        self.restarted_workers = []  # [worker]
 
     def delete_node(self, node):
         logging.warning(f"Connection to {node} lost.")
@@ -34,13 +35,15 @@ class Monitor:
         actual_time = time.time()
         for sock in active_workers:
             if actual_time - self.last_heartbeat[sock] > MAX_HEARTBEAT_TIME:
-                logging.warning(f"Connection to {self.active_workers[sock]} lost due to inactivity.")
+                logging.warning(
+                    f"Connection to {self.active_workers[sock]} lost due to inactivity.")
                 self.delete_node(sock)
 
     def check_health(self):
         # logging.warning(f"Checking health: available workers: {self.active_workers.values()} \nFailed workers: {self.failed_workers} \nRestarted workers: {self.restarted_workers}")
         try:
-            ready_to_read, _, _ = select.select(self.active_workers.keys(), [], [], MAX_HEARTBEAT_TIME)
+            ready_to_read, _, _ = select.select(
+                self.active_workers.keys(), [], [], MAX_HEARTBEAT_TIME)
         except OSError as e:
             logging.error(f"Error in select: {e}")
         for sock in ready_to_read:
@@ -49,15 +52,17 @@ class Monitor:
                 if data and data != b"":
                     self.last_heartbeat[sock] = time.time()
                     send_message(sock, "Ok")
-                    logging.warning(f"Received heartbeat from {self.active_workers[sock]}")
+                    logging.warning(
+                        f"Received heartbeat from {self.active_workers[sock]}")
                 else:
                     self.delete_node(sock)
             except (BrokenPipeError, OSError) as e:
-                logging.warning(f"Connection to {self.active_workers[sock]} lost: {e}...")
+                logging.warning(
+                    f"Connection to {self.active_workers[sock]} lost: {e}...")
                 self.delete_node(sock)
         self.check_last_heartbeats()
 
-    def connect_to_worker(self,worker):
+    def connect_to_worker(self, worker):
         logging.warning(f"Trying to connect with: {worker}")
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -82,7 +87,7 @@ class Monitor:
         except OSError as e:
             logging.error(f"Error connecting with {worker}: {e}")
             self.connect_to_worker(worker)
-        
+
     def check_failed_workers(self):
         failed_conns = list(self.failed_workers)
         for worker in failed_conns:
@@ -108,9 +113,7 @@ class Monitor:
             self.check_health()
         logging.warning("Monitor stopped")
 
-
     def stop(self):
         self.running = False
         for worker in self.active_workers:
             worker.close()
-

@@ -1,36 +1,44 @@
 name: tp1
 services:
-
-  monitor0:
-    container_name: monitor0
-    image: monitor:latest
-    privileged: true
+  sender_client_0:
+    container_name: sender_client_0
+    image: client:latest
     entrypoint: python3 /main.py
+    depends_on:
+    - gateway
     environment:
-      - ID=0
-      - NAME=monitor0
+    - PYTHONUNBUFFERED=1
+    - LOGGING_LEVEL=INFO
+    - BOOKS_PATH=/data/books_data_reduced.csv
+    - BOOKS_REVIEWS_PATH=/data/Books_rating_reduced.csv
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-
-  monitor1:
-    container_name: monitor1
-    image: monitor:latest
-    privileged: true
+    - ./data/csv:/data
+    - ./data/0/query:/query
+  sender_client_1:
+    container_name: sender_client_1
+    image: client:latest
     entrypoint: python3 /main.py
+    depends_on:
+    - gateway
     environment:
-      - ID=1
-      - NAME=monitor1
+    - PYTHONUNBUFFERED=1
+    - LOGGING_LEVEL=INFO
+    - BOOKS_PATH=/data/books_data_reduced.csv
+    - BOOKS_REVIEWS_PATH=/data/Books_rating_reduced.csv
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-
-  monitor2:
-    container_name: monitor2
-    image: monitor:latest
-    privileged: true
+    - ./data/csv:/data
+    - ./data/1/query:/query
+  sender_client_2:
+    container_name: sender_client_2
+    image: client:latest
     entrypoint: python3 /main.py
+    depends_on:
+    - gateway
     environment:
-      - ID=1
-      - NAME=monitor2
+    - PYTHONUNBUFFERED=1
+    - LOGGING_LEVEL=INFO
+    - BOOKS_PATH=/data/books_data_reduced.csv
+    - BOOKS_REVIEWS_PATH=/data/Books_rating_reduced.csv
     volumes:
     - ./data/csv:/data
     - ./data/2/query:/query
@@ -42,6 +50,28 @@ services:
     environment:
     - ID=0
     - NAME=monitor0
+    - WORKERS=computers_category_filter_0,computers_category_filter_1,computers_category_filter_2,computers_category_filter_3,2000s_published_year_filter_0,2000s_published_year_filter_1,2000s_published_year_filter_2,2000s_published_year_filter_3,title_contains_filter_0,title_contains_filter_1,title_contains_filter_2,title_contains_filter_3,decades_accumulator_0,decades_accumulator_1,decades_accumulator_2,decades_accumulator_3,1990s_published_year_filter_0,1990s_published_year_filter_1,1990s_published_year_filter_2,1990s_published_year_filter_3,reviews_counter_0,reviews_counter_1,reviews_counter_2,reviews_counter_3,fiction_category_filter_0,fiction_category_filter_1,fiction_category_filter_2,fiction_category_filter_3,sentiment_analyzer_0,sentiment_analyzer_1,sentiment_analyzer_2,sentiment_analyzer_3,avg_rating_accumulator,sentiment_score_accumulator
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+  monitor1:
+    container_name: monitor1
+    image: monitor:latest
+    privileged: true
+    entrypoint: python3 /main.py
+    environment:
+    - ID=1
+    - NAME=monitor1
+    - WORKERS=computers_category_filter_0,computers_category_filter_1,computers_category_filter_2,computers_category_filter_3,2000s_published_year_filter_0,2000s_published_year_filter_1,2000s_published_year_filter_2,2000s_published_year_filter_3,title_contains_filter_0,title_contains_filter_1,title_contains_filter_2,title_contains_filter_3,decades_accumulator_0,decades_accumulator_1,decades_accumulator_2,decades_accumulator_3,1990s_published_year_filter_0,1990s_published_year_filter_1,1990s_published_year_filter_2,1990s_published_year_filter_3,reviews_counter_0,reviews_counter_1,reviews_counter_2,reviews_counter_3,fiction_category_filter_0,fiction_category_filter_1,fiction_category_filter_2,fiction_category_filter_3,sentiment_analyzer_0,sentiment_analyzer_1,sentiment_analyzer_2,sentiment_analyzer_3,avg_rating_accumulator,sentiment_score_accumulator
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+  monitor2:
+    container_name: monitor2
+    image: monitor:latest
+    privileged: true
+    entrypoint: python3 /main.py
+    environment:
+    - ID=2
+    - NAME=monitor2
     - WORKERS=computers_category_filter_0,computers_category_filter_1,computers_category_filter_2,computers_category_filter_3,2000s_published_year_filter_0,2000s_published_year_filter_1,2000s_published_year_filter_2,2000s_published_year_filter_3,title_contains_filter_0,title_contains_filter_1,title_contains_filter_2,title_contains_filter_3,decades_accumulator_0,decades_accumulator_1,decades_accumulator_2,decades_accumulator_3,1990s_published_year_filter_0,1990s_published_year_filter_1,1990s_published_year_filter_2,1990s_published_year_filter_3,reviews_counter_0,reviews_counter_1,reviews_counter_2,reviews_counter_3,fiction_category_filter_0,fiction_category_filter_1,fiction_category_filter_2,fiction_category_filter_3,sentiment_analyzer_0,sentiment_analyzer_1,sentiment_analyzer_2,sentiment_analyzer_3,avg_rating_accumulator,sentiment_score_accumulator
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock

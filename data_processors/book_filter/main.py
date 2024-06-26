@@ -10,12 +10,6 @@ from filter_manager import FilterManager
 from utils.initialize import init, initialize_config
 
 
-def send_heartbeat(name):
-    logging.warning(f"Starting monitor client with name {name}")
-    monitor_client = MonitorClient(name)
-    monitor_client.run()
-
-
 def initialize():
     all_params = ["category",
                   "published_year_range", "title_contains", "save_books", "is_equal", "no_send", "name"]
