@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from functools import partial
 import logging
+import signal
 
 from data_checkpoints.messages_checkpoint import MessagesCheckpoint
 from entities.client_dc import ClientDCMessage
@@ -8,11 +9,14 @@ from entities.eof_msg import EOFMessage
 from entities.query_message import QueryMessage
 from rabbitmq.queue import QueueMiddleware
 from utils.initialize import get_queue_names
+from utils.monitor import start_monitor_process
 from utils.parser import parse_query_msg
 
 
 class DataManager(ABC):
     def __init__(self, config_params):
+        signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
+
         self.messages_cp = MessagesCheckpoint('.checkpoints/msgs')
 
         if 'no-queue' not in config_params:
@@ -21,6 +25,12 @@ class DataManager(ABC):
 
         self.query = config_params["query"]
         self.processed_messages = {}
+
+        self.monitor_process = start_monitor_process(config_params["name"])
+
+    def stop(self):
+        self.monitor_process.terminate()
+        self.monitor_process.join()
 
     def run(self):
         self.queue_middleware.start_consuming(
