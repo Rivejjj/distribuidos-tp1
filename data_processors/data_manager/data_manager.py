@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from functools import partial
 import logging
+import os
 import signal
 
 from data_checkpoints.messages_checkpoint import MessagesCheckpoint
@@ -36,7 +37,7 @@ class DataManager(ABC):
         try:
             self.queue_middleware.start_consuming(
                 self.process_message())
-        except OSError as e :
+        except OSError as e:
             logging.error(f"Error in start consuming: {e}")
 
     def eof_cb(self, eof_msg: EOFMessage):
@@ -102,6 +103,17 @@ class DataManager(ABC):
                     logging.error(f"Error sending ack: Channel is closed")
                 return
 
+            if msg.is_sys_clean():
+                logging.info(
+                    f"Received System disconnect")
+                self.delete()
+                self.queue_middleware.send_to_all(encode(msg))
+                if ch.is_open:
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                else:
+                    logging.error(f"Error sending ack: Channel is closed")
+                return
+
             if self.messages_cp.is_sent_msg(msg):
                 logging.info(f"Already proccessed message {msg.get_id()}")
                 if ch.is_open:
@@ -128,3 +140,21 @@ class DataManager(ABC):
                 logging.error(f"Error sending ack: Channel is closed")
                 return
         return callback
+
+    def clients(self):
+        if not os.path.exists(self.messages_cp.path):
+            return
+        clients = os.listdir(self.messages_cp.path)
+        logging.info(f"Current clients: {clients}")
+        return clients
+
+    def delete(self):
+        clients = self.clients()
+
+        if not clients:
+            return
+
+        for client in clients:
+            client_dc_msg = ClientDCMessage(0, int(client))
+            self.delete_client(client_dc_msg)
+        return

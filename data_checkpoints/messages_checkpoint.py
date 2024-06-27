@@ -118,8 +118,9 @@ class MessagesCheckpoint(DataCheckpoint):
 
     def delete_client(self, msg: QueryMessage):
         client_id = msg.get_client_id()
-        super().delete_client(msg)
         if client_id in self.processed_messages:
             self.processed_messages.pop(client_id)
         if client_id in self.pending_message:
             self.pending_message.pop(client_id)
+
+        super().delete_client(msg)

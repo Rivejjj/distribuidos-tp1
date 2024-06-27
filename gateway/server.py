@@ -2,8 +2,10 @@ from multiprocessing import Process
 import socket
 import logging
 import signal
+from entities.sys_clean import SystemCleanMessage
+from rabbitmq.queue import QueueMiddleware
 from server_handler import create_server_handler
-from utils.initialize import decode
+from utils.initialize import decode, encode
 from utils.sockets import receive
 
 
@@ -18,6 +20,12 @@ class Server:
         self.output_queues = output_queues
         self.processes = []
         self.cur_client = 0
+
+        self.queue = QueueMiddleware(output_queues)
+        logging.info(f"Cleaning all saved states")
+        self.queue.send_to_all(encode(SystemCleanMessage(0, -1)))
+        self.queue.end()
+        logging.info(f"Sent message, closing queue")
 
     def run(self):
         """

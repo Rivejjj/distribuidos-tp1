@@ -10,6 +10,7 @@ TITLE_SCORE = 5
 EOF = 6
 BATCH_TITLE_SCORE = 7
 CLIENT_DC = 8
+SYSTEM_CLEAN = 9
 QUERY_MSG_SEPARATOR = ";"
 
 
@@ -59,3 +60,6 @@ class QueryMessage(ABC):
 
     def is_dc(self) -> bool:
         return self.identifier == CLIENT_DC
+
+    def is_sys_clean(self) -> bool:
+        return self.identifier == SYSTEM_CLEAN

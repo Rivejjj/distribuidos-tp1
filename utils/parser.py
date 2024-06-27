@@ -7,9 +7,10 @@ from entities.book import Book
 from entities.book_msg import BookMessage
 from entities.client_dc import ClientDCMessage
 from entities.eof_msg import EOFMessage
-from entities.query_message import AUTHORS, BATCH_TITLE_SCORE, BOOK, CLIENT_DC, EOF, QUERY_MSG_SEPARATOR, REVIEW, TITLE_AUTHORS, TITLE_SCORE
+from entities.query_message import AUTHORS, BATCH_TITLE_SCORE, BOOK, CLIENT_DC, EOF, QUERY_MSG_SEPARATOR, REVIEW, SYSTEM_CLEAN, TITLE_AUTHORS, TITLE_SCORE
 from entities.review import Review
 from entities.review_msg import ReviewMessage
+from entities.sys_clean import SystemCleanMessage
 from entities.title_authors_msg import TitleAuthorsMessage
 from entities.title_score_msg import TitleScoreMessage
 from utils.initialize import decode
@@ -75,5 +76,7 @@ def parse_query_msg(msg: bytes):
         return BatchTitleScoreMessage(list(convert_to_title_score(data.split('\n'))), *header)
     elif identifier == CLIENT_DC:
         return ClientDCMessage(*header)
+    elif identifier == SYSTEM_CLEAN:
+        return SystemCleanMessage(*header)
     else:
         raise Exception('Mensaje desconocido')
