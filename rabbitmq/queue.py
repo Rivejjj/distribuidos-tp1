@@ -9,6 +9,7 @@ from entities.eof_msg import EOFMessage
 from entities.query_message import QueryMessage
 from rabbitmq.eofs_cp import ReceivedEOF
 from utils.initialize import encode, uuid
+import hashlib
 
 RESULTS_QUEUE = 'results'
 
@@ -94,7 +95,6 @@ class QueueMiddleware:
         except OSError as e:
             logging.error(f"Error while consuming from queue {e}")
 
-
     def end(self):
         if self.channel.is_open:
             self.channel.stop_consuming()
@@ -159,8 +159,9 @@ class QueueMiddleware:
         output_queues = list(filter(
             lambda output_queue: next_pool_name in output_queue, self.output_queues))
 
-        hash_value = hash(hash_key)
-        return hash_value % len(output_queues)
+        hash_object = hashlib.sha1(encode(hash_key))
+        digest_int = int(hash_object.hexdigest(), 16)
+        return digest_int % len(output_queues)
 
     def send_to_pool(self, message, hash_key, next_pool_name=None):
         if not next_pool_name and len(self.queue_pools) == 1:

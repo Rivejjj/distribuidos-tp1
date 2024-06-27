@@ -1,3 +1,4 @@
+import logging
 from data_processors.data_manager.data_manager import DataManager
 from book_authors_cp import BookAuthorsCheckpoint
 from entities.book import Book
@@ -17,8 +18,9 @@ class ReviewsCounterManager(DataManager):
     def __init__(self, config_params):
         super().__init__(config_params)
         self.counter = ReviewsCounter()
-        self.reviews_counter_cp = ReviewsCounterCheckpoint(self.counter)
         self.book_authors_cp = BookAuthorsCheckpoint(self.counter)
+
+        self.reviews_counter_cp = ReviewsCounterCheckpoint(self.counter)
 
         self.sent_titles_cp = SentTitlesCheckpoint()
 
