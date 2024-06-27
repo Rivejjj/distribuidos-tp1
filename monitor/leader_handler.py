@@ -44,10 +44,9 @@ class LeaderHandler():
         logging.warning(f"Connection not found")
 
     def find_socket(self, conn):
-        with self.lock:
-            for name, connection in self.active_monitors.items():
-                if conn.getsockname() == connection.getsockname():
-                    return name, connection
+        for name, connection in self.active_monitors.items():
+            if conn.getsockname() == connection.getsockname():
+                return name, connection
         logging.warning(f"Connection not found")
         return None, None
 
