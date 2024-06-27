@@ -25,25 +25,24 @@ def listen_for_connections(running, sock, lock, active_monitors):
                 if monitor_name not in active_monitors:
                     active_monitors[monitor_name] = conn
                     logging.warning(
-                        f"active monitors: {active_monitors.keys()}")
+                        f"ACA falla active monitors: {active_monitors.keys()}")
         else:
             conn.close()
             logging.warning(f"Connection closed")
 
+
 def signal_handler(sig, frame):
-        logging.warning("Received SIGTERM")
-        sock.close()
-        process.terminate()
-        leader_handler.stop()
+    logging.warning("Received SIGTERM")
+    sock.close()
+    process.terminate()
+    leader_handler.stop()
+
 
 if __name__ == "__main__":
     config_params = initialize_config(
         [('port', True), ('host', True), ('logging_level', True), ('name', True), ('workers', True), ('highest_id', True)])
     config_params["port"] = int(config_params["port"])
     initialize_log(logging, config_params["logging_level"])
-
-    
-
 
     monitors = ['monitor0', 'monitor1', 'monitor2']
     if config_params["name"] in monitors:
@@ -72,9 +71,9 @@ if __name__ == "__main__":
     else:
         leader_handler = LeaderHandler(
             monitors, active_monitors, lock, config_params["name"], False, workers)
-        
-    #handle sigterm
-    signal.signal(signal.SIGTERM, lambda signal, frame: signal_handler(process, leader_handler))
+
+    # handle sigterm
+    signal.signal(signal.SIGTERM, lambda signal,
+                  frame: signal_handler(process, leader_handler))
 
     leader_handler.run()
-

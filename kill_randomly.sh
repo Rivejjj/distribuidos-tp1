@@ -9,7 +9,7 @@ containers=(
   reviews_counter_0 reviews_counter_1 reviews_counter_2 reviews_counter_3
   fiction_category_filter_0 fiction_category_filter_1 fiction_category_filter_2 fiction_category_filter_3
   sentiment_analyzer_0 sentiment_analyzer_1 sentiment_analyzer_2 sentiment_analyzer_3
-  avg_rating_accumulator sentiment_score_accumulator
+  avg_rating_accumulator sentiment_score_accumulator monitor2
 )
 
 random_sleep() {

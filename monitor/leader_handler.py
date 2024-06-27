@@ -74,7 +74,7 @@ class LeaderHandler():
             if len(self.active_monitors) == 0:
                 logging.warning(f"I am leader")
                 self.leader = (self.name, None)
-                if not self.workers_handler:           
+                if not self.workers_handler:
                     self.start_workers()
                 return
 
@@ -95,7 +95,7 @@ class LeaderHandler():
             values = self.active_monitors.values()
         try:
             readable, _, _ = select.select(
-            list(values), [], [], 5)
+                list(values), [], [], 5)
         except (OSError, ValueError) as e:
             logging.warning(f"Error selecting: {e}")
             return
@@ -178,16 +178,23 @@ class LeaderHandler():
             logging.warning(f"Connection to {name} lost while reading: {e}")
             self.find_and_delete(conn)
             with self.lock:
-                logging.warning(f"active monitors: {self.active_monitors.keys()}")
+                logging.warning(
+                    f"active monitors: {self.active_monitors.keys()}")
             return
 
     def check_heartbeats(self):
         items = self.heartbeats.items()
+        deleted_names = []
         for name, timestamp in items:
             if time.time() - timestamp > MAX_HEARTBEAT_TIMEOUT:
                 logging.warning(f"Lost heartbeat from {name}")
-                self.find_and_delete(self.active_monitors)
-                del self.heartbeats[name]
+                connections = list(self.active_monitors.values())
+                for conn in connections:
+                    self.find_and_delete(conn)
+                deleted_names.append(name)
+
+        for name in deleted_names:
+            del self.heartbeats[name]
 
     def check_connections(self):
         with self.lock:
@@ -235,7 +242,8 @@ class LeaderHandler():
                     try:
                         sock.connect((monitor, 22226))
                     except (socket.timeout, OSError) as e:
-                        logging.warning(f"Error connecting with {monitor}: {e}")
+                        logging.warning(
+                            f"Error connecting with {monitor}: {e}")
                         sock.close()
                         continue
                     send_message(sock, self.name)
@@ -243,7 +251,8 @@ class LeaderHandler():
                     try:
                         name = decode(receive(sock))
                     except (ConnectionResetError, OSError, EOFError, socket.timeout) as e:
-                        logging.warning(f"Error connecting with {monitor}: {e}")
+                        logging.warning(
+                            f"Error connecting with {monitor}: {e}")
                         sock.close()
                         continue
                     with self.lock:
@@ -271,7 +280,7 @@ class LeaderHandler():
             for conn in self.active_monitors.values():
                 msg = "coordinator:" + self.name
                 send_message(conn, msg)
-        if not self.workers_handler:           
+        if not self.workers_handler:
             self.start_workers()
 
     def get_leader(self):
@@ -303,7 +312,6 @@ class LeaderHandler():
         with self.lock:
             for conn in self.active_monitors.values():
                 conn.close()
-
 
 
 def run_monitor(workers):
