@@ -7,7 +7,7 @@ import select
 from utils.sockets import receive, send_message
 from utils.revive import revive
 
-HEALTH_CHECK_INTERVAL = 3
+HEALTH_CHECK_INTERVAL = 4
 MAX_HEARTBEAT_TIME = 3 * HEALTH_CHECK_INTERVAL + 1
 
 
@@ -46,7 +46,7 @@ class Monitor:
         try:
             ready_to_read, _, _ = select.select(
                 self.active_workers.keys(), [], [], MAX_HEARTBEAT_TIME)
-        except OSError as e:
+        except (OSError, ValueError) as e:
             logging.error(f"[WORKER HANDLER] Error in select: {e}")
             return
         for sock in ready_to_read:

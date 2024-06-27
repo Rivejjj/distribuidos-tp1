@@ -37,7 +37,7 @@ class DataManager(ABC):
         try:
             self.queue_middleware.start_consuming(
                 self.process_message())
-        except OSError as e:
+        except Exception as e :
             logging.error(f"Error in start consuming: {e}")
 
     def eof_cb(self, eof_msg: EOFMessage):

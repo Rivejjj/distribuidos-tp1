@@ -35,11 +35,10 @@ def signal_handler(sig, frame):
         sock.close()
         process.terminate()
         leader_handler.stop()
-        exit(0)
 
 if __name__ == "__main__":
     config_params = initialize_config(
-        [('port', True), ('host', True), ('logging_level', True), ('name', True), ('workers', True)])
+        [('port', True), ('host', True), ('logging_level', True), ('name', True), ('workers', True), ('highest_id', True)])
     config_params["port"] = int(config_params["port"])
     initialize_log(logging, config_params["logging_level"])
 
@@ -67,7 +66,7 @@ if __name__ == "__main__":
     config_params["workers"] = config_params["workers"].split(',')
     workers = config_params["workers"]
 
-    if config_params["name"] == "monitor2":  # could be envvar
+    if config_params["name"] == "monitor2":
         leader_handler = LeaderHandler(
             monitors, active_monitors, lock, config_params["name"], True, workers)
     else:
@@ -75,7 +74,7 @@ if __name__ == "__main__":
             monitors, active_monitors, lock, config_params["name"], False, workers)
         
     #handle sigterm
-    # signal.signal(signal.SIGTERM, lambda signal, frame: signal_handler(process, leader_handler))
+    signal.signal(signal.SIGTERM, lambda signal, frame: signal_handler(process, leader_handler))
 
     leader_handler.run()
 
