@@ -38,15 +38,12 @@ class MonitorClient():
                     logging.warning(f"Sending heartbeat to monitor")
                     send_message(self.conn, self.name)
                     data = decode(receive(self.conn))
-                    # if data == b'':
-                    #     self.listen_for_connections()
                     logging.warning(f"Answer from server: {data}")
                     time.sleep(TIME_TO_WAIT)
                 except (socket.timeout, OSError, EOFError) as e:
                     logging.error(f"Error in client: {e}")
                     self.conn.close()
                     self.connected = False
-                    break   
                 time.sleep(1)
 
 
@@ -57,7 +54,6 @@ class MonitorClient():
         self.connected = False
         self.address = None
         self.port = None
-        self.connect()
         time.sleep(1)
     
     def close(self):

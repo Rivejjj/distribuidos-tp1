@@ -5,7 +5,7 @@ from entities.query_message import REVIEW, QueryMessage
 from entities.title_score_msg import TitleScoreMessage
 from entities.review_msg import ReviewMessage
 from utils.initialize import encode
-
+import logging
 
 class SentimentAnalyzerManager(DataManager):
     def __init__(self, config_params):
@@ -13,9 +13,11 @@ class SentimentAnalyzerManager(DataManager):
         self.analyzer = SentimentAnalyzer()
 
     def run(self):
-        self.queue_middleware.start_consuming(
-            self.process_message())
-
+        try:
+            self.queue_middleware.start_consuming(
+                self.process_message())
+        except OSError as e:
+            logging.error(f"Error in in start consuming: {e}")
     def process_review(self, review_msg: ReviewMessage):
         review = review_msg.get_review()
         polarity_score = self.analyzer.analyze(review.text)

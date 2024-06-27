@@ -30,6 +30,12 @@ def listen_for_connections(running, sock, lock, active_monitors):
             conn.close()
             logging.warning(f"Connection closed")
 
+def signal_handler(sig, frame):
+        logging.warning("Received SIGTERM")
+        sock.close()
+        process.terminate()
+        leader_handler.stop()
+        exit(0)
 
 if __name__ == "__main__":
     config_params = initialize_config(
@@ -68,4 +74,8 @@ if __name__ == "__main__":
         leader_handler = LeaderHandler(
             monitors, active_monitors, lock, config_params["name"], False, workers)
         
+    #handle sigterm
+    # signal.signal(signal.SIGTERM, lambda signal, frame: signal_handler(process, leader_handler))
+
     leader_handler.run()
+

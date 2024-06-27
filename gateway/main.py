@@ -5,14 +5,14 @@ import signal
 from data_collector import DataCollector
 from server import Server
 from utils.initialize import get_queue_names, initialize_config, initialize_log
-
+from utils.monitor import start_monitor_process
 
 def initialize():
     config_params = initialize_config(
         [("logging_level", True), ("port", True),
          ("results_port", True),  ("listen_backlog", True),
          ("input_queue", False), ("query_count", False),
-         ("output_queues", False),
+         ("output_queues", False), ("name", True),
          ])
 
     config_params["port"] = int(config_params["port"])
@@ -43,6 +43,9 @@ def start_data_collector(config_params):
 
     data_collector.run()
 
+def handle_sigterm(data_collector_process,monitor_process):
+    data_collector_process.terminate()
+    monitor_process.terminate()
 
 def main():
     config_params = initialize()
@@ -50,8 +53,10 @@ def main():
     data_collector_process = Process(
         target=start_data_collector, args=(config_params,))
 
+    monitor_process = start_monitor_process(config_params["name"])
+
     signal.signal(signal.SIGTERM, lambda signal,
-                  frame: data_collector_process.terminate())
+                  frame: handle_sigterm(data_collector_process,monitor_process))
     data_collector_process.start()
 
     server = Server(

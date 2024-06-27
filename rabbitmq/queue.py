@@ -41,7 +41,10 @@ class QueueMiddleware:
         if input_queue:
             self.__declare_input_queue(input_queue, id)
 
-        self.channel.start_consuming()
+        try:
+            self.channel.start_consuming()
+        except OSError as e:
+            logging.error(f"Error while consuming from queue {e}")
 
         self.received_eofs_cp = ReceivedEOF(
             previous_workers, save_to_file=save_to_file)

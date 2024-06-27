@@ -81,8 +81,10 @@ class LeaderHandler():
 
     def wait_for_answer(self):
         logging.warning(f"Waiting for answer")
+        with self.lock:
+            values = self.active_monitors.values()
         readable, _, _ = select.select(
-            list(self.active_monitors.values()), [], [], 5)
+            list(values), [], [], 5)
         if not readable:
             logging.warning(f"Timeout polling. I am leader")
             self.send_coordinator_msg()
@@ -163,7 +165,8 @@ class LeaderHandler():
         except (ConnectionResetError, OSError, BrokenPipeError, EOFError) as e:
             logging.warning(f"Connection to {name} lost: {e}")
             self.find_and_delete(conn)
-            logging.warning(f"active monitors: {self.active_monitors.keys()}")
+            with self.lock:
+                logging.warning(f"active monitors: {self.active_monitors.keys()}")
 
     def check_heartbeats(self):
         items = self.heartbeats.items()
@@ -220,12 +223,17 @@ class LeaderHandler():
                         continue
                 try:
                     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    sock.connect((monitor, 22226))
+                    try:
+                        sock.connect((monitor, 22226))
+                    except (socket.timeout, OSError) as e:
+                        logging.warning(f"Error connecting with {monitor}: {e}")
+                        sock.close()
+                        continue
                     send_message(sock, self.name)
                     sock.settimeout(5)
                     name = decode(receive(sock))
-                    if name and name not in self.active_monitors:
-                        with self.lock:
+                    with self.lock:
+                        if name and name not in self.active_monitors:
                             self.active_monitors[monitor] = sock
                             logging.warning(
                                 f"Received connection from: {monitor}")
@@ -233,10 +241,10 @@ class LeaderHandler():
                                 logging.warning(
                                     f"Connected with all monitors: {self.active_monitors.keys()}")
                                 return
+                        else:
+                            logging.warning(f"NOT DATA: {monitor}")
                         if name in self.revived_monitors:
                             self.revived_monitors.remove(name)
-                    else:
-                        logging.warning(f"NOT DATA: {monitor}")
                         sock.close()
                 except (ConnectionRefusedError, EOFError, socket.gaierror) as e:
                     logging.warning(f"Error connecting with {monitor}: {e}")

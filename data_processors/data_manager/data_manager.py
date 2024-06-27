@@ -33,8 +33,11 @@ class DataManager(ABC):
         self.monitor_process.join()
 
     def run(self):
-        self.queue_middleware.start_consuming(
-            self.process_message())
+        try:
+            self.queue_middleware.start_consuming(
+                self.process_message())
+        except OSError as e :
+            logging.error(f"Error in start consuming: {e}")
 
     def eof_cb(self, eof_msg: EOFMessage):
         """
@@ -82,7 +85,10 @@ class DataManager(ABC):
             if msg.is_eof():
                 logging.info(f"Received EOF of client {msg.get_client_id()}")
                 self.process_eof(msg)
-                ch.basic_ack(delivery_tag=method.delivery_tag)
+                if ch.is_open:
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                else:
+                    logging.error(f"Error sending ack: Channel is closed")
                 return
 
             if msg.is_dc():
@@ -90,12 +96,18 @@ class DataManager(ABC):
                     f"Received Client disconnect {msg.get_client_id()}")
                 self.delete_client(msg)
                 self.queue_middleware.send_to_all(encode(msg))
-                ch.basic_ack(delivery_tag=method.delivery_tag)
+                if ch.is_open:
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                else:
+                    logging.error(f"Error sending ack: Channel is closed")
                 return
 
             if self.messages_cp.is_sent_msg(msg):
                 logging.info(f"Already proccessed message {msg.get_id()}")
-                ch.basic_ack(delivery_tag=method.delivery_tag)
+                if ch.is_open:
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                else:
+                    logging.error(f"Error sending ack: Channel is closed")
                 return
 
             logging.info(
@@ -110,6 +122,9 @@ class DataManager(ABC):
 
             self.messages_cp.mark_msg_as_sent(msg)
 
-            ch.basic_ack(delivery_tag=method.delivery_tag)
-
+            if ch.is_open:
+                ch.basic_ack(delivery_tag=method.delivery_tag)
+            else:
+                logging.error(f"Error sending ack: Channel is closed")
+                return
         return callback
