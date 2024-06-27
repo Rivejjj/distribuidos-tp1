@@ -33,13 +33,14 @@ class LeaderHandler():
     def find_and_delete(self, conn):
         name, connection = self.find_socket(conn)
         logging.warning(f"Finding and deleting {name}")
-        with self.lock:
-            if connection and name in self.active_monitors:
-                logging.warning(f"Deleting {name}")
-                del self.active_monitors[name]
-                logging.warning(
-                    f"active monitors: {self.active_monitors.keys()}")
-                return
+        if connection and name in self.active_monitors:
+            logging.warning(f"Deleting {name}")
+            del self.active_monitors[name]
+            logging.warning(
+                f"active monitors: {self.active_monitors.keys()}")
+            if name == self.leader[0]:
+                self.leader = (None, None)
+            return
         logging.warning(f"Connection not found")
 
     def find_socket(self, conn):
@@ -51,33 +52,49 @@ class LeaderHandler():
         return None, None
 
     def send_heartbeat(self):
-        try:
-            send_message(self.leader[1], self.name)
-            logging.warning(f"Sending heartbeat to {self.leader[0]}")
-        except (ConnectionResetError, OSError) as e:
-            logging.warning(f"Could not send to {self.leader[0]} lost: {e}")
+        if self.leader:
+            try:
+                send_message(self.leader[1], self.name)
+                logging.warning(f"Sending heartbeat to {self.leader[0]}")
+            except (ConnectionResetError, OSError) as e:
+                logging.warning(f"Could not send to {self.leader[0]} lost: {e}")
+                self.get_leader()
+            try:
+                self.leader[1].setblocking(True)
+                self.leader[1].settimeout(MAX_HEARTBEAT_TIMEOUT)
+                decode(receive(self.leader[1]))
+            except (ConnectionResetError, OSError, EOFError, socket.timeout) as e:
+                logging.warning(f"Connection to {self.leader[0]} lost: {e}")
+                self.leader = None
+                self.get_leader()
+                return
+        else:
             self.get_leader()
-        try:
-            self.leader[1].setblocking(True)
-            self.leader[1].settimeout(MAX_HEARTBEAT_TIMEOUT)
-            decode(receive(self.leader[1]))
-        except (ConnectionResetError, OSError, EOFError, socket.timeout) as e:
-            logging.warning(f"Connection to {self.leader[0]} lost: {e}")
-            self.leader = None
-            self.get_leader()
-            return
         time.sleep(1)
+
+    def autoproclaim_leader(self):
+        logging.warning(f"I am leader")
+        self.leader = (self.name, None)
+        if not self.workers_handler:
+            self.start_workers()
 
     def send_election_message(self):
         with self.lock:
-            msg = "election"
+            for name,conn in self.active_monitors.items():
+                try:
+                    conn.setblocking(True)
+                    conn.settimeout(1)
+                    receive(conn)
+                except (ConnectionResetError, OSError, EOFError, socket.timeout) as e:
+                    logging.warning(f"Connection to {name} lost in send election: {e}")
+                    self.find_and_delete(conn)
             if len(self.active_monitors) == 0:
-                logging.warning(f"I am leader")
-                self.leader = (self.name, None)
-                if not self.workers_handler:
-                    self.start_workers()
+                logging.warning("No monitors connected in send election")
+                self.autoproclaim_leader()
                 return
+            messages_sent = 0
 
+            msg = "election"
             for name, conn in self.active_monitors.items():
                 conn.setblocking(True)
                 conn.settimeout(5)
@@ -85,9 +102,14 @@ class LeaderHandler():
                     try:
                         logging.warning(f"Sending election message to {name}")
                         send_message(conn, msg)
+                        messages_sent += 1
                     except (ConnectionResetError, OSError, socket.timeout) as e:
                         logging.warning(f"Connection to {name} lost: {e}")
                         self.find_and_delete(conn)
+        if messages_sent == 0:
+            self.autoproclaim_leader()
+        while not self.leader:
+            self.wait_for_answer()
 
     def wait_for_answer(self):
         logging.warning(f"Waiting for answer")
@@ -120,7 +142,8 @@ class LeaderHandler():
                 self.send_coordinator_msg()
             except (ConnectionResetError, OSError, EOFError) as e:
                 logging.warning(f"Connection lost: {e}")
-                self.find_and_delete(conn)
+                with self.lock:
+                    self.find_and_delete(conn)
 
     def handle_election_message(self, conn):
         self.leader = None
@@ -177,8 +200,7 @@ class LeaderHandler():
         except (ConnectionResetError, OSError, BrokenPipeError, EOFError) as e:
             logging.warning(f"Connection to {name} lost while reading: {e}")
             self.find_and_delete(conn)
-            with self.lock:
-                logging.warning(
+            logging.warning(
                     f"active monitors: {self.active_monitors.keys()}")
             return
 
@@ -197,28 +219,29 @@ class LeaderHandler():
             del self.heartbeats[name]
 
     def check_connections(self):
-        with self.lock:
-            try:
-                readable, _, _ = select.select(
-                    list(self.active_monitors.values()), [], [], TIME_BETWEEN_HEARTBEATS)
-            except OSError as e:
-                logging.warning(f"Error selecting: {e}")
+        while self.running:
+            with self.lock:
+                try:
+                    readable, _, _ = select.select(
+                        list(self.active_monitors.values()), [], [], TIME_BETWEEN_HEARTBEATS)
+                except OSError as e:
+                    logging.warning(f"Error selecting: {e}")
+                    return
+            for conn in readable:
+                name, sock = self.find_socket(conn)
+                if sock:
+                    self.read_from_socket(conn, name)
+                else:
+                    logging.warning(f"Connection not found")
+
+            if self.leader and self.leader[0] != self.name:
+                self.send_heartbeat()
                 return
-        for conn in readable:
-            name, sock = self.find_socket(conn)
-            if sock:
-                self.read_from_socket(conn, name)
-            else:
-                logging.warning(f"Connection not found")
 
-        if self.leader and self.leader[0] != self.name:
-            self.send_heartbeat()
-            return
-
-        if self.leader and self.leader[0] == self.name:
-            self.revive_monitors()
-            self.check_heartbeats()
-            return
+            if self.leader and self.leader[0] == self.name:
+                self.revive_monitors()
+                self.check_heartbeats()
+                return
 
     def revive_monitors(self):
         with self.lock:
@@ -229,6 +252,47 @@ class LeaderHandler():
             for monitor in self.active_monitors.keys():
                 if monitor in self.revived_monitors:
                     self.revived_monitors.remove(monitor)
+
+    
+    def send_coordinator_msg(self):
+        self.leader = (self.name, None)
+        with self.lock:
+            for conn in self.active_monitors.values():
+                msg = "coordinator:" + self.name
+                send_message(conn, msg)
+        if not self.workers_handler:
+            self.start_workers()
+
+    def get_leader(self):
+        logging.warning(f"HIGHEST ID: {self.highest_id}")
+        if self.highest_id:
+            self.send_coordinator_msg()
+            return
+        logging.warning(f"Getting leader")
+        self.send_election_message()
+
+    def start_workers(self):
+        self.workers_handler = Process(
+            target=run_monitor, args=(self.workers,))
+        self.workers_handler.daemon = True
+        self.workers_handler.start()
+
+    def run(self):
+        logging.warning(f"starting leader handler ")
+        self.connect_with_monitors()
+        self.get_leader()
+        while self.running:
+            self.check_connections()
+        logging.warning(f"Leader handler stopped")
+
+    def stop(self):
+        logging.warning(f"Stopping leader handler")
+        self.running = False
+        if self.workers_handler:
+            self.workers_handler.terminate()
+        with self.lock:
+            for conn in self.active_monitors.values():
+                conn.close()
 
     def connect_with_monitors(self):
         tries = 5
@@ -273,46 +337,6 @@ class LeaderHandler():
                     logging.warning(f"Error connecting with {monitor}: {e}")
             tries -= 1
             time.sleep(1)
-
-    def send_coordinator_msg(self):
-        self.leader = (self.name, None)
-        with self.lock:
-            for conn in self.active_monitors.values():
-                msg = "coordinator:" + self.name
-                send_message(conn, msg)
-        if not self.workers_handler:
-            self.start_workers()
-
-    def get_leader(self):
-        logging.warning(f"HIGHEST ID: {self.highest_id}")
-        if self.highest_id:
-            self.send_coordinator_msg()
-            return
-        logging.warning(f"Getting leader")
-        self.send_election_message()
-
-    def start_workers(self):
-        self.workers_handler = Process(
-            target=run_monitor, args=(self.workers,))
-        self.workers_handler.daemon = True
-        self.workers_handler.start()
-
-    def run(self):
-        logging.warning(f"starting leader handler ")
-        self.connect_with_monitors()
-        self.get_leader()
-        while self.running:
-            self.check_connections()
-
-    def stop(self):
-        logging.warning(f"Stopping leader handler")
-        self.running = False
-        if self.workers_handler:
-            self.workers_handler.terminate()
-        with self.lock:
-            for conn in self.active_monitors.values():
-                conn.close()
-
 
 def run_monitor(workers):
     monitor = Monitor(workers)

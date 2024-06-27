@@ -26,6 +26,7 @@ def listen_for_connections(running, sock, lock, active_monitors):
                     active_monitors[monitor_name] = conn
                     logging.warning(
                         f"ACA falla active monitors: {active_monitors.keys()}")
+                    continue
         else:
             conn.close()
             logging.warning(f"Connection closed")
