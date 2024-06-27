@@ -3,6 +3,8 @@ import socket
 import logging
 import signal
 from data_collector_handler import create_data_collector_handler
+from utils.initialize import decode
+from utils.sockets import receive
 
 
 class DataCollector:
@@ -34,7 +36,9 @@ class DataCollector:
                 client_sock = self.__accept_new_connection(
                     self.results_server_socket)
 
-                logging.info(f"results client sock: {client_sock}")
+                client_id = int(decode(receive(client_sock)))
+
+                logging.info(f"results client sock: {client_id}")
                 process = Process(target=create_data_collector_handler,
                                   args=(client_sock, self.query_count, self.input_queue, self.cur_client))
 

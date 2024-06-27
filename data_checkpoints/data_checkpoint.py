@@ -114,6 +114,6 @@ class DataCheckpoint(ABC):
         if client_id in self.change_counter:
             self.change_counter.pop(client_id)
 
-    @ abstractmethod
+    @abstractmethod
     def load(self):
         pass

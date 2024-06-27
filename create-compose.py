@@ -64,7 +64,8 @@ def build_gateway():
             f'OUTPUT_QUEUES=query1:{WORKERS};query2:{WORKERS};query3:{WORKERS};query4:{WORKERS}',
             'INPUT_QUEUE=results',
             f'QUERY_COUNT={WORKERS+WORKERS+WORKERS+2}',
-            'ID=0'
+            'ID=0',
+            f'NAME=gateway'
         ],
 
     }
@@ -82,7 +83,8 @@ def build_client(i):
             'PYTHONUNBUFFERED=1',
             f'LOGGING_LEVEL={LOGGING_LEVEL}',
             'BOOKS_PATH=/data/books_data_reduced.csv',
-            'BOOKS_REVIEWS_PATH=/data/Books_rating_reduced.csv'
+            'BOOKS_REVIEWS_PATH=/data/Books_rating_reduced.csv',
+            f'ID={i}'
         ],
         'volumes': [
             './data/csv:/data',
@@ -414,6 +416,7 @@ def generate_all_workers():
 
     all_worker_names.append('avg_rating_accumulator')
     all_worker_names.append('sentiment_score_accumulator')
+    all_worker_names.append('gateway')
     return all_worker_names
 
 
@@ -421,7 +424,11 @@ def create_atomic_bomb():
     with open('atomic_bomb.sh', 'w') as f:
         f.write('#!/bin/bash\n')
 
-        f.write(f'docker kill {" ".join(generate_all_workers())}\n')
+        workers = generate_all_workers()
+
+        workers.remove('gateway')
+
+        f.write(f'docker kill {" ".join(workers)}\n')
 
 
 def main():

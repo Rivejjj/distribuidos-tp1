@@ -3,6 +3,8 @@ import socket
 import logging
 import signal
 from server_handler import create_server_handler
+from utils.initialize import decode
+from utils.sockets import receive
 
 
 class Server:
@@ -32,6 +34,10 @@ class Server:
             try:
                 logging.info(f"waiting for connection")
                 client_sock = self.__accept_new_connection(self._server_socket)
+
+                client_id = int(decode(receive(client_sock)))
+
+                logging.info(f"client sock: {client_id}")
                 process = Process(target=create_server_handler,
                                   args=(client_sock, self.output_queues, self.cur_client))
 

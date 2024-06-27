@@ -8,7 +8,7 @@ from utils.initialize import initialize_config, initialize_log
 def initialize():
 
     config_params = initialize_config(
-        [("logging_level", True), ("address", True), ("port", True),  ("results_port", True), ("books_path", False), ("books_reviews_path", False)])
+        [("logging_level", True), ("address", True), ("port", True),  ("results_port", True), ("books_path", False), ("books_reviews_path", False), ("id", False)])
 
     config_params["port"] = int(config_params["port"])
     config_params["results_port"] = int(config_params["results_port"])
@@ -16,8 +16,10 @@ def initialize():
     return config_params
 
 
-def receive_results(address, port):
+def receive_results(address, port, id):
     client = Client(address, port)
+    client.send_message(id)
+
     while True:
         msg = client.receive_message()
         print(msg)
@@ -64,12 +66,13 @@ def send_file(client, filename, identifier, batch_size=10, max_batches=0):
 
 def run(config_params):
     process = Process(target=receive_results, args=(
-        config_params["address"], config_params["results_port"]))
+        config_params["address"], config_params["results_port"], config_params["id"]))
 
     process.start()
 
     client = Client(config_params["address"], config_params["port"])
 
+    client.send_message(config_params["id"])
     logging.info("Sending books")
     send_file(client, config_params["books_path"], BOOK, 30)
     logging.info("Sending reviews")
