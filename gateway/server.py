@@ -1,4 +1,4 @@
-from multiprocessing import Process
+from multiprocessing import Pool, Process
 import socket
 import logging
 import signal
@@ -10,7 +10,7 @@ from utils.sockets import receive
 
 
 class Server:
-    def __init__(self, port, listen_backlog, output_queues=[]):
+    def __init__(self, port, listen_backlog, output_queues=[], workers=10):
         # Initialize server socket
         signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -20,6 +20,7 @@ class Server:
         self.output_queues = output_queues
         self.processes = []
         self.cur_client = 0
+        self.workers = workers
 
         self.queue = QueueMiddleware(output_queues)
         logging.info(f"Cleaning all saved states")
@@ -38,22 +39,22 @@ class Server:
         self.run_client()
 
     def run_client(self):
-        while True:
-            try:
-                logging.info(f"waiting for connection")
-                client_sock = self.__accept_new_connection(self._server_socket)
+        with Pool(self.workers) as p:
+            while True:
+                try:
+                    logging.info(f"waiting for connection")
+                    client_sock = self.__accept_new_connection(
+                        self._server_socket)
 
-                client_id = int(decode(receive(client_sock)))
+                    client_id = int(decode(receive(client_sock)))
 
-                logging.info(f"client sock: {client_id}")
-                process = Process(target=create_server_handler,
+                    logging.info(f"client sock: {client_id}")
+                    p.apply_async(create_server_handler,
                                   args=(client_sock, self.output_queues, self.cur_client))
 
-                self.cur_client += 1
-                self.processes.append(process)
-                process.start()
-            except OSError:
-                break
+                    self.cur_client += 1
+                except OSError:
+                    break
 
     def __accept_new_connection(self, socket):
         """

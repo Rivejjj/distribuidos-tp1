@@ -1,4 +1,4 @@
-from multiprocessing import Process
+from multiprocessing import Pool, Process
 import socket
 import logging
 import signal
@@ -8,7 +8,7 @@ from utils.sockets import receive
 
 
 class DataCollector:
-    def __init__(self, results_port, listen_backlog, query_count, input_queue=None):
+    def __init__(self, results_port, listen_backlog, query_count, input_queue=None, workers=10):
         # Initialize server socket
         signal.signal(signal.SIGTERM, lambda signal, frame: self.stop())
 
@@ -21,6 +21,7 @@ class DataCollector:
         self.input_queue = input_queue
         self.cur_client = 0
         self.processes = []
+        self.workers = workers
 
     def run(self):
         """
@@ -30,23 +31,22 @@ class DataCollector:
         communication with a client. After client with communucation
         finishes, servers starts to accept new connections again
         """
-        while True:
-            try:
-                logging.info(f"waiting for connection for results")
-                client_sock = self.__accept_new_connection(
-                    self.results_server_socket)
+        with Pool(self.workers) as p:
+            while True:
+                try:
+                    logging.info(f"waiting for connection for results")
+                    client_sock = self.__accept_new_connection(
+                        self.results_server_socket)
 
-                client_id = int(decode(receive(client_sock)))
+                    client_id = int(decode(receive(client_sock)))
 
-                logging.info(f"results client sock: {client_id}")
-                process = Process(target=create_data_collector_handler,
+                    logging.info(f"results client sock: {client_id}")
+                    p.apply_async(create_data_collector_handler,
                                   args=(client_sock, self.query_count, self.input_queue, self.cur_client))
 
-                self.cur_client += 1
-                self.processes.append(process)
-                process.start()
-            except OSError:
-                break
+                    self.cur_client += 1
+                except OSError:
+                    break
 
     def __accept_new_connection(self, socket):
         """
